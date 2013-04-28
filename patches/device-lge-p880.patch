@@ -1,0 +1,73 @@
+diff --git a/extract-files.sh b/extract-files.sh
+index daa4eb8..20130bd 100644
+--- a/extract-files.sh
++++ b/extract-files.sh
+@@ -14,4 +14,9 @@ for FILE in `cat proprietary-files.txt | grep -v ^# | grep -v ^$`; do
+     adb pull /system/$FILE $BASE/$FILE
+ done
+ 
++mkdir -p $BASE/framework $BASE/app $BASE/etc/permissions
++cp pulled/com.lge.app.floating.res.apk $BASE/framework/pulled/com.lge.app.floating.res.apk
++cp pulled/com.lge.app.floating.xml $BASE/etc/permissions/pulled/com.lge.app.floating.xml
++cp pulled/QMemobin.apk $BASE/app/QMemobin.apk
++
+ ./setup-makefiles.sh
+diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
+index 3f1ae1e..81fb896 100755
+--- a/overlay/frameworks/base/core/res/res/values/config.xml
++++ b/overlay/frameworks/base/core/res/res/values/config.xml
+@@ -177,4 +177,7 @@
+         <item>255</item>
+     </integer-array>
+ 
++    <bool name="config_intrusiveNotificationLed">true</bool>
++    <bool name="config_intrusiveBatteryLed">true</bool>
++
+ </resources>
+diff --git a/overlay/packages/apps/Settings/res/values/config.xml b/overlay/packages/apps/Settings/res/values/config.xml
+index 00acd18..a23be27 100644
+--- a/overlay/packages/apps/Settings/res/values/config.xml
++++ b/overlay/packages/apps/Settings/res/values/config.xml
+@@ -1,3 +1,5 @@
+ <resources>
+     <bool name="has_led_flash">true</bool>
++    <bool name="config_show_volumeRockerWake">true</bool>
++    <bool name="config_show_expandedDesktop">true</bool>
+ </resources>
+diff --git a/p880.mk b/p880.mk
+index bc77b3e..88e0c88 100644
+--- a/p880.mk
++++ b/p880.mk
+@@ -114,6 +114,9 @@ PRODUCT_PACKAGES += \
+     Nfc \
+     Tag
+ 
++PRODUCT_PACKAGES += \
++    lights.x3
++
+ PRODUCT_COPY_FILES += \
+     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
+     $(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
+diff --git a/proprietary-files.txt b/proprietary-files.txt
+index 8ccb6fd..8a6a889 100644
+--- a/proprietary-files.txt
++++ b/proprietary-files.txt
+@@ -6,7 +6,8 @@ bin/rild
+ bin/tf_daemon
+ lib/hw/camera.tegra.so
+ lib/hw/gps.tegra.so
+-lib/hw/lights.x3.so
++# We use our own custom driver
++#lib/hw/lights.x3.so
+ lib/hw/sensors.tegra.so
+ lib/hw/audio_policy.tegra.so
+ lib/hw/audio.primary.tegra.so
+@@ -88,3 +89,8 @@ lib/libaudioavp.so
+ # Camera is built against a modified libjpeg, and requires that one to
+ # encode images
+ lib/lgejpeg.so
++# For QuickMemo
++# Note the apks are de-odexed and resigned, not just pulled from stock
++etc/permissions/com.lge.app.floating.xml
++framework/com.lge.app.floating.res.apk
++app/QMemobin.apk

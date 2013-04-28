@@ -1,0 +1,175 @@
+diff --git a/res/values/arrays.xml b/res/values/arrays.xml
+index 14e1fc8..ad45b79 100644
+--- a/res/values/arrays.xml
++++ b/res/values/arrays.xml
+@@ -77,6 +77,27 @@
+         <item>1800000</item>
+     </string-array>
+     
++    <string-array name="button_backlight_entries">
++        <item>Auto</item>
++        <item>Off</item>
++        <item>On</item>
++        <item>Force off</item>
++        <item>Force on</item>
++    </string-array>
++
++    <string-array name="button_backlight_values" translatable="false">
++        <!-- Do not translate. -->
++        <item>0</item>
++        <!-- Do not translate. -->
++        <item>1</item>
++        <!-- Do not translate. -->
++        <item>2</item>
++        <!-- Do not translate. -->
++        <item>3</item>
++        <!-- Do not translate. -->
++        <item>4</item>
++    </string-array>
++
+     <!-- Display settings.  The delay in inactivity before the dream is shown. These are shown in a list dialog. -->
+     <string-array name="dream_timeout_entries">
+         <item>Never</item>
+diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
+index 69cb8b7..6811cb1 100644
+--- a/res/values/cm_strings.xml
++++ b/res/values/cm_strings.xml
+@@ -841,6 +841,9 @@ desired screen brightness. Selecting \'Split\' allows you to to duplicate one li
+ two in order to insert additional control points. \'Remove\' deletes the selected line.
+     </string>
+ 
++    <!-- Button backlight mode -->
++    <string name="button_backlight_mode">Button backlight</string>
++
+     <!-- Advanced reboot options -->
+     <string name="advanced_reboot_title">Advanced reboot</string>
+     <string name="advanced_reboot_summary">When unlocked, include options in the power menu for rebooting into recovery or bootloader</string>
+diff --git a/res/xml/system_settings.xml b/res/xml/system_settings.xml
+index c5ffb5d..f3d3351 100644
+--- a/res/xml/system_settings.xml
++++ b/res/xml/system_settings.xml
+@@ -71,6 +71,13 @@
+         android:title="@string/battery_light_title"
+         android:fragment="com.android.settings.notificationlight.BatteryLightSettings" />
+ 
++   <ListPreference
++        android:key="button_backlight_mode"
++        android:title="@string/button_backlight_mode"
++        android:persistent="true"
++        android:entries="@array/button_backlight_entries"
++        android:entryValues="@array/button_backlight_values" />
++
+     <PreferenceScreen
+         android:key="hardware_keys"
+         android:fragment="com.android.settings.cyanogenmod.HardwareKeys"
+diff --git a/src/com/android/settings/cyanogenmod/SystemSettings.java b/src/com/android/settings/cyanogenmod/SystemSettings.java
+index 0b0d29c..b3cbf54 100644
+--- a/src/com/android/settings/cyanogenmod/SystemSettings.java
++++ b/src/com/android/settings/cyanogenmod/SystemSettings.java
+@@ -35,12 +35,16 @@ import android.view.WindowManagerGlobal;
+ import com.android.settings.R;
+ import com.android.settings.SettingsPreferenceFragment;
+ 
+-public class SystemSettings extends SettingsPreferenceFragment  implements
++public class SystemSettings extends SettingsPreferenceFragment implements
+         Preference.OnPreferenceChangeListener {
+     private static final String TAG = "SystemSettings";
+ 
++    // If there is not setting in the provider, use this
++    private static final int FALLBACK_BUTTON_BACKLIGHT_VALUE = 0;
++
+     private static final String KEY_NOTIFICATION_PULSE = "notification_pulse";
+     private static final String KEY_BATTERY_LIGHT = "battery_light";
++    private static final String KEY_BUTTON_BACKLIGHT = "button_backlight_mode";
+     private static final String KEY_HARDWARE_KEYS = "hardware_keys";
+     private static final String KEY_NAVIGATION_BAR = "navigation_bar";
+     private static final String KEY_NAVIGATION_RING = "navigation_ring";
+@@ -56,6 +60,7 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+ 
+     private PreferenceScreen mNotificationPulse;
+     private PreferenceScreen mBatteryPulse;
++    private ListPreference mButtonBacklightPref;
+     private PreferenceScreen mPieControl;
+     private ListPreference mExpandedDesktopPref;
+     private CheckBoxPreference mExpandedDesktopNoNavbarPref;
+@@ -69,8 +74,9 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+         addPreferencesFromResource(R.xml.system_settings);
+         PreferenceScreen prefScreen = getPreferenceScreen();
+ 
+-        // Only show the hardware keys config on a device that does not have a navbar
+-        // and the navigation bar config on phones that has a navigation bar
++        // Only show the hardware keys config on a device that does not have a
++        // navbar and the navigation bar config on phones that has a navigation
++        // bar
+         boolean removeKeys = false;
+         boolean removeNavbar = false;
+ 
+@@ -110,7 +116,8 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+                 prefScreen.removePreference(findPreference(KEY_NAVIGATION_BAR_CATEGORY));
+             }
+         } else {
+-            // Secondary user is logged in, remove all primary user specific preferences
++            // Secondary user is logged in, remove all primary user specific
++            // preferences
+             prefScreen.removePreference(findPreference(KEY_BATTERY_LIGHT));
+             prefScreen.removePreference(findPreference(KEY_HARDWARE_KEYS));
+             prefScreen.removePreference(findPreference(KEY_NAVIGATION_BAR));
+@@ -122,11 +129,24 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+             prefScreen.removePreference(findPreference(KEY_NOTIFICATION_DRAWER));
+         }
+ 
++        // Button lights. Per user.
++        if (removeKeys) {
++            prefScreen.removePreference(findPreference(KEY_BUTTON_BACKLIGHT));
++        } else {
++            mButtonBacklightPref = (ListPreference) findPreference(KEY_BUTTON_BACKLIGHT);
++            final int currentButtonBacklight = Settings.System.getInt(getContentResolver(),
++                    Settings.System.BUTTON_BACKLIGHT_MODE, FALLBACK_BUTTON_BACKLIGHT_VALUE);
++            mButtonBacklightPref.setValueIndex(currentButtonBacklight);
++            mButtonBacklightPref.setOnPreferenceChangeListener(this);
++            updateButtonBacklight(currentButtonBacklight);
++        }
++
+         // Preferences that applies to all users
+         // Notification lights
+         mNotificationPulse = (PreferenceScreen) findPreference(KEY_NOTIFICATION_PULSE);
+         if (mNotificationPulse != null) {
+-            if (!getResources().getBoolean(com.android.internal.R.bool.config_intrusiveNotificationLed)) {
++            if (!getResources().getBoolean(
++                    com.android.internal.R.bool.config_intrusiveNotificationLed)) {
+                 prefScreen.removePreference(mNotificationPulse);
+                 mNotificationPulse = null;
+             }
+@@ -199,6 +219,10 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+             boolean value = (Boolean) objValue;
+             updateExpandedDesktop(value ? 2 : 0);
+             return true;
++        } else if (preference == mButtonBacklightPref) {
++            int value = Integer.parseInt((String) objValue);
++            updateButtonBacklight(value);
++            return true;
+         }
+ 
+         return false;
+@@ -220,7 +244,7 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+         } else {
+             mBatteryPulse.setSummary(getString(R.string.notification_light_disabled));
+         }
+-     }
++    }
+ 
+     private void updatePieControlDescription() {
+         if (Settings.System.getInt(getActivity().getContentResolver(),
+@@ -231,6 +255,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+         }
+     }
+ 
++    private void updateButtonBacklight(int value) {
++        mButtonBacklightPref.setSummary(mButtonBacklightPref.getEntries()[value]);
++        Settings.System.putInt(getContentResolver(),
++                Settings.System.BUTTON_BACKLIGHT_MODE, value);
++    }
++
+     private void updateExpandedDesktop(int value) {
+         ContentResolver cr = getContentResolver();
+         Resources res = getResources();

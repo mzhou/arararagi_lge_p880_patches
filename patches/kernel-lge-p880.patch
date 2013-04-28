@@ -1,0 +1,380 @@
+diff --git a/drivers/power/max8971-charger.c b/drivers/power/max8971-charger.c
+index c6787eb..8b246403 100644
+--- a/drivers/power/max8971-charger.c
++++ b/drivers/power/max8971-charger.c
+@@ -175,6 +175,8 @@ struct max8971_chip {
+ 	int				chg_cable_type;
+ 	int				chg_status;
+ 	bool				chg_enable;
++	int				chgcc_forced;
++	int				dcilmt_forced;
+ };
+ 
+ static struct max8971_chip	*max8971_chg;
+@@ -228,11 +230,19 @@ out:
+ 	return ret;
+ }
+ 
++#define POWER_SUPPLY_TYPE_FORCED 9001
++
+ extern unsigned char chg_flag_muic;
+ extern unsigned char chg_700_flag;
+ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ {
+ 	u8 reg_val= 0;
++	int chg_cable_type = chip->chg_cable_type;
++
++	if (chip->chgcc_forced >= 5
++			&& chip->chgcc_forced <= 31) {
++		chg_cable_type = POWER_SUPPLY_TYPE_FORCED;
++	}
+ 
+ 	// unlock charger protection
+ 	reg_val = chip->pdata->chg_proctection  << MAX8971_CHGPROT_SHIFT;
+@@ -244,7 +254,7 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 		dev_dbg(&chip->client->dev, "Charing enable..\n");
+ 
+ 		// Set fast charge current and timer
+-		switch(chip->chg_cable_type) {
++		switch(chg_cable_type) {
+ 			case POWER_SUPPLY_TYPE_USB:
+ 				//                                                      
+ 				if( charging_mode != CHARGING_MHL ) {
+@@ -266,6 +276,12 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 							(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
+ 				}
+ 				break;
++
++			case POWER_SUPPLY_TYPE_FORCED:
++				reg_val = (chip->chgcc_forced << MAX8971_CHGCC_SHIFT) |
++						(chip->pdata->fchgtime << MAX8971_FCHGTIME_SHIFT);
++				break;
++
+ 			case POWER_SUPPLY_TYPE_MAINS:
+ //                                                                          
+ //                    
+@@ -286,6 +302,7 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 				reg_val = ((chip->pdata->chgcc_factory << MAX8971_CHGCC_SHIFT) |
+ 						(chip->pdata->fchgtime<<MAX8971_FCHGTIME_SHIFT));
+ 				break;
++
+ 			default :
+ 				dev_dbg(&chip->client->dev, "Unknown charger cabel type!!!\n");
+ 				reg_val = ((chip->pdata->chgcc_usb500 << MAX8971_CHGCC_SHIFT) |
+@@ -305,7 +322,7 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 		dev_dbg(&chip->client->dev, "MAX8971_REG_FCHGCRNT(0x%x) = 0x%x\n", MAX8971_REG_FCHGCRNT, reg_val);
+ 		
+ 		// Set input current limit and charger restart threshold
+-		switch(chip->chg_cable_type) {
++		switch(chg_cable_type) {
+ 			case POWER_SUPPLY_TYPE_USB:
+ 				//                                                      
+ 				if( charging_mode != CHARGING_MHL ) {
+@@ -316,6 +333,10 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 					(chip->pdata->dcilmt_mhl400 << MAX8971_DCILMT_SHIFT));
+ 				}
+ 				break;
++			case POWER_SUPPLY_TYPE_FORCED:
++				reg_val = (chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
++						(chip->dcilmt_forced << MAX8971_DCILMT_SHIFT);
++				break;
+ 			case POWER_SUPPLY_TYPE_MAINS:
+ 				if(chg_700_flag == 1){
+ 					reg_val = ((chip->pdata->chgrstrt << MAX8971_CHGRSTRT_SHIFT) |
+@@ -346,7 +367,7 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 				(chip->pdata->chgcv << MAX8971_CHGCV_SHIFT) |
+ 				(chip->pdata->ifst2p8 << MAX8971_IFST2P8_SHIFT));
+ #endif
+-		switch(chip->chg_cable_type) {
++		switch(chg_cable_type) {
+ 			case POWER_SUPPLY_TYPE_USB:
+ 				//                                                      
+ 				if( charging_mode != CHARGING_MHL ) {
+@@ -361,6 +382,7 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 					(chip->pdata->ifst2p8_mhl400 << MAX8971_IFST2P8_SHIFT));
+ 				}
+ 				break;
++			case POWER_SUPPLY_TYPE_FORCED:
+ 			case POWER_SUPPLY_TYPE_MAINS:
+ 				reg_val = ((chip->pdata->topofftime << MAX8971_TOPOFFTIME_SHIFT) |
+ 				(chip->pdata->topofftshld << MAX8971_TOPOFFTSHLD_SHIFT) |
+@@ -394,7 +416,7 @@ static int max8971_set_reg(struct max8971_chip *chip, int enable)
+ 		if(chg_flag_muic >= MAX_CHARGER_INT_COUNT)		//                                                                    
+ 		{
+ 			//                                                                                           
+-			if(chip->chg_cable_type == POWER_SUPPLY_TYPE_USB){
++			if(chg_cable_type == POWER_SUPPLY_TYPE_USB){
+ 			reg_val = (0x0 << MAX8971_DCMON_DIS_SHIFT)
+ 				|(chip->pdata->suspend_usb << MAX8971_USB_SUS_SHIFT);
+ 		}
+@@ -981,6 +1003,58 @@ static DEVICE_ATTR(chgcc_ta, S_IRUGO | S_IWUSR | S_IRGRP | S_IWGRP,
+ 		   max8971_charger_show_chgcc_ta,
+ 		   max8971_charger_store_chgcc_ta);
+ 
++static ssize_t max8971_charger_show_chgcc_forced(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct max8971_chip *chip = dev_get_drvdata(dev);
++	return sprintf(buf, "%d\n", chip->chgcc_forced);
++}
++
++static ssize_t max8971_charger_store_chgcc_forced(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct max8971_chip *chip = dev_get_drvdata(dev);
++	if (!count) {
++		return -EINVAL;
++	}
++	chip->chgcc_forced = simple_strtoul(buf, NULL, 10);
++	if (chip->chg_enable) {
++		max8971_set_reg(chip, 1);
++	}
++	return count;
++}
++
++DEVICE_ATTR(chgcc_forced, 0660, max8971_charger_show_chgcc_forced,
++		max8971_charger_store_chgcc_forced);
++
++static ssize_t max8971_charger_show_dcilmt_forced(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct max8971_chip *chip = dev_get_drvdata(dev);
++	return sprintf(buf, "%d\n", chip->dcilmt_forced);
++}
++
++static ssize_t max8971_charger_store_dcilmt_forced(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct max8971_chip *chip = dev_get_drvdata(dev);
++	if (!count) {
++		return -EINVAL;
++	}
++	int val = simple_strtoul(buf, NULL, 10);
++	if (val < 9 || val > 63) {
++		return -EINVAL;
++	}
++	chip->dcilmt_forced = val;
++	if (chip->chg_enable) {
++		max8971_set_reg(chip, 1);
++	}
++	return count;
++}
++
++DEVICE_ATTR(dcilmt_forced, 0660, max8971_charger_show_dcilmt_forced,
++		max8971_charger_store_dcilmt_forced);
++
+ 
+ static __devinit int max8971_probe(struct i2c_client *client, 
+ 				   const struct i2c_device_id *id)
+@@ -1075,15 +1149,37 @@ static __devinit int max8971_probe(struct i2c_client *client,
+ 	}
+ */
+ 
+- 	ret = device_create_file(&client->dev, &dev_attr_chgcc_ta);
+-        if (ret < 0) {
+-                printk("device_create_file error!\n");
+-                return ret;
++	chip->chgcc_forced = 0;
++	chip->dcilmt_forced = 60;
++
++	ret = device_create_file(&client->dev, &dev_attr_chgcc_ta);
++	if (ret < 0) {
++		printk("device_create_file(chgcc_ta) error!\n");
++		goto err;
+ 	}
++
++	ret = device_create_file(&client->dev, &dev_attr_chgcc_forced);
++	if (ret < 0) {
++		printk("device_create_file(chgcc_forced) error!\n");
++		goto err_chgcc_forced;
++	}
++
++	ret = device_create_file(&client->dev, &dev_attr_dcilmt_forced);
++	if (ret < 0) {
++		printk("device_create_file(dcilmt_forced) error!\n");
++		goto err_dcilmt_forced;
++	}
++
+ 	dev_info(&client->dev, "%s finish...\n", __func__);
+ 
+ 	return 0;
+ 
++err_dcilmt_forced:
++	device_remove_file(&client->dev, &dev_attr_chgcc_forced);
++
++err_chgcc_forced:
++	device_remove_file(&client->dev, &dev_attr_chgcc_ta);
++
+ err:
+ 	free_irq(client->irq, chip);
+ 
+@@ -1108,6 +1204,10 @@ static __devexit int max8971_remove(struct i2c_client *client)
+ 	//kkk_test
+ 	//cancel_delayed_work(&chip->monitor_work);
+ 
++	device_remove_file(&client->dev, &dev_attr_dcilmt_forced);
++	device_remove_file(&client->dev, &dev_attr_chgcc_forced);
++	device_remove_file(&client->dev, &dev_attr_chgcc_ta);
++
+ 	gpio_free(TEGRA_GPIO_PJ2);
+ 	free_irq(client->irq, chip);
+ 	power_supply_unregister(&chip->charger);
+@@ -1186,7 +1286,8 @@ module_exit(max8971_exit);
+ 
+ 
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Clark Kim <clark.kim@maxim-ic.com>");
++MODULE_AUTHOR("Clark Kim <clark.kim@maxim-ic.com>"
++		", Michael Zhou <mzhou@cse.unsw.edu.au>");
+ MODULE_DESCRIPTION("Power supply driver for MAX8971");
+ MODULE_VERSION("3.3");
+ MODULE_ALIAS("platform:max8971-charger");
+diff --git a/drivers/video/backlight/lm3533_bl.c b/drivers/video/backlight/lm3533_bl.c
+index f0ee1d9..7170cce 100644
+--- a/drivers/video/backlight/lm3533_bl.c
++++ b/drivers/video/backlight/lm3533_bl.c
+@@ -46,6 +46,10 @@
+ #define LEDS_BACKLIGHT_NAME 		"lcd-backlight"
+ #endif
+ 
++#define LM3533_BL_MAX_MAXCURRENT	19 // Can be up to 23
++#define LM3533_BL_DEFAULT_MAXCURRENT	19
++#define LM3533_BL_MIN_MAXCURRENT	0
++
+ static unsigned char default_160nit_53percent_lut[256]={
+ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,
+ 1,1,1,1,1,1,2,2,2,2,2,2,2,3,3,3,3,3,3,4,
+@@ -78,6 +82,7 @@ struct lm3533_device {
+ 	int			bl_status;
+ 	struct mutex 		bl_mutex;
+ 	struct mutex 		bl_mutex_saved;
++	int			cur_maxcurrent;
+ };
+ 
+ struct lm3533_device *lm3533dev;
+@@ -174,10 +179,12 @@ static void lm3533_set_main_current_level(struct i2c_client *client, int level)
+ 			cal_value = LM3533_BL_MIN_BRIGHTNESS;
+ 		}
+ #endif
++		lm3533_bl_write_reg(client, 0x1F, dev->cur_maxcurrent);
+ 		lm3533_bl_write_reg(client, 0x40, cal_value);
+ 	}
+ 	else if(level == 0){
+ 		cal_value = level;
++		lm3533_bl_write_reg(client, 0x1F, dev->cur_maxcurrent);
+ 		lm3533_bl_write_reg(client, 0x40, cal_value);
+ 	}
+ 	mutex_unlock(&lm3533dev->bl_mutex);
+@@ -200,7 +207,6 @@ static void lm3533_backlight_on(struct i2c_client *client, int level)
+ 	lm3533_bl_write_reg(client, 0x14, 0x0); //PWM input is disabled for CABC
+ #endif
+ 	lm3533_bl_write_reg(client, 0x1A, 0x2); //Linear & Control Bank A is configured for register Current control
+-	lm3533_bl_write_reg(client, 0x1F, 0x13); //Full-Scale Current (20.2mA)
+ 	lm3533_bl_write_reg(client, 0x27, 0x1); //Control Bank A is enable
+ #if !defined(CONFIG_MACH_HD5_LGD)        
+ 	lm3533_bl_write_reg(client, 0x2C, 0x0A); //                                                                                   
+@@ -411,6 +417,59 @@ static ssize_t lm3533_bl_store_on_off(struct device *dev,
+ DEVICE_ATTR(lm3533_bl_level, 0660, lm3533_bl_show_lvl, lm3533_bl_store_lvl);
+ DEVICE_ATTR(lm3533_bl_onoff, 0660, lm3533_bl_show_on_off, lm3533_bl_store_on_off);
+ 
++static void lm3533_lcd_backlight_set_maxcurrent(struct i2c_client *client,
++		int level)
++{
++	struct lm3533_device *dev = i2c_get_clientdata(client);
++
++	if (level > LM3533_BL_MAX_MAXCURRENT)
++		level = LM3533_BL_MAX_MAXCURRENT;
++	if (level < LM3533_BL_MIN_MAXCURRENT)
++		level = LM3533_BL_MIN_MAXCURRENT;
++
++	dev->cur_maxcurrent = level;
++	lm3533_set_main_current_level(client, dev->saved_main_lcd_level);
++}
++
++static ssize_t lm3533_bl_show_maxcurrent(struct device *dev,
++		struct device_attribute *attr,
++		char *buf)
++{
++	int r;
++	struct i2c_client *client = to_i2c_client(dev);
++	struct lm3533_device *lm3533_dev = i2c_get_clientdata(client);
++
++	r = snprintf(buf, PAGE_SIZE,
++			"%d\n",
++			lm3533_dev->cur_maxcurrent);
++
++	return r;
++}
++
++static ssize_t lm3533_bl_store_maxcurrent(struct device *dev,
++		struct device_attribute *attr,
++		const char *buf,
++		size_t count)
++{
++	int level;
++	struct i2c_client *client = to_i2c_client(dev);
++
++	if (!count) {
++		dev_err(&client->dev,
++				"Invalid argument while storing maxcurrent\n");
++		return -EINVAL;
++	}
++
++	level = simple_strtoul(buf, NULL, 10);
++
++	lm3533_lcd_backlight_set_maxcurrent(client, level);
++
++	return count;
++}
++
++DEVICE_ATTR(lm3533_bl_maxcurrent, 0660, lm3533_bl_show_maxcurrent,
++		lm3533_bl_store_maxcurrent);
++
+ #ifdef CONFIG_LM3533_LEDS_CLASS
+ 
+ static int lm3533_bl_get_intensity(struct lm3533_device *drvdata)
+@@ -502,6 +561,7 @@ static int __devinit lm3533_bl_probe(struct i2c_client *i2c_dev,
+ 	dev->cur_main_lcd_level= LM3533_BL_DEFAULT_BRIGHTNESS;
+ 	dev->saved_main_lcd_level= LM3533_BL_DEFAULT_BRIGHTNESS;
+ 	dev->bl_status = BL_OFF;
++	dev->cur_maxcurrent = LM3533_BL_DEFAULT_MAXCURRENT;
+ 
+ 	err = led_classdev_register(&i2c_dev->dev, &lm3533_led_dev);
+ 	if (err < 0) {
+@@ -538,6 +598,11 @@ static int __devinit lm3533_bl_probe(struct i2c_client *i2c_dev,
+ 		dev_err(&i2c_dev->dev, "device_create_file(onoff) failed\n");
+ 		goto err_device_create_file_2;
+ 	}
++	err = device_create_file(&i2c_dev->dev, &dev_attr_lm3533_bl_maxcurrent);
++	if (err < 0) {
++		dev_err(&i2c_dev->dev, "device_create_file(maxcurrent) failed\n");
++		goto err_device_create_file_3;
++	}
+ 
+ 	lm3533dev = dev;
+ 
+@@ -547,6 +612,8 @@ static int __devinit lm3533_bl_probe(struct i2c_client *i2c_dev,
+ 
+ 	return 0;
+ 
++err_device_create_file_3:
++	device_remove_file(&i2c_dev->dev, &dev_attr_lm3533_bl_onoff);
+ err_device_create_file_2:
+ 	device_remove_file(&i2c_dev->dev, &dev_attr_lm3533_bl_level);
+ err_device_create_file_1:
+@@ -570,6 +637,7 @@ static int __devexit lm3533_bl_remove(struct i2c_client *i2c_dev)
+ 
+  	device_remove_file(&i2c_dev->dev, &dev_attr_lm3533_bl_level);
+ 	device_remove_file(&i2c_dev->dev, &dev_attr_lm3533_bl_onoff);
++	device_remove_file(&i2c_dev->dev, &dev_attr_lm3533_bl_maxcurrent);
+ 
+ 	led_classdev_unregister(dev->led);
+ 
+@@ -614,5 +682,6 @@ module_init(lm3533_init);
+ module_exit(lm3533_exit);
+ 
+ MODULE_DESCRIPTION("LM3533 Backlight Control");
+-MODULE_AUTHOR("Jaeseong Gim <jaeseong.gim@lge.com>");
++MODULE_AUTHOR("Jaeseong Gim <jaeseong.gim@lge.com>"
++		", Michael Zhou <mzhou@cse.unsw.edu.au>");
+ MODULE_LICENSE("GPL");
