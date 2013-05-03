@@ -16,7 +16,7 @@ index 69523d2..0810e34 100644
           * @hide
           */
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index 187c6df..5f4f3a7 100644
+index 2a97b33..35ea39a 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 @@ -896,21 +896,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {

@@ -1,17 +1,16 @@
-diff --git a/extract-files.sh b/extract-files.sh
-index daa4eb8..20130bd 100644
---- a/extract-files.sh
-+++ b/extract-files.sh
-@@ -14,4 +14,9 @@ for FILE in `cat proprietary-files.txt | grep -v ^# | grep -v ^$`; do
-     adb pull /system/$FILE $BASE/$FILE
- done
+diff --git a/configs/touch_dev.kl b/configs/touch_dev.kl
+index dc21f1c..6d593e8 100644
+--- a/configs/touch_dev.kl
++++ b/configs/touch_dev.kl
+@@ -236,7 +236,7 @@ key 215   ENVELOPE
+ # key 223 "KEY_CANCEL"
+ # key 224 "KEY_BRIGHTNESSDOWN"
+ # key 225 "KEY_BRIGHTNESSUP"
+-key 226   HEADSETHOOK
++key 248   HEADSETHOOK
  
-+mkdir -p $BASE/framework $BASE/app $BASE/etc/permissions
-+cp pulled/com.lge.app.floating.res.apk $BASE/framework/pulled/com.lge.app.floating.res.apk
-+cp pulled/com.lge.app.floating.xml $BASE/etc/permissions/pulled/com.lge.app.floating.xml
-+cp pulled/QMemobin.apk $BASE/app/QMemobin.apk
-+
- ./setup-makefiles.sh
+ key 256   BUTTON_1
+ key 257   BUTTON_2
 diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
 index 3f1ae1e..81fb896 100755
 --- a/overlay/frameworks/base/core/res/res/values/config.xml
@@ -35,10 +34,49 @@ index 00acd18..a23be27 100644
 +    <bool name="config_show_expandedDesktop">true</bool>
  </resources>
 diff --git a/p880.mk b/p880.mk
-index bc77b3e..88e0c88 100644
+index bc77b3e..eee0430 100644
 --- a/p880.mk
 +++ b/p880.mk
-@@ -114,6 +114,9 @@ PRODUCT_PACKAGES += \
+@@ -1,8 +1,5 @@
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
+ 
+-# The gps config appropriate for this device
+-$(call inherit-product, device/common/gps/gps_us_supl.mk)
+-
+ $(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
+ 
+ DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
+@@ -44,11 +41,14 @@ PRODUCT_COPY_FILES += \
+ ## GPS
+ PRODUCT_COPY_FILES += \
+     $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer \
+-    $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
++    $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
++    $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt \
++    $(LOCAL_PATH)/configs/SuplRootCert:system/etc/SuplRootCert
+ 
+ ## Input
+ 
+ PRODUCT_COPY_FILES += \
++    $(LOCAL_PATH)/configs/Generic.kl:system/usr/keylayout/Generic.kl \
+     $(LOCAL_PATH)/configs/MHLRCP.kl:system/usr/keylayout/MHLRCP.kl \
+     $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
+     $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
+@@ -98,6 +98,13 @@ PRODUCT_COPY_FILES += \
+     frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
+     frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml
+ 
++# QuickMemo
++PRODUCT_COPY_FILES += \
++    $(LOCAL_PATH)/pulled/com.lge.app.floating.xml:system/etc/permissions/com.lge.app.floating.xml \
++    $(LOCAL_PATH)/pulled/com.lge.app.floating.res.apk:system/framework/com.lge.app.floating.res.apk \
++    $(LOCAL_PATH)/pulled/QMemobin.apk:system/app/QMemobin.apk
++
++
+ # Charger mode
+ PRODUCT_PACKAGES += \
+     charger \
+@@ -114,6 +121,9 @@ PRODUCT_PACKAGES += \
      Nfc \
      Tag
  
@@ -49,7 +87,7 @@ index bc77b3e..88e0c88 100644
      $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
      $(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
 diff --git a/proprietary-files.txt b/proprietary-files.txt
-index 8ccb6fd..8a6a889 100644
+index 8ccb6fd..1a33530 100644
 --- a/proprietary-files.txt
 +++ b/proprietary-files.txt
 @@ -6,7 +6,8 @@ bin/rild
@@ -62,12 +100,3 @@ index 8ccb6fd..8a6a889 100644
  lib/hw/sensors.tegra.so
  lib/hw/audio_policy.tegra.so
  lib/hw/audio.primary.tegra.so
-@@ -88,3 +89,8 @@ lib/libaudioavp.so
- # Camera is built against a modified libjpeg, and requires that one to
- # encode images
- lib/lgejpeg.so
-+# For QuickMemo
-+# Note the apks are de-odexed and resigned, not just pulled from stock
-+etc/permissions/com.lge.app.floating.xml
-+framework/com.lge.app.floating.res.apk
-+app/QMemobin.apk

@@ -31,7 +31,7 @@ index 14e1fc8..ad45b79 100644
      <string-array name="dream_timeout_entries">
          <item>Never</item>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 69cb8b7..6811cb1 100644
+index db91478..a98c453 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
 @@ -841,6 +841,9 @@ desired screen brightness. Selecting \'Split\' allows you to to duplicate one li
