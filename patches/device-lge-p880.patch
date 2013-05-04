@@ -1,16 +1,3 @@
-diff --git a/configs/touch_dev.kl b/configs/touch_dev.kl
-index dc21f1c..6d593e8 100644
---- a/configs/touch_dev.kl
-+++ b/configs/touch_dev.kl
-@@ -236,7 +236,7 @@ key 215   ENVELOPE
- # key 223 "KEY_CANCEL"
- # key 224 "KEY_BRIGHTNESSDOWN"
- # key 225 "KEY_BRIGHTNESSUP"
--key 226   HEADSETHOOK
-+key 248   HEADSETHOOK
- 
- key 256   BUTTON_1
- key 257   BUTTON_2
 diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
 index 3f1ae1e..81fb896 100755
 --- a/overlay/frameworks/base/core/res/res/values/config.xml
@@ -34,7 +21,7 @@ index 00acd18..a23be27 100644
 +    <bool name="config_show_expandedDesktop">true</bool>
  </resources>
 diff --git a/p880.mk b/p880.mk
-index bc77b3e..eee0430 100644
+index dfb3fa7..b8a5c4e 100644
 --- a/p880.mk
 +++ b/p880.mk
 @@ -1,8 +1,5 @@
@@ -46,25 +33,18 @@ index bc77b3e..eee0430 100644
  $(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
  
  DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
-@@ -44,11 +41,14 @@ PRODUCT_COPY_FILES += \
+@@ -44,6 +41,8 @@ PRODUCT_COPY_FILES += \
  ## GPS
  PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer \
--    $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
 +    $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
-+    $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt \
-+    $(LOCAL_PATH)/configs/SuplRootCert:system/etc/SuplRootCert
++    $(LOCAL_PATH)/configs/SuplRootCert:system/etc/SuplRootCert \
+     $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
  
  ## Input
- 
- PRODUCT_COPY_FILES += \
-+    $(LOCAL_PATH)/configs/Generic.kl:system/usr/keylayout/Generic.kl \
-     $(LOCAL_PATH)/configs/MHLRCP.kl:system/usr/keylayout/MHLRCP.kl \
+@@ -54,6 +53,12 @@ PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
      $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
-@@ -98,6 +98,13 @@ PRODUCT_COPY_FILES += \
-     frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
-     frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml
  
 +# QuickMemo
 +PRODUCT_COPY_FILES += \
@@ -72,31 +52,16 @@ index bc77b3e..eee0430 100644
 +    $(LOCAL_PATH)/pulled/com.lge.app.floating.res.apk:system/framework/com.lge.app.floating.res.apk \
 +    $(LOCAL_PATH)/pulled/QMemobin.apk:system/app/QMemobin.apk
 +
-+
- # Charger mode
- PRODUCT_PACKAGES += \
-     charger \
-@@ -114,6 +121,9 @@ PRODUCT_PACKAGES += \
-     Nfc \
-     Tag
+ ## ALSA Config
  
-+PRODUCT_PACKAGES += \
+ PRODUCT_COPY_FILES += \
+@@ -105,6 +110,9 @@ PRODUCT_PACKAGES += \
+     charger_res_images
+ 
+ PRODUCT_PACKAGES += \
 +    lights.x3
 +
- PRODUCT_COPY_FILES += \
-     $(LOCAL_PATH)/prebuilt/init.rmnet:system/bin/init.rmnet \
-     $(LOCAL_PATH)/prebuilt/init.rmnet-down:system/bin/init.rmnet-down \
-diff --git a/proprietary-files.txt b/proprietary-files.txt
-index 8ccb6fd..1a33530 100644
---- a/proprietary-files.txt
-+++ b/proprietary-files.txt
-@@ -6,7 +6,8 @@ bin/rild
- bin/tf_daemon
- lib/hw/camera.tegra.so
- lib/hw/gps.tegra.so
--lib/hw/lights.x3.so
-+# We use our own custom driver
-+#lib/hw/lights.x3.so
- lib/hw/sensors.tegra.so
- lib/hw/audio_policy.tegra.so
- lib/hw/audio.primary.tegra.so
++PRODUCT_PACKAGES += \
+     audio.a2dp.default \
+     com.android.future.usb.accessory
+ 
