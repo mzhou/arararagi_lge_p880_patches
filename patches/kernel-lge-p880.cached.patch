@@ -1,0 +1,151 @@
+diff --git a/drivers/misc/tspdrv/ImmVibeSPI.c b/drivers/misc/tspdrv/ImmVibeSPI.c
+index b86e513..2d4f5b8 100644
+--- a/drivers/misc/tspdrv/ImmVibeSPI.c
++++ b/drivers/misc/tspdrv/ImmVibeSPI.c
+@@ -115,7 +115,7 @@ IMMVIBESPIAPI VibeStatus SYS_API__I2C__Write( _addr, _data)
+ /*
+ ** Called to disable amp (disable output force)
+ */
+-/*IMMVIBESPIAPI*/ VibeStatus ImmVibeSPI_ForceOut_AmpDisable(VibeUInt8 nActuatorIndex)
++IMMVIBESPIAPI VibeStatus ImmVibeSPI_ForceOut_AmpDisable(VibeUInt8 nActuatorIndex)
+ {
+     int cnt = 0;
+     unsigned char I2C_data[1];
+@@ -147,13 +147,10 @@ IMMVIBESPIAPI VibeStatus SYS_API__I2C__Write( _addr, _data)
+     return VIBE_S_SUCCESS;
+ }
+ 
+-EXPORT_SYMBOL(ImmVibeSPI_ForceOut_AmpDisable);
+-
+-
+ /*
+ ** Called to enable amp (enable output force0)
+ */
+-/*IMMVIBESPIAPI*/ VibeStatus ImmVibeSPI_ForceOut_AmpEnable(VibeUInt8 nActuatorIndex)
++IMMVIBESPIAPI VibeStatus ImmVibeSPI_ForceOut_AmpEnable(VibeUInt8 nActuatorIndex)
+ {
+     int cnt = 0;	
+     unsigned char I2C_data[1];
+@@ -279,7 +276,6 @@ EXPORT_SYMBOL(ImmVibeSPI_ForceOut_AmpDisable);
+ 
+     return VIBE_S_SUCCESS;
+ }
+-EXPORT_SYMBOL(ImmVibeSPI_ForceOut_AmpEnable);
+ 
+ /*
+ ** Called at initialization time to set PWM frequencies, disable amp, etc...
+diff --git a/drivers/misc/tspdrv/Makefile b/drivers/misc/tspdrv/Makefile
+index b90ea41..36cfa59 100644
+--- a/drivers/misc/tspdrv/Makefile
++++ b/drivers/misc/tspdrv/Makefile
+@@ -2,5 +2,5 @@
+ # Makefile for STPDRV devices.
+ #
+ 
+-obj-$(CONFIG_TSPDRV)	+= tspdrv.o imm_timed_output.o
++obj-$(CONFIG_TSPDRV)	+= tspdrv.o
+ obj-$(CONFIG_TSPDRV)	+= tspdrv_i2c.o
+diff --git a/drivers/misc/tspdrv/VibeOSKernelLinuxHRTime.c b/drivers/misc/tspdrv/VibeOSKernelLinuxHRTime.c
+index 6a0d84b..8844922 100644
+--- a/drivers/misc/tspdrv/VibeOSKernelLinuxHRTime.c
++++ b/drivers/misc/tspdrv/VibeOSKernelLinuxHRTime.c
+@@ -53,6 +53,9 @@
+ /* Global variables */
+ static bool g_bTimerStarted = false;
+ static struct hrtimer g_tspTimer;
++static struct hrtimer g_autoTimer;
++static struct work_struct  vibrator_timeout;
++
+ static ktime_t g_ktFiveMs;
+ static int g_nWatchdogCounter = 0;
+ 
+@@ -86,6 +89,19 @@ static enum hrtimer_restart tsp_timer_interrupt(struct hrtimer *timer)
+     return HRTIMER_RESTART;
+ }
+ 
++static enum hrtimer_restart autotimer_stop(struct hrtimer *timer)
++{
++    g_bStopRequested = true;
++    schedule_work(&vibrator_timeout);
++
++    return HRTIMER_NORESTART;
++}
++
++static void vibrator_timeout_work(struct work_struct *wq)
++{
++    ImmVibeSPI_ForceOut_AmpDisable(0);
++}
++
+ static int VibeOSKernelProcessData(void* data)
+ {
+     int i;
+@@ -170,6 +186,12 @@ static void VibeOSKernelLinuxInitTimer(void)
+ 
+     /* Initialize a 5ms-timer with tsp_timer_interrupt as timer callback (interrupt driven)*/
+     g_tspTimer.function = tsp_timer_interrupt;
++
++    /* Extend timers to enable a timed vibration */
++    hrtimer_init(&g_autoTimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
++    g_autoTimer.function = autotimer_stop;
++
++    INIT_WORK(&vibrator_timeout, vibrator_timeout_work);
+ }
+ 
+ static void VibeOSKernelLinuxStartTimer(void)
+@@ -213,6 +235,12 @@ static void VibeOSKernelLinuxStartTimer(void)
+     }
+ }
+ 
++static void VibeOSKernelLinuxAutoTimer(int timeout)
++{
++        hrtimer_cancel(&g_autoTimer);
++        hrtimer_start(&g_autoTimer, ktime_set(0, timeout*1000*1000), HRTIMER_MODE_REL);
++}
++
+ static void VibeOSKernelLinuxStopTimer(void)
+ {
+     int i;
+diff --git a/drivers/misc/tspdrv/tspdrv.c b/drivers/misc/tspdrv/tspdrv.c
+index 91ffd13..9574976 100644
+--- a/drivers/misc/tspdrv/tspdrv.c
++++ b/drivers/misc/tspdrv/tspdrv.c
+@@ -49,7 +49,7 @@
+ #if defined(VIBE_DEBUG) && defined(VIBE_RECORD)
+ #include <tspdrvRecorder.c>
+ #endif
+-#include"imm_timed_output.h"
++
+ 
+ /* Device name and version information */
+ #define VERSION_STR " v3.4.55.8\n"                  /* DO NOT CHANGE - this is auto-generated */
+@@ -215,7 +215,6 @@ int __init tspdrv_init( void )
+     }
+     DbgOut((KERN_INFO "tspdrv: init_module exit.\n"));
+ 
+-    ImmVibe_timed_output();
+     return 0;
+ }
+ 
+@@ -456,6 +455,10 @@ static int ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsig
+             file->private_data = (void*)TSPDRV_MAGIC_NUMBER;
+             break;
+ 
++        case TSPDRV_ENABLE_TIMED_AMP:
++            ImmVibeSPI_ForceOut_AmpEnable(0);
++            VibeOSKernelLinuxAutoTimer(*((int*)arg));
++            break;
+         case TSPDRV_ENABLE_AMP:
+             ImmVibeSPI_ForceOut_AmpEnable(arg);
+             DbgRecorderReset((arg));
+diff --git a/drivers/misc/tspdrv/tspdrv.h b/drivers/misc/tspdrv/tspdrv.h
+index cded0bc..d60ca49 100644
+--- a/drivers/misc/tspdrv/tspdrv.h
++++ b/drivers/misc/tspdrv/tspdrv.h
+@@ -43,6 +43,7 @@
+ #define TSPDRV_ENABLE_AMP                   _IO(TSPDRV_MAGIC_NUMBER & 0xFF, 3)
+ #define TSPDRV_DISABLE_AMP                  _IO(TSPDRV_MAGIC_NUMBER & 0xFF, 4)
+ #define TSPDRV_GET_NUM_ACTUATORS            _IO(TSPDRV_MAGIC_NUMBER & 0xFF, 5)
++#define TSPDRV_ENABLE_TIMED_AMP             _IO(TSPDRV_MAGIC_NUMBER & 0xFF, 6)
+ #define VIBE_MAX_DEVICE_NAME_LENGTH			64
+ #define SPI_HEADER_SIZE                     3   /* DO NOT CHANGE - SPI buffer header size */
+ #define VIBE_OUTPUT_SAMPLE_SIZE             50  /* DO NOT CHANGE - maximum number of samples */

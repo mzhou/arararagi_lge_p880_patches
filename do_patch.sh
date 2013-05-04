@@ -7,7 +7,7 @@ git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.cached.patch
 #54148870b37e288b3cdf7830026adf67c2e00254
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.patch"
 
-#26caff32fde6413ce7f14a543d4300bc252af6ae
+#93df8a71f87985a9aa3dc142b430c365e2a53276
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
@@ -15,6 +15,9 @@ git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.ca
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.patch"
+
+#7fc7e995af38aa746b4d9a8434830569136390bb
+git apply --directory='kernel/lge/p880' "$PATCH_DIR/kernel-lge-p880.cached.patch"
 
 #7fc7e995af38aa746b4d9a8434830569136390bb
 git apply --directory='kernel/lge/p880' "$PATCH_DIR/kernel-lge-p880.patch"
