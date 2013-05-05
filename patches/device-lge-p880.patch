@@ -1,3 +1,15 @@
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index cb20f96..7295406 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -16,6 +16,7 @@ TARGET_CPU_SMP := true
+ ARCH_ARM_HAVE_TLS_REGISTER := true
+ ARCH_ARM_USE_NON_NEON_MEMCPY := true
+ TARGET_ARCH := arm
++TARGET_CPU_VARIANT := cortex-a9
+ 
+ BOARD_KERNEL_CMDLINE := 
+ BOARD_KERNEL_BASE := 0x10000000
 diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
 index 3f1ae1e..81fb896 100755
 --- a/overlay/frameworks/base/core/res/res/values/config.xml
