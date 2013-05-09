@@ -1,5 +1,5 @@
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 69523d2..0810e34 100644
+index dd16616..641b0fc 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -2798,6 +2798,12 @@ public final class Settings {
@@ -43,7 +43,7 @@ index 2a97b33..35ea39a 100644
      };
  
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
-index f1971c4..40130eb 100644
+index 40279a2..0ef6306 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java
 +++ b/services/java/com/android/server/power/PowerManagerService.java
 @@ -349,6 +349,14 @@ public final class PowerManagerService extends IPowerManager.Stub
@@ -82,12 +82,16 @@ index f1971c4..40130eb 100644
          mDirty |= DIRTY_SETTINGS;
      }
  
-@@ -1362,12 +1377,24 @@ public final class PowerManagerService extends IPowerManager.Stub
+@@ -1364,14 +1379,27 @@ public final class PowerManagerService extends IPowerManager.Stub
+                     nextTimeout = mLastUserActivityTime
                              + screenOffTimeout - screenDimDuration;
                      if (now < nextTimeout) {
+-                        int brightness = mButtonBrightnessOverrideFromWindowManager >= 0
+-                                ? mButtonBrightnessOverrideFromWindowManager
+-                                : mDisplayPowerRequest.screenBrightness;
+-                        mKeyboardLight.setBrightness(mKeyboardVisible ? brightness : 0);
                          if (now > mLastUserActivityTime + BUTTON_ON_DURATION) {
 -                            mButtonsLight.setBrightness(0);
--                            mKeyboardLight.setBrightness(0);
 +                            // Default or force on
 +                            int brightness = mButtonModeSetting == 2
 +                                    || mButtonModeSetting == 4
@@ -95,9 +99,6 @@ index f1971c4..40130eb 100644
 +                            mButtonsLight.setBrightness(brightness);
 +                            mKeyboardLight.setBrightness(brightness);
                          } else {
--                            int brightness = mButtonBrightnessOverrideFromWindowManager >= 0
--                                    ? mButtonBrightnessOverrideFromWindowManager
--                                    : mDisplayPowerRequest.screenBrightness;
 +                            int brightness = mDisplayPowerRequest.screenBrightness;
 +                            if (mButtonModeSetting == 1
 +                                    || mButtonModeSetting == 3) {
@@ -110,5 +111,7 @@ index f1971c4..40130eb 100644
 +                                        : brightness;
 +                            }
                              mButtonsLight.setBrightness(brightness);
-                             mKeyboardLight.setBrightness(mKeyboardVisible ? brightness : 0);
++                            mKeyboardLight.setBrightness(brightness);
                              if (brightness != 0) {
+                                 nextTimeout = now + BUTTON_ON_DURATION;
+                             }

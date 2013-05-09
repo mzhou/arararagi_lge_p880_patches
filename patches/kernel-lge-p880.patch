@@ -24,6 +24,21 @@ index 487c244..f7d40ba 100644
  	modem_sleep_flag = false;
  	spin_lock_irqsave(&xmm_lock, flags);
  	wakeup_pending = false;
+diff --git a/drivers/media/video/tegra/lm3559.c b/drivers/media/video/tegra/lm3559.c
+index be6e9fa..afb04e9 100644
+--- a/drivers/media/video/tegra/lm3559.c
++++ b/drivers/media/video/tegra/lm3559.c
+@@ -32,10 +32,6 @@
+ 
+ #define LM3559_I2C_NAME  				"lm3559"
+ 
+-#if 1 //                 
+-#define LGE_X3_LM3559_FLASH_TORCH_CURRENT_FIXED 1
+-#endif
+-
+ /* Register Descriptions */
+ #define LM3559_REG_ENABLE				      0x10
+ #define LM3559_REG_GPIO					      0x20
 diff --git a/drivers/power/max8971-charger.c b/drivers/power/max8971-charger.c
 index c6787eb..8b246403 100644
 --- a/drivers/power/max8971-charger.c
