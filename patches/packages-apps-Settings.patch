@@ -31,7 +31,7 @@ index 14e1fc8..ad45b79 100644
      <string-array name="dream_timeout_entries">
          <item>Never</item>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index e0e2cb2..9b78e85 100644
+index 3b18fb0..d9ca18a 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
 @@ -843,6 +843,9 @@ desired screen brightness. Selecting \'Split\' allows you to to duplicate one li
@@ -39,7 +39,7 @@ index e0e2cb2..9b78e85 100644
      </string>
  
 +    <!-- Button backlight mode -->
-+    <string name="button_backlight_mode">Button backlight</string>
++    <string name="button_backlight_mode">Button light</string>
 +
      <!-- Advanced reboot options -->
      <string name="advanced_reboot_title">Advanced reboot</string>

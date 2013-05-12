@@ -32,6 +32,37 @@ index 00acd18..a23be27 100644
 +    <bool name="config_show_volumeRockerWake">true</bool>
 +    <bool name="config_show_expandedDesktop">true</bool>
  </resources>
+diff --git a/overlay/packages/apps/Torch/res/values/config.xml b/overlay/packages/apps/Torch/res/values/config.xml
+index ceedb9b..62950b9 100644
+--- a/overlay/packages/apps/Torch/res/values/config.xml
++++ b/overlay/packages/apps/Torch/res/values/config.xml
+@@ -20,11 +20,23 @@
+ <!-- These resources are around just to allow their values to be customized
+      for different hardware and product builds. -->
+ <resources>
++    <!-- If there is no sysfs-based control mechanism, enable this -->
++    <bool name="useCameraInterface">false</bool>
++
+     <!-- Full path to the sysfs toggle -->
+     <string name="flashDevice">/sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch</string>
++    <!-- Full path to the sysfs luminosity -->
++    <string name="flashDeviceLuminosity"></string>
++
++    <!-- Off setting -->
++    <integer name="valueOff">0</integer>
++    <!-- On setting -->
++    <integer name="valueOn">10</integer>
+ 
+-    <!-- Lowest setting -->
+-    <integer name="valueOn">1</integer>
++    <!-- Low setting -->
++    <integer name="valueLow">10</integer>
+     <!-- Middle setting -->
+-    <integer name="valueHigh">2</integer>
++    <integer name="valueHigh">30</integer>
++    <!-- Highest setting, leave -1 if it doesn't exist -->
++    <integer name="valueDeathRay">36</integer>
+ </resources>
 diff --git a/p880.mk b/p880.mk
 index dfb3fa7..b8a5c4e 100644
 --- a/p880.mk
