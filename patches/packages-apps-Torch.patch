@@ -40,6 +40,42 @@ index dff7223..3bd763b 100755
  
      </RelativeLayout>
  
+diff --git a/res/layout/optionsview.xml b/res/layout/optionsview.xml
+index dd499a0..64a273e 100644
+--- a/res/layout/optionsview.xml
++++ b/res/layout/optionsview.xml
+@@ -1,23 +1,22 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">  
++<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+ 
+     <PreferenceCategory
+         android:title="@string/widget_options">
+ 
+-            <CheckBoxPreference
++            <SeekBarPreference
+                 android:key="widget_bright"
+-                android:title="@string/setting_widget_bright"
+-                android:defaultValue="false" />
++                android:title="@string/setting_widget_bright" />
+ 
+             <CheckBoxPreference
+                 android:key="widget_strobe"
+                 android:title="@string/setting_widget_strobe"
+-                android:defaultValue="false" />    
++                android:defaultValue="false" />
+ 
+-                    <net.cactii.flash2.SeekBarPreference 
+-                        android:key="widget_strobe_freq"
+-                        android:title="@string/setting_frequency_title" />
++            <net.cactii.flash2.SeekBarPreference
++                android:key="widget_strobe_freq"
++                android:title="@string/setting_frequency_title" />
+ 
+     </PreferenceCategory>
+ 
+-</PreferenceScreen>  
++</PreferenceScreen>
 diff --git a/src/net/cactii/flash2/MainActivity.java b/src/net/cactii/flash2/MainActivity.java
 index a752392..a40e8b7 100755
 --- a/src/net/cactii/flash2/MainActivity.java
@@ -298,7 +334,7 @@ index a752392..a40e8b7 100755
          @Override
          public void onReceive(Context context, Intent intent) {
 diff --git a/src/net/cactii/flash2/TorchService.java b/src/net/cactii/flash2/TorchService.java
-index c08affa..cbfcec1 100644
+index c08affa..dc05a5b 100644
 --- a/src/net/cactii/flash2/TorchService.java
 +++ b/src/net/cactii/flash2/TorchService.java
 @@ -36,7 +36,9 @@ public class TorchService extends Service {
@@ -312,34 +348,55 @@ index c08affa..cbfcec1 100644
  
      private int mStrobePeriod;
  
-@@ -51,12 +53,11 @@ public class TorchService extends Service {
-         this.mNotificationManager = (NotificationManager) getSystemService(ns);
-         this.mContext = getApplicationContext();
+@@ -48,56 +50,64 @@ public class TorchService extends Service {
+ 
+     public void onCreate() {
+         String ns = Context.NOTIFICATION_SERVICE;
+-        this.mNotificationManager = (NotificationManager) getSystemService(ns);
+-        this.mContext = getApplicationContext();
++        mNotificationManager = (NotificationManager) getSystemService(ns);
++        mContext = getApplicationContext();
  
 -        this.mHandler = new Handler() {
 -        };
-+        this.mHandler = new Handler();
++        mHandler = new Handler();
  
-         this.mTorchTask = new TimerTask() {
+-        this.mTorchTask = new TimerTask() {
++        mTorchTask = new TimerTask() {
              public void run() {
 -                FlashDevice.instance(mContext).setFlashMode(mBright ? FlashDevice.DEATH_RAY : FlashDevice.ON);
 +                FlashDevice.instance(mContext).setFlashMode(mBright);
              }
          };
-         this.mTorchTimer = new Timer();
-@@ -66,7 +67,7 @@ public class TorchService extends Service {
+-        this.mTorchTimer = new Timer();
+ 
+-        this.mStrobeRunnable = new Runnable() {
++        mStrobeRunnable = new Runnable() {
+             private int mCounter = 4;
  
              @Override
              public void run() {
 -                int flashMode = mBright ? FlashDevice.DEATH_RAY : FlashDevice.ON;
 +                int flashMode = mBright;
                  if (FlashDevice.instance(mContext).getFlashMode() < flashMode) {
-                     if (this.mCounter-- < 1) {
+-                    if (this.mCounter-- < 1) {
++                    if (mCounter-- < 1) {
                          FlashDevice.instance(mContext).setFlashMode(flashMode);
-@@ -82,14 +83,17 @@ public class TorchService extends Service {
+                     }
+                 } else {
+                     FlashDevice.instance(mContext).setFlashMode(FlashDevice.STROBE);
+-                    this.mCounter = 4;
++                    mCounter = 4;
+                 }
+             }
  
-         this.mStrobeTimer = new Timer();
+         };
+-        this.mStrobeTask = new WrapperTask(this.mStrobeRunnable);
+-
+-        this.mStrobeTimer = new Timer();
++        mStrobeTask = new WrapperTask(mStrobeRunnable);
  
++        // TODO: Deduplicate
 +        mMin = mContext.getResources().getInteger(R.integer.valueLow);
 +        if (mMin < 0) {
 +            mMin = mContext.getResources().getInteger(R.integer.valueOn);
@@ -349,14 +406,36 @@ index c08affa..cbfcec1 100644
      public int onStartCommand(Intent intent, int flags, int startId) {
 -
          Log.d(MSG_TAG, "Starting torch");
-         if (intent == null)
-             this.stopSelf();
+-        if (intent == null)
+-            this.stopSelf();
 -        this.mBright = intent.getBooleanExtra("bright", false);
-+        this.mBright = intent.getIntExtra("bright", mMin);
++        if (intent == null) {
++            stopSelf();
++        }
++        mBright = intent.getIntExtra("bright", mMin);
++
          if (intent.getBooleanExtra("strobe", false)) {
-             this.mStrobePeriod = intent.getIntExtra("period", 200) / 4;
-             this.mStrobeTimer.schedule(this.mStrobeTask, 0, this.mStrobePeriod);
-@@ -110,7 +114,7 @@ public class TorchService extends Service {
+-            this.mStrobePeriod = intent.getIntExtra("period", 200) / 4;
+-            this.mStrobeTimer.schedule(this.mStrobeTask, 0, this.mStrobePeriod);
++            if (mStrobeTimer == null) {
++                mStrobePeriod = intent.getIntExtra("period", 200) / 4;
++                mStrobeTimer = new Timer();
++                mStrobeTimer.schedule(mStrobeTask, 0, mStrobePeriod);
++            }
+         } else {
+-            this.mTorchTimer.schedule(this.mTorchTask, 0, 100);
++            if (mTorchTimer == null) {
++                mTorchTimer = new Timer();
++                mTorchTimer.schedule(mTorchTask, 0, 100);
++            }
+         }
+ 
+-        this.mReceiver = new IntentReceiver();
++        mReceiver = new IntentReceiver();
+         registerReceiver(mReceiver, new IntentFilter("net.cactii.flash2.SET_STROBE"));
+ 
+         mNotificationBuilder = new Notification.Builder(this);
+@@ -110,32 +120,36 @@ public class TorchService extends Service {
          mNotificationBuilder.setAutoCancel(false);
          mNotificationBuilder.setOngoing(true);
  
@@ -365,7 +444,48 @@ index c08affa..cbfcec1 100644
          mNotificationManager.notify(getString(R.string.app_name).hashCode(), mNotification);
  
          startForeground(getString(R.string.app_name).hashCode(), mNotification);
-@@ -156,16 +160,13 @@ public class TorchService extends Service {
+-        Settings.System.putInt(this.getContentResolver(), Settings.System.TORCH_STATE, 1);
+-        this.sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
++        Settings.System.putInt(getContentResolver(), Settings.System.TORCH_STATE, 1);
++        sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
+         return START_STICKY;
+     }
+ 
+     public void onDestroy() {
+-        this.mNotificationManager.cancelAll();
+-        this.unregisterReceiver(this.mReceiver);
++        mNotificationManager.cancelAll();
++        unregisterReceiver(mReceiver);
+         stopForeground(true);
+-        this.mTorchTimer.cancel();
+-        this.mStrobeTimer.cancel();
++        if (mTorchTimer != null) {
++            mTorchTimer.cancel();
++        }
++        if (mStrobeTimer != null) {
++            mStrobeTimer.cancel();
++        }
+         FlashDevice.instance(mContext).setFlashMode(FlashDevice.OFF);
+-        Settings.System.putInt(this.getContentResolver(), Settings.System.TORCH_STATE, 0);
+-        this.sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
++        Settings.System.putInt(getContentResolver(), Settings.System.TORCH_STATE, 0);
++        sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
+     }
+ 
+     public void Reshedule(int period) {
+-        this.mStrobeTask.cancel();
+-        this.mStrobeTask = new WrapperTask(this.mStrobeRunnable);
++        mStrobeTask.cancel();
++        mStrobeTask = new WrapperTask(mStrobeRunnable);
+ 
+-        this.mStrobePeriod = period / 4;
+-        this.mStrobeTimer.schedule(this.mStrobeTask, 0, this.mStrobePeriod);
++        mStrobePeriod = period / 4;
++        mStrobeTimer.schedule(mStrobeTask, 0, mStrobePeriod);
+     }
+ 
+     public class WrapperTask extends TimerTask {
+@@ -156,16 +170,13 @@ public class TorchService extends Service {
      }
  
      public class IntentReceiver extends BroadcastReceiver {
@@ -383,7 +503,7 @@ index c08affa..cbfcec1 100644
          }
      }
 diff --git a/src/net/cactii/flash2/TorchSwitch.java b/src/net/cactii/flash2/TorchSwitch.java
-index 9a6f197..cd6d9ef 100644
+index 9a6f197..7cd7eb7 100644
 --- a/src/net/cactii/flash2/TorchSwitch.java
 +++ b/src/net/cactii/flash2/TorchSwitch.java
 @@ -1,6 +1,5 @@
@@ -394,7 +514,7 @@ index 9a6f197..cd6d9ef 100644
  
  import android.app.Activity;
  import android.app.ActivityManager;
-@@ -11,37 +10,59 @@ import android.content.Context;
+@@ -11,37 +10,58 @@ import android.content.Context;
  import android.content.Intent;
  import android.content.SharedPreferences;
  import android.preference.PreferenceManager;
@@ -424,7 +544,7 @@ index 9a6f197..cd6d9ef 100644
 +                    && !TorchServiceRunning(context)) {
 +                return;
 +            }
-+            
++
              // bright setting can come from intent or from prefs depending on
              // on what send the broadcast
              //
@@ -445,16 +565,16 @@ index 9a6f197..cd6d9ef 100644
              int period = receivingIntent.getIntExtra("period", 200);
 +
              Intent i = new Intent(context, TorchService.class);
-             if (this.TorchServiceRunning(context)) {
+-            if (this.TorchServiceRunning(context)) {
++            if (this.TorchServiceRunning(context)
++                    && !receivingIntent.getAction().equals(UPDATE_FLASHLIGHT)) {
                  context.stopService(i);
 -            } else {
 -                i.putExtra("bright", bright);
 -                i.putExtra("strobe", strobe);
 -                i.putExtra("period", period);
 -                context.startService(i);
-+                if (!receivingIntent.getAction().equals(UPDATE_FLASHLIGHT)) {
-+                    return;
-+                }
++                return;
              }
 +            i.putExtra("bright", bright);
 +            i.putExtra("strobe", strobe);
@@ -463,3 +583,198 @@ index 9a6f197..cd6d9ef 100644
          }
      }
  
+diff --git a/src/net/cactii/flash2/TorchWidgetProvider.java b/src/net/cactii/flash2/TorchWidgetProvider.java
+index f7f5b6d..166dfc7 100644
+--- a/src/net/cactii/flash2/TorchWidgetProvider.java
++++ b/src/net/cactii/flash2/TorchWidgetProvider.java
+@@ -24,8 +24,8 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+     }
+ 
+     private enum WidgetState {
+-        OFF     (R.drawable.ic_appwidget_torch_off,R.drawable.ind_bar_off),
+-        ON      (R.drawable.ic_appwidget_torch_on,R.drawable.ind_bar_on);
++        OFF(R.drawable.ic_appwidget_torch_off, R.drawable.ind_bar_off),
++        ON(R.drawable.ic_appwidget_torch_on, R.drawable.ind_bar_on);
+ 
+         /**
+          * The drawable resources associated with this widget state.
+@@ -58,13 +58,11 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+         launchIntent.setClass(context, TorchWidgetProvider.class);
+         launchIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
+         launchIntent.setData(Uri.parse("custom:" + appWidgetId + "/" + buttonId));
+-        PendingIntent pi = PendingIntent.getBroadcast(context, 0 /*
+-                                                                  * no
+-                                                                  * requestCode
+-                                                                  */, launchIntent, 0 /*
+-                                                                                       * no
+-                                                                                       * flags
+-                                                                                       */);
++        PendingIntent pi = PendingIntent.getBroadcast(
++                context,
++                0 /* no requestCode */,
++                launchIntent,
++                0 /* no flags */);
+         return pi;
+     }
+ 
+@@ -79,11 +77,17 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+             buttonId = Integer.parseInt(data.getSchemeSpecificPart().split("/")[1]);
+ 
+             if (buttonId == 0) {
++                // TODO: Deduplicate
++                int min = context.getResources().getInteger(R.integer.valueLow);
++                if (min < 0) {
++                    min = context.getResources().getInteger(R.integer.valueOn);
++                }
++                
+                 Intent pendingIntent = new Intent(TorchSwitch.TOGGLE_FLASHLIGHT);
+                 pendingIntent.putExtra("bright",
+-                        mPrefs.getBoolean("widget_bright_" + widgetId, false));
++                        mPrefs.getInt("widget_bright_" + widgetId, min));
+                 pendingIntent.putExtra("strobe",
+-                        mPrefs.getBoolean("widget_strobe_" + widgetId, false)); 
++                        mPrefs.getBoolean("widget_strobe_" + widgetId, false));
+                 pendingIntent.putExtra("period",
+                         mPrefs.getInt("widget_strobe_freq_" + widgetId, 200));
+                 context.sendBroadcast(pendingIntent);
+@@ -122,10 +126,13 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+             views.setImageViewResource(R.id.img_torch, WidgetState.OFF.getImgDrawable());
+             views.setImageViewResource(R.id.ind_torch, WidgetState.OFF.getIndDrawable());
+         }
++        
++        // TODO: Deduplicate.
++        int high = context.getResources().getInteger(R.integer.valueHigh);
+ 
+         if (prefs.getBoolean("widget_strobe_" + appWidgetId, false)) {
+             views.setTextViewText(R.id.ind_text, context.getString(R.string.label_strobe));
+-        } else if (prefs.getBoolean("widget_bright_" + appWidgetId, false)) {
++        } else if (prefs.getInt("widget_bright_" + appWidgetId, 0) > high) {
+             views.setTextViewText(R.id.ind_text, context.getString(R.string.label_high));
+         }
+ 
+diff --git a/src/net/cactii/flash2/WidgetOptionsActivity.java b/src/net/cactii/flash2/WidgetOptionsActivity.java
+index 9e89a5d..dc43e3e 100755
+--- a/src/net/cactii/flash2/WidgetOptionsActivity.java
++++ b/src/net/cactii/flash2/WidgetOptionsActivity.java
+@@ -1,3 +1,4 @@
++
+ package net.cactii.flash2;
+ 
+ import android.app.PendingIntent;
+@@ -26,8 +27,12 @@ public class WidgetOptionsActivity extends PreferenceActivity implements
+ 
+     private SharedPreferences mPreferences;
+ 
++    int mHigh;
++    int mMin;
++    int mMax;
++
+     @SuppressWarnings("deprecation")
+-    //No need to go to fragments right now
++    // No need to go to fragments right now
+     public void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         addPreferencesFromResource(R.layout.optionsview);
+@@ -38,8 +43,26 @@ public class WidgetOptionsActivity extends PreferenceActivity implements
+                     AppWidgetManager.INVALID_APPWIDGET_ID);
+         }
+ 
+-        CheckBoxPreference mBrightPref = (CheckBoxPreference) findPreference("widget_bright");
+-        mBrightPref.setChecked(false);
++        // TODO: Deduplicate this code. Also in MainActivity
++        mHigh = getResources().getInteger(R.integer.valueHigh);
++
++        mMin = getResources().getInteger(R.integer.valueLow);
++        if (mMin < 0) {
++            mMin = getResources().getInteger(R.integer.valueOn);
++        }
++
++        mMax = getResources().getInteger(R.integer.valueDeathRay);
++        if (mMax < 0) {
++            mMax = mHigh;
++        }
++        if (mMax < 0) {
++            mMax = mMin;
++        }
++
++        android.preference.SeekBarPreference mBrightPref =
++                (android.preference.SeekBarPreference) findPreference("widget_bright");
++        mBrightPref.setMax(mMax - mMin);
++        mBrightPref.setProgress(0);
+ 
+         CheckBoxPreference mStrobePref = (CheckBoxPreference) findPreference("widget_strobe");
+         mStrobePref.setChecked(false);
+@@ -47,38 +70,39 @@ public class WidgetOptionsActivity extends PreferenceActivity implements
+         mStrobeFrequency = (SeekBarPreference) findPreference("widget_strobe_freq");
+         mStrobeFrequency.setEnabled(false);
+ 
+-        //keeps 'Strobe frequency' option available
++        // keeps 'Strobe frequency' option available
+         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+     }
+ 
+     public void addWidget() {
+         Editor editor = mPreferences.edit();
+-        editor.putBoolean("widget_strobe_" + mAppWidgetId, mPreferences.getBoolean("widget_strobe", false));
+-
+-        //TODO: Fix temporary patch
+-        //had to do +1 to fix division by zero crash, only temporary fix:
+-        editor.putInt("widget_strobe_freq_" + mAppWidgetId, 666 / (1 + mPreferences.getInt("widget_strobe_freq", 5)));
+-        editor.putBoolean("widget_bright_" + mAppWidgetId, mPreferences.getBoolean("widget_bright", false));
++        editor.putBoolean("widget_strobe_" + mAppWidgetId,
++                mPreferences.getBoolean("widget_strobe", false));
++
++        // TODO: Fix temporary patch
++        // had to do +1 to fix division by zero crash, only temporary fix:
++        editor.putInt("widget_strobe_freq_" + mAppWidgetId,
++                666 / (1 + mPreferences.getInt("widget_strobe_freq", 5)));
++        editor.putInt("widget_bright_" + mAppWidgetId,
++                mPreferences.getInt("widget_bright", mMin) + mMin);
+         editor.commit();
+ 
+-        //Initialize widget view for first update
++        // Initialize widget view for first update
+         Context context = getApplicationContext();
+         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget);
+         Intent launchIntent = new Intent();
+         launchIntent.setClass(context, TorchWidgetProvider.class);
+         launchIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
+         launchIntent.setData(Uri.parse("custom:" + mAppWidgetId + "/0"));
+-        PendingIntent pi = PendingIntent.getBroadcast(context, 0 /*
+-                                                                  * no
+-                                                                  * requestCode
+-                                                                  */, launchIntent, 0 /*
+-                                                                                       * no
+-                                                                                       * flags
+-                                                                                       */);
++        PendingIntent pi = PendingIntent.getBroadcast(
++                context,
++                0 /* no requestCode */,
++                launchIntent,
++                0 /* no flags */);
+         views.setOnClickPendingIntent(R.id.btn, pi);
+         if (mPreferences.getBoolean("widget_strobe_" + mAppWidgetId, false)) {
+             views.setTextViewText(R.id.ind_text, context.getString(R.string.label_strobe));
+-        } else if (mPreferences.getBoolean("widget_bright_" + mAppWidgetId, false)) {
++        } else if (mPreferences.getInt("widget_bright_" + mAppWidgetId, mMin) > mHigh) {
+             views.setTextViewText(R.id.ind_text, context.getString(R.string.label_high));
+         }
+ 
+@@ -89,7 +113,7 @@ public class WidgetOptionsActivity extends PreferenceActivity implements
+         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+         setResult(RESULT_OK, resultValue);
+ 
+-        //close the activity
++        // close the activity
+         finish();
+     }
+ 
+@@ -111,7 +135,7 @@ public class WidgetOptionsActivity extends PreferenceActivity implements
+     @Override
+     public boolean onOptionsItemSelected(MenuItem item) {
+         switch (item.getItemId()) {
+-            case R.id.saveSetting : //Changes are accepted
++            case R.id.saveSetting: // Changes are accepted
+                 addWidget();
+                 return true;
+             default:
