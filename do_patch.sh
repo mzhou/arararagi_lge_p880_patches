@@ -7,7 +7,7 @@ git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.cached.patch
 #54148870b37e288b3cdf7830026adf67c2e00254
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.patch"
 
-#4641ba204604e29befa5d87e0fced5bb9221c380
+#73e2c7ac711f0b9ad32bb8f133f56fad77ce1df0
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
