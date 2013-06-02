@@ -1,5 +1,5 @@
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index cb20f96..7295406 100644
+index 76cf475..cd1b71c 100644
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
 @@ -16,6 +16,7 @@ TARGET_CPU_SMP := true
@@ -47,14 +47,14 @@ index ceedb9b..62950b9 100644
      <string name="flashDevice">/sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch</string>
 +    <!-- Full path to the sysfs luminosity -->
 +    <string name="flashDeviceLuminosity"></string>
-+
+ 
+-    <!-- Lowest setting -->
+-    <integer name="valueOn">1</integer>
 +    <!-- Off setting -->
 +    <integer name="valueOff">0</integer>
 +    <!-- On setting -->
 +    <integer name="valueOn">10</integer>
- 
--    <!-- Lowest setting -->
--    <integer name="valueOn">1</integer>
++
 +    <!-- Low setting -->
 +    <integer name="valueLow">10</integer>
      <!-- Middle setting -->

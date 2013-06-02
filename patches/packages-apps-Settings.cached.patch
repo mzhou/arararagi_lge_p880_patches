@@ -30,7 +30,20 @@ index 14e1fc8..ad45b79 100644
      <!-- Display settings.  The delay in inactivity before the dream is shown. These are shown in a list dialog. -->
      <string-array name="dream_timeout_entries">
          <item>Never</item>
-* Unmerged path res/values/cm_strings.xml
+diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
+index 787083f..1db8cad 100644
+--- a/res/values/cm_strings.xml
++++ b/res/values/cm_strings.xml
+@@ -851,6 +851,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+     <string name="auto_brightness_sensitivity_high">High</string>
+     <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
+ 
++    <!-- Button backlight mode -->
++    <string name="button_backlight_mode">Button light</string>
++
+     <!-- Advanced reboot options -->
+     <string name="advanced_reboot_title">Advanced reboot</string>
+     <string name="advanced_reboot_summary">When unlocked, include options in the power menu for rebooting into recovery or bootloader</string>
 diff --git a/res/xml/system_settings.xml b/res/xml/system_settings.xml
 index c5ffb5d..f3d3351 100644
 --- a/res/xml/system_settings.xml

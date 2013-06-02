@@ -17,7 +17,7 @@ find * -type d -name .git | while read i; do
     directory="`dirname "$i" | tr -d '\n'`"
     hyphenated="`echo "$directory" | tr / - | tr -d '\n'`"
 
-    if git --git-dir="$i" --work-tree="$directory" diff --cached --binary --exit-code >"$PATCH_DIR/$hyphenated.cached.patch"; then
+    if git --git-dir="$i" --work-tree="$directory" diff --patience --cached --binary --exit-code >"$PATCH_DIR/$hyphenated.cached.patch"; then
         rm -f "$PATCH_DIR/$hyphenated.cached.patch"
     else
         echo -n '#' >>"$PATCH_SCRIPT"
@@ -26,7 +26,7 @@ find * -type d -name .git | while read i; do
         echo >>"$PATCH_SCRIPT"
     fi
 
-    if git --git-dir="$i" --work-tree="$directory" diff --binary --exit-code >"$PATCH_DIR/$hyphenated.patch"; then
+    if git --git-dir="$i" --work-tree="$directory" diff --patience --binary --exit-code >"$PATCH_DIR/$hyphenated.patch"; then
         rm -f "$PATCH_DIR/$hyphenated.patch"
     else
         echo -n '#' >>"$PATCH_SCRIPT"

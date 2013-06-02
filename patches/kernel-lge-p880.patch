@@ -1,29 +1,3 @@
-diff --git a/arch/arm/mach-tegra/baseband-xmm-power.c b/arch/arm/mach-tegra/baseband-xmm-power.c
-index 487c244..f7d40ba 100644
---- a/arch/arm/mach-tegra/baseband-xmm-power.c
-+++ b/arch/arm/mach-tegra/baseband-xmm-power.c
-@@ -462,8 +462,8 @@ void baseband_xmm_set_power_status(unsigned int status)
- 		}	
- 		pr_debug("PM_ST : L0\n");
- 		baseband_xmm_powerstate = status;
--		if (!wake_lock_active(&wakelock))
--			wake_lock(&wakelock);
-+		//if (!wake_lock_active(&wakelock))
-+		//	wake_lock(&wakelock);
- 		value = gpio_get_value(data->modem.xmm.ipc_hsic_active);
- 		//pr_debug("GPIO [R]: before L0 Host_active = %d \n", value); 
- 		if (!value) {
-@@ -730,8 +730,8 @@ static void baseband_xmm_power_L2_resume(void)
- 		return;
- 
- 	/* claim the wakelock here to avoid any system suspend */
--	if (!wake_lock_active(&wakelock))
--		wake_lock(&wakelock);
-+	//if (!wake_lock_active(&wakelock))
-+	//	wake_lock(&wakelock);
- 	modem_sleep_flag = false;
- 	spin_lock_irqsave(&xmm_lock, flags);
- 	wakeup_pending = false;
 diff --git a/drivers/media/video/tegra/lm3559.c b/drivers/media/video/tegra/lm3559.c
 index be6e9fa..e47e135 100644
 --- a/drivers/media/video/tegra/lm3559.c
@@ -249,12 +223,12 @@ index be6e9fa..e47e135 100644
 -#ifndef LGE_X3_LM3559_FLASH_TORCH_CURRENT_FIXED  
    unsigned char level_value;
 -#endif
--
+ 
 -	//pr_info("%s: state=%d, arg=%d\n",__func__, state, param.value);
 -
 -#ifdef LGE_X3_LM3559_FLASH_TORCH_CURRENT_FIXED			
 -  pr_info("%s:[LGE fixed]  Level: 140.625 (Total 281.25) mA \n",__func__);
- 
+-
 -  // 0x24 : 100 100 -> 140.625
 -  lm3559_write_reg(info->i2c_client,LM3559_REG_TORCH_BRIGHTNESS,0x24);  
 -  udelay(10);
@@ -295,12 +269,6 @@ index be6e9fa..e47e135 100644
 +		udelay(10);
  		gpio_direction_output(info->pdata->gpio_act, 0);
 -    pr_info("LM3559_POWER_OFF\n");
--	}
--	else{
--    gpio_direction_output(info->pdata->gpio_act, 1);	
--    udelay(10);
--		gpio_set_value(info->pdata->gpio_act, 1);	
--    pr_info("LM3559_POWER_ON\n");
 +		pr_info("LM3559_POWER_OFF\n");
 +	} else {
 +		gpio_direction_output(info->pdata->gpio_act, 1);
@@ -308,6 +276,12 @@ index be6e9fa..e47e135 100644
 +		gpio_set_value(info->pdata->gpio_act, 1);
 +		pr_info("LM3559_POWER_ON\n");
  	}
+-	else{
+-    gpio_direction_output(info->pdata->gpio_act, 1);	
+-    udelay(10);
+-		gpio_set_value(info->pdata->gpio_act, 1);	
+-    pr_info("LM3559_POWER_ON\n");
+-	}
 -  mdelay(1); /* delay for device startup */
 -  
 -  //pr_info("%s: lm3559_onoff_state=%d, onoff=%d\n",__func__, lm3559_onoff_state, onoff);
@@ -352,6 +326,9 @@ index be6e9fa..e47e135 100644
 -			lm3559_onoff_state = LM3559_POWER_ON;
 -			lm3559_enable_torch_mode(info, LM3559_LED_LOW, param);
 -		}          
+-	}
+-
+-	return  count;
 +		return 0;
 +	}
 +
@@ -393,9 +370,8 @@ index be6e9fa..e47e135 100644
 +	err = torch_apply(info, val); // TODO: Kill global variable.
 +	if (err) {
 +		return err;
- 	}
- 
--	return  count;
++	}
++
 +	return count;
  }
  static DEVICE_ATTR(torch, 0666, NULL, torch_store);
