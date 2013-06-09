@@ -1,3 +1,94 @@
+diff --git a/arch/arm/mach-tegra/baseband-xmm-power.c b/arch/arm/mach-tegra/baseband-xmm-power.c
+index 487c244..7275a61 100644
+--- a/arch/arm/mach-tegra/baseband-xmm-power.c
++++ b/arch/arm/mach-tegra/baseband-xmm-power.c
+@@ -148,6 +148,12 @@ static void baseband_xmm_power_L2_resume(void);
+ static int baseband_xmm_power_driver_handle_resume(struct baseband_power_platform_data *data);
+ #define CP_RESET_SEQUENCE
+ 
++
++#define PR_TRACE(msg) do {\
++	pr_info("ARARARAGI " msg, __LINE__);\
++	dump_stack();\
++} while (0)
++
+ static inline void baseband_xmm_power_msleep(u32 t)
+ {
+ 	/*
+@@ -447,9 +453,9 @@ void baseband_xmm_set_power_status(unsigned int status)
+ {
+ 	struct baseband_power_platform_data *data = baseband_power_driver_data;
+ 	int value = 0;
+-    unsigned long flags;
++	unsigned long flags;
+ 
+-	pr_debug("%s n(%d),o(%d)\n", __func__, status, baseband_xmm_powerstate );
++	pr_debug("%s n(%d),o(%d)\n", __func__, status, baseband_xmm_powerstate);
+ 
+ 	if (baseband_xmm_powerstate == status)
+ 		return;
+@@ -462,8 +468,12 @@ void baseband_xmm_set_power_status(unsigned int status)
+ 		}	
+ 		pr_debug("PM_ST : L0\n");
+ 		baseband_xmm_powerstate = status;
+-		if (!wake_lock_active(&wakelock))
++		if (!wake_lock_active(&wakelock)) {
++			PR_TRACE("Acquire baseband_xmm_power wakelock line %d\n");
+ 			wake_lock(&wakelock);
++		} else {
++			PR_TRACE("Already held baseband_xmm_power wakelock line %d\n");
++		}
+ 		value = gpio_get_value(data->modem.xmm.ipc_hsic_active);
+ 		//pr_debug("GPIO [R]: before L0 Host_active = %d \n", value); 
+ 		if (!value) {
+@@ -486,8 +496,12 @@ void baseband_xmm_set_power_status(unsigned int status)
+ 			baseband_xmm_power_L2_resume();
+ 		 } else {
+ 			spin_unlock_irqrestore(&xmm_lock, flags);
+-			if (wake_lock_active(&wakelock))
++			if (wake_lock_active(&wakelock)) {
++				PR_TRACE("Release baseband_xmm_power wakelock line %d\n");
+ 				wake_unlock(&wakelock);
++			} else {
++				PR_TRACE("Already released baseband_xmm_power wakelock line %d\n");
++			}
+ 		modem_sleep_flag = true;
+ 		}
+ 		if (short_autosuspend && enable_short_autosuspend && &usbdev->dev) {
+@@ -512,8 +526,11 @@ void baseband_xmm_set_power_status(unsigned int status)
+ 		system_suspending = false;
+ 		spin_unlock_irqrestore(&xmm_lock, flags);
+ 		if (wake_lock_active(&wakelock)) {
++			PR_TRACE("Release baseband_xmm_power wakelock line %d\n");
+ 			pr_debug("%s: releasing wakelock before L3\n", __func__);
+ 			wake_unlock(&wakelock);
++		} else {
++			PR_TRACE("Already released baseband_xmm_power wakelock line %d\n");
+ 		}
+ 		gpio_set_value(data->modem.xmm.ipc_hsic_active, 0);
+ 		pr_debug("GPIO [W]: Host_active -> 0 \n"); 
+@@ -730,8 +747,12 @@ static void baseband_xmm_power_L2_resume(void)
+ 		return;
+ 
+ 	/* claim the wakelock here to avoid any system suspend */
+-	if (!wake_lock_active(&wakelock))
++	if (!wake_lock_active(&wakelock)) {
++		PR_TRACE("Acquire baseband_xmm_power wakelock line %d\n");
+ 		wake_lock(&wakelock);
++	} else {
++		PR_TRACE("Already held baseband_xmm_power wakelock line %d\n");
++	}
+ 	modem_sleep_flag = false;
+ 	spin_lock_irqsave(&xmm_lock, flags);
+ 	wakeup_pending = false;
+@@ -1120,6 +1141,7 @@ static int baseband_xmm_power_pm_notifier_event(struct notifier_block *this,
+ 	case PM_SUSPEND_PREPARE:
+ 		pr_debug("%s : PM_SUSPEND_PREPARE\n", __func__);
+ 		if (wake_lock_active(&wakelock)) {
++			PR_TRACE("Not suspending because baseband_xmm_power wakelock active line %d\n");
+ 			pr_debug("%s: wakelock was active, aborting suspend\n",__func__);
+ 			return NOTIFY_STOP;
+ 		}
 diff --git a/drivers/media/video/tegra/lm3559.c b/drivers/media/video/tegra/lm3559.c
 index be6e9fa..e47e135 100644
 --- a/drivers/media/video/tegra/lm3559.c
@@ -608,14 +699,14 @@ index c6787eb..8b246403 100644
  MODULE_VERSION("3.3");
  MODULE_ALIAS("platform:max8971-charger");
 diff --git a/drivers/video/backlight/lm3533_bl.c b/drivers/video/backlight/lm3533_bl.c
-index f0ee1d9..7170cce 100644
+index f0ee1d9..95270ae 100644
 --- a/drivers/video/backlight/lm3533_bl.c
 +++ b/drivers/video/backlight/lm3533_bl.c
 @@ -46,6 +46,10 @@
  #define LEDS_BACKLIGHT_NAME 		"lcd-backlight"
  #endif
  
-+#define LM3533_BL_MAX_MAXCURRENT	19 // Can be up to 23
++#define LM3533_BL_MAX_MAXCURRENT	23
 +#define LM3533_BL_DEFAULT_MAXCURRENT	19
 +#define LM3533_BL_MIN_MAXCURRENT	0
 +

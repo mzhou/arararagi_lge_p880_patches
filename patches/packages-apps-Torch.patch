@@ -334,7 +334,7 @@ index a752392..a40e8b7 100755
          @Override
          public void onReceive(Context context, Intent intent) {
 diff --git a/src/net/cactii/flash2/TorchService.java b/src/net/cactii/flash2/TorchService.java
-index cdc9b45..4f465ae 100644
+index 4017ff5..798dc25 100644
 --- a/src/net/cactii/flash2/TorchService.java
 +++ b/src/net/cactii/flash2/TorchService.java
 @@ -36,7 +36,9 @@ public class TorchService extends Service {
@@ -434,12 +434,7 @@ index cdc9b45..4f465ae 100644
          registerReceiver(mReceiver, new IntentFilter("net.cactii.flash2.SET_STROBE"));
  
          mNotificationBuilder = new Notification.Builder(this);
-@@ -112,32 +121,36 @@ public class TorchService extends Service {
-         mNotificationBuilder.setAutoCancel(false);
-         mNotificationBuilder.setOngoing(true);
- 
--        mNotification = mNotificationBuilder.getNotification();
-+        mNotification = mNotificationBuilder.build();
+@@ -120,28 +129,32 @@ public class TorchService extends Service {
          mNotificationManager.notify(getString(R.string.app_name).hashCode(), mNotification);
  
          startForeground(getString(R.string.app_name).hashCode(), mNotification);
@@ -484,7 +479,7 @@ index cdc9b45..4f465ae 100644
      }
  
      public class WrapperTask extends TimerTask {
-@@ -158,16 +171,13 @@ public class TorchService extends Service {
+@@ -162,16 +175,13 @@ public class TorchService extends Service {
      }
  
      public class IntentReceiver extends BroadcastReceiver {

@@ -31,7 +31,7 @@ index 14e1fc8..ad45b79 100644
      <string-array name="dream_timeout_entries">
          <item>Never</item>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 787083f..1db8cad 100644
+index 24d5863..ef001f1 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
 @@ -851,6 +851,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
