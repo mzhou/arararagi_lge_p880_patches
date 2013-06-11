@@ -1,0 +1,32 @@
+diff --git a/libc/Android.mk b/libc/Android.mk
+index 78dfebe..6e2deca 100644
+--- a/libc/Android.mk
++++ b/libc/Android.mk
+@@ -949,6 +949,8 @@ LOCAL_SRC_FILES := \
+ 	bionic/pthread_debug.c \
+ 	bionic/libc_init_dynamic.c
+ 
++LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
++
+ ifeq ($(TARGET_ARCH),arm)
+ 	LOCAL_NO_CRT := true
+ 	LOCAL_CFLAGS += -DCRT_LEGACY_WORKAROUND
+@@ -958,10 +960,16 @@ ifeq ($(TARGET_ARCH),arm)
+ 		arch-arm/bionic/atexit_legacy.c \
+ 		$(LOCAL_SRC_FILES) \
+ 		arch-arm/bionic/crtend_so.S
++
++	prebuilt_objs := $(LOCAL_PATH)/arch-arm/_popcount_tab.o \
++		$(LOCAL_PATH)/arch-arm/_popcountsi2.o \
++		$(LOCAL_PATH)/arch-arm/pr-support.o \
++		$(LOCAL_PATH)/arch-arm/unwind-arm.o
++	LOCAL_LDFLAGS += $(prebuilt_objs)
++	LOCAL_ADDITIONAL_DEPENDENCIES += $(prebuilt_objs)
+ endif
+ 
+-LOCAL_MODULE:= libc
+-LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
++LOCAL_MODULE := libc
+ 
+ # WARNING: The only library libc.so should depend on is libdl.so!  If you add other libraries,
+ # make sure to add -Wl,--exclude-libs=libgcc.a to the LOCAL_LDFLAGS for those libraries.  This

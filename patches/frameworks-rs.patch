@@ -1,0 +1,13 @@
+diff --git a/driver/rsdIntrinsics_Convolve.S b/driver/rsdIntrinsics_Convolve.S
+index 0bea299..0c6333b 100644
+--- a/driver/rsdIntrinsics_Convolve.S
++++ b/driver/rsdIntrinsics_Convolve.S
+@@ -102,7 +102,7 @@ ENTRY(rsdIntrinsicConvolve3x3_K)
+         vpop            {q4-q7}
+         pop             {r4-r8, r10, r11, lr}
+         bx              lr
+-END(TestConvolveK)
++END(rsdIntrinsicConvolve3x3_K)
+ 
+ /*
+         r0 = dst

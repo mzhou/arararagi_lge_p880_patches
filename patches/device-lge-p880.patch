@@ -108,3 +108,15 @@ index dfb3fa7..b8a5c4e 100644
      audio.a2dp.default \
      com.android.future.usb.accessory
  
+diff --git a/proprietary-files.txt b/proprietary-files.txt
+index 8ccb6fd..3c61405 100644
+--- a/proprietary-files.txt
++++ b/proprietary-files.txt
+@@ -6,7 +6,6 @@ bin/rild
+ bin/tf_daemon
+ lib/hw/camera.tegra.so
+ lib/hw/gps.tegra.so
+-lib/hw/lights.x3.so
+ lib/hw/sensors.tegra.so
+ lib/hw/audio_policy.tegra.so
+ lib/hw/audio.primary.tegra.so

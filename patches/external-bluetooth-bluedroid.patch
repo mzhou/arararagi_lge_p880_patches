@@ -1,0 +1,39 @@
+diff --git a/gki/Android.mk b/gki/Android.mk
+index 0ece25b..ed9f904 100644
+--- a/gki/Android.mk
++++ b/gki/Android.mk
+@@ -11,7 +11,7 @@ LOCAL_C_INCLUDES:= $(LOCAL_PATH)/common \
+                    $(LOCAL_PATH)/../utils/include \
+                    $(bdroid_C_INCLUDES) \
+ 
+-LOCAL_CFLAGS += -Werror $(bdroid_CFLAGS)
++LOCAL_CFLAGS += -Werror -Wno-error=unused-parameter $(bdroid_CFLAGS)
+ 
+ ifeq ($(BOARD_HAVE_BLUETOOTH_BCM),true)
+ LOCAL_CFLAGS += \
+diff --git a/main/Android.mk b/main/Android.mk
+index 23a9783..f1283bc 100644
+--- a/main/Android.mk
++++ b/main/Android.mk
+@@ -98,7 +98,7 @@ LOCAL_C_INCLUDES+= . \
+ 	$(bdroid_C_INCLUDES) \
+ 	external/tinyxml2
+ 
+-LOCAL_CFLAGS += -DBUILDCFG $(bdroid_CFLAGS) -Werror -Wno-error=maybe-uninitialized -Wno-error=uninitialized
++LOCAL_CFLAGS += -DBUILDCFG $(bdroid_CFLAGS) -Werror -Wno-error=maybe-uninitialized -Wno-error=uninitialized -Wno-error=unused-parameter
+ 
+ ifeq ($(TARGET_PRODUCT), full_crespo)
+      LOCAL_CFLAGS += -DTARGET_CRESPO
+diff --git a/utils/Android.mk b/utils/Android.mk
+index 4e66705..12dd63d 100644
+--- a/utils/Android.mk
++++ b/utils/Android.mk
+@@ -6,7 +6,7 @@ LOCAL_C_INCLUDES:= $(LOCAL_PATH)/include \
+                    $(LOCAL_PATH)/../gki/ulinux \
+                    $(bdroid_C_INCLUDES)
+ 
+-LOCAL_CFLAGS += -Werror $(bdroid_CFLAGS)
++LOCAL_CFLAGS += -Werror -Wno-error=unused-parameter $(bdroid_CFLAGS)
+ 
+ LOCAL_PRELINK_MODULE:=false
+ LOCAL_SRC_FILES:= \

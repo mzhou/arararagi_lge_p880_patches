@@ -1,0 +1,23 @@
+diff --git a/libcorkscrew/arch-arm/backtrace-arm.c b/libcorkscrew/arch-arm/backtrace-arm.c
+index ff6c192..62c8fc2 100644
+--- a/libcorkscrew/arch-arm/backtrace-arm.c
++++ b/libcorkscrew/arch-arm/backtrace-arm.c
+@@ -555,6 +555,7 @@ static ssize_t unwind_backtrace_common(const memory_t* memory,
+ ssize_t unwind_backtrace_signal_arch(siginfo_t* siginfo, void* sigcontext,
+         const map_info_t* map_info_list,
+         backtrace_frame_t* backtrace, size_t ignore_depth, size_t max_depth) {
++    (void) siginfo;
+     const ucontext_t* uc = (const ucontext_t*)sigcontext;
+ 
+     unwind_state_t state;
+diff --git a/libcorkscrew/arch-arm/ptrace-arm.c b/libcorkscrew/arch-arm/ptrace-arm.c
+index 78a9ea9..4eb756a 100644
+--- a/libcorkscrew/arch-arm/ptrace-arm.c
++++ b/libcorkscrew/arch-arm/ptrace-arm.c
+@@ -70,4 +70,6 @@ void load_ptrace_map_info_data_arch(pid_t pid, map_info_t* mi, map_info_data_t*
+ }
+ 
+ void free_ptrace_map_info_data_arch(map_info_t* mi, map_info_data_t* data) {
++    (void) mi;
++    (void) data;
+ }

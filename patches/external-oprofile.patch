@@ -1,0 +1,13 @@
+diff --git a/common.mk b/common.mk
+index f5578b1..e45e16f 100644
+--- a/common.mk
++++ b/common.mk
+@@ -46,7 +46,7 @@ common_host_cflags += -DMISSING_MREMAP
+ common_host_ldlibs_libiconv := -liconv
+ else
+ ifeq ($(HOST_OS)-$(HOST_ARCH),linux-x86)
+-HAVE_LIBBFD := true
++HAVE_LIBBFD := false
+ endif
+ endif
+ 
