@@ -1,8 +1,269 @@
+diff --git a/core/java/android/app/Activity.java b/core/java/android/app/Activity.java
+index e779746..94e9b42 100644
+--- a/core/java/android/app/Activity.java
++++ b/core/java/android/app/Activity.java
+@@ -55,13 +55,17 @@ import android.text.TextUtils;
+ import android.text.method.TextKeyListener;
+ import android.util.AttributeSet;
+ import android.util.EventLog;
++import android.util.DisplayMetrics;
+ import android.util.Log;
++import android.util.TypedValue;
+ import android.util.Slog;
+ import android.util.SparseArray;
+ import android.view.ActionMode;
+ import android.view.ContextMenu;
+ import android.view.ContextMenu.ContextMenuInfo;
+ import android.view.ContextThemeWrapper;
++import android.view.Display;
++import android.view.Gravity;
+ import android.view.KeyEvent;
+ import android.view.LayoutInflater;
+ import android.view.Menu;
+@@ -1459,6 +1463,9 @@ public class Activity extends ContextThemeWrapper
+         if (mWindow != null) {
+             // Pass the configuration changed event to the window
+             mWindow.onConfigurationChanged(newConfig);
++            if (mWindow.mIsFloatingWindow) {
++                scaleFloatingWindow(null);
++            }
+         }
+ 
+         if (mActionBar != null) {
+@@ -5056,11 +5063,47 @@ public class Activity extends ContextThemeWrapper
+             CharSequence title, Activity parent, String id,
+             NonConfigurationInstances lastNonConfigurationInstances,
+             Configuration config) {
++
+         attachBaseContext(context);
+ 
+         mFragments.attachActivity(this, mContainer, null);
+-        
+-        mWindow = PolicyManager.makeNewWindow(this);
++
++        boolean floating = (intent.getFlags()&Intent.FLAG_FLOATING_WINDOW) == Intent.FLAG_FLOATING_WINDOW;
++        if (intent != null && floating) {
++            TypedArray styleArray = context.obtainStyledAttributes(info.theme, com.android.internal.R.styleable.Window);
++            TypedValue backgroundValue = styleArray.peekValue(com.android.internal.R.styleable.Window_windowBackground);
++
++            // Apps that have no title don't need no title bar
++            TypedValue outValue = new TypedValue();
++            boolean result = styleArray.getValue(com.android.internal.R.styleable.Window_windowNoTitle, outValue);
++
++            if (backgroundValue != null && backgroundValue.toString().contains("light")) {
++                context.getTheme().applyStyle(com.android.internal.R.style.Theme_DeviceDefault_FloatingWindowLight, true);
++            } else {
++                context.getTheme().applyStyle(com.android.internal.R.style.Theme_DeviceDefault_FloatingWindow, true);
++            }
++
++            parent = null;
++
++            // Create our new window
++            mWindow = PolicyManager.makeNewWindow(this);
++            mWindow.mIsFloatingWindow = true;
++            mWindow.setCloseOnTouchOutsideIfNotSet(true);
++            mWindow.setGravity(Gravity.CENTER);
++
++            mWindow.setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
++                    WindowManager.LayoutParams.FLAG_DIM_BEHIND);
++            WindowManager.LayoutParams params = mWindow.getAttributes(); 
++            params.alpha = 1f;
++            params.dimAmount = 0.25f;
++            mWindow.setAttributes((android.view.WindowManager.LayoutParams) params);
++
++            // Scale it
++            scaleFloatingWindow(context);
++        } else {
++            mWindow = PolicyManager.makeNewWindow(this);
++        }
++
+         mWindow.setCallback(this);
+         mWindow.getLayoutInflater().setPrivateFactory(this);
+         if (info.softInputMode != WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED) {
+@@ -5095,6 +5138,26 @@ public class Activity extends ContextThemeWrapper
+         mCurrentConfig = config;
+     }
+ 
++    private void scaleFloatingWindow(Context context) {
++        if (!mWindow.mIsFloatingWindow) {
++            return;
++        }
++        WindowManager wm = null;
++        if (context != null) {
++            wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
++        } else {
++            wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
++        }
++        Display display = wm.getDefaultDisplay();
++        DisplayMetrics metrics = new DisplayMetrics();
++        display.getMetrics(metrics);
++        if (metrics.heightPixels > metrics.widthPixels) {
++            mWindow.setLayout((int)(metrics.widthPixels * 0.9f), (int)(metrics.heightPixels * 0.7f));
++        } else {
++            mWindow.setLayout((int)(metrics.widthPixels * 0.7f), (int)(metrics.heightPixels * 0.8f));
++        }
++    }
++
+     /** @hide */
+     public final IBinder getActivityToken() {
+         return mParent != null ? mParent.getActivityToken() : mToken;
+@@ -5218,7 +5281,7 @@ public class Activity extends ContextThemeWrapper
+         onUserInteraction();
+         onUserLeaveHint();
+     }
+-    
++
+     final void performStop() {
+         if (mLoadersStarted) {
+             mLoadersStarted = false;
+@@ -5264,6 +5327,14 @@ public class Activity extends ContextThemeWrapper
+             mStopped = true;
+         }
+         mResumed = false;
++
++        // Floatingwindows activities should be kept volatile to prevent new activities taking
++        // up front in a minimized space. Every stop call, for instance when pressing home,
++        // will terminate the activity. If the activity is already finishing we might just
++        // as well let it go.
++        if (!mChangingConfigurations && mWindow != null && mWindow.mIsFloatingWindow && !isFinishing()) {
++            finish();
++        }
+     }
+ 
+     final void performDestroy() {
+diff --git a/core/java/android/app/ActivityThread.java b/core/java/android/app/ActivityThread.java
+index 6250262..a03e301 100644
+--- a/core/java/android/app/ActivityThread.java
++++ b/core/java/android/app/ActivityThread.java
+@@ -2866,12 +2866,7 @@ public final class ActivityThread {
+                 r.stopped = false;
+                 r.state = null;
+             } catch (Exception e) {
+-                if (!mInstrumentation.onException(r.activity, e)) {
+-                    throw new RuntimeException(
+-                        "Unable to resume activity "
+-                        + r.intent.getComponent().toShortString()
+-                        + ": " + e.toString(), e);
+-                }
++                // Unable to resume activity
+             }
+         }
+         return r;
+diff --git a/core/java/android/app/INotificationManager.aidl b/core/java/android/app/INotificationManager.aidl
+index 62d4962..b94d93a 100644
+--- a/core/java/android/app/INotificationManager.aidl
++++ b/core/java/android/app/INotificationManager.aidl
+@@ -34,5 +34,12 @@ interface INotificationManager
+ 
+     void setNotificationsEnabledForPackage(String pkg, boolean enabled);
+     boolean areNotificationsEnabledForPackage(String pkg);
++
++    void setHaloPolicyBlack(boolean state);
++    void setHaloStatus(String pkg, boolean status);
++    void setHaloBlacklistStatus(String pkg, boolean status);
++    void setHaloWhitelistStatus(String pkg, boolean status);
++    boolean isHaloPolicyBlack();
++    boolean isPackageAllowedForHalo(String pkg);
+ }
+ 
+diff --git a/core/java/android/app/TaskStackBuilder.java b/core/java/android/app/TaskStackBuilder.java
+index 3e0ac7e..f3d07cc 100644
+--- a/core/java/android/app/TaskStackBuilder.java
++++ b/core/java/android/app/TaskStackBuilder.java
+@@ -62,6 +62,7 @@ public class TaskStackBuilder {
+ 
+     private final ArrayList<Intent> mIntents = new ArrayList<Intent>();
+     private final Context mSourceContext;
++    private boolean mFirstTaskOnHome = true;
+ 
+     private TaskStackBuilder(Context a) {
+         mSourceContext = a;
+@@ -78,6 +79,10 @@ public class TaskStackBuilder {
+         return new TaskStackBuilder(context);
+     }
+ 
++    public void setTaskOnHome(boolean firstTaskOnHome) {
++        mFirstTaskOnHome = firstTaskOnHome;
++    }
++
+     /**
+      * Add a new Intent to the task stack. The most recently added Intent will invoke
+      * the Activity at the top of the final task stack.
+@@ -298,9 +303,16 @@ public class TaskStackBuilder {
+         Intent[] intents = new Intent[mIntents.size()];
+         if (intents.length == 0) return intents;
+ 
+-        intents[0] = new Intent(mIntents.get(0)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+-                Intent.FLAG_ACTIVITY_CLEAR_TASK |
+-                Intent.FLAG_ACTIVITY_TASK_ON_HOME);
++        Intent newIntent = new Intent(mIntents.get(0));
++        newIntent.addFlags(
++                Intent.FLAG_ACTIVITY_NEW_TASK |
++                Intent.FLAG_ACTIVITY_CLEAR_TASK);
++
++        if (mFirstTaskOnHome) {
++            newIntent.addFlags(Intent.FLAG_ACTIVITY_TASK_ON_HOME);
++        }
++
++        intents[0] = newIntent;
+         for (int i = 1; i < intents.length; i++) {
+             intents[i] = new Intent(mIntents.get(i));
+         }
+diff --git a/core/java/android/content/Intent.java b/core/java/android/content/Intent.java
+index 519eb36..ae52b7b 100644
+--- a/core/java/android/content/Intent.java
++++ b/core/java/android/content/Intent.java
+@@ -3126,7 +3126,6 @@ public class Intent implements Parcelable, Cloneable {
+      * places where the framework may automatically set the exclude flag).
+      */
+     public static final int FLAG_INCLUDE_STOPPED_PACKAGES = 0x00000020;
+-
+     /**
+      * If set, the new activity is not kept in the history stack.  As soon as
+      * the user navigates away from it, the activity is finished.  This may also
+@@ -3343,6 +3342,11 @@ public class Intent implements Parcelable, Cloneable {
+      */
+     public static final int FLAG_ACTIVITY_TASK_ON_HOME = 0X00004000;
+     /**
++     * If set, this intent will always match start up as a floating window
++     * in mutil window scenarios.
++     */
++    public static final int FLAG_FLOATING_WINDOW = 0x00002000;
++    /**
+      * If set, when sending a broadcast only registered receivers will be
+      * called -- no BroadcastReceiver components will be launched.
+      */
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 65629d4..4a4502f 100644
+index 65629d4..c183633 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
-@@ -2813,6 +2813,12 @@ public final class Settings {
+@@ -2706,6 +2706,25 @@ public final class Settings {
+         public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
+ 
+         /**
++         * Pie menu, should default to 1 (yes, show)
++         * HALO, should default to 0 (no, do not show)
++         * @hide
++         */
++        public static final String HALO_ACTIVE = "halo_active";
++
++        /**
++         * HALO reversed?, should default to 1 (yes, reverse)
++         * @hide
++         */
++        public static final String HALO_REVERSED = "halo_reversed";
++
++        /**
++         * HALO hide?, should default to 0 (no, do not hide)
++         * @hide
++         */
++        public static final String HALO_HIDE = "halo_hide";
++
++        /**
+          * Display style of AM/PM next to clock in status bar
+          * 0: Normal display (Eclair stock)
+          * 1: Small display (Froyo stock)
+@@ -2813,6 +2832,12 @@ public final class Settings {
          public static final String MENU_UNLOCK_SCREEN = "menu_unlock_screen";
  
          /**
@@ -15,8 +276,931 @@ index 65629d4..4a4502f 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
+diff --git a/core/java/android/view/Window.java b/core/java/android/view/Window.java
+index fcf0924..aa8aebf 100644
+--- a/core/java/android/view/Window.java
++++ b/core/java/android/view/Window.java
+@@ -152,6 +152,8 @@ public abstract class Window {
+     
+     private boolean mDestroyed;
+ 
++    public boolean mIsFloatingWindow = false;
++
+     // The current window attributes.
+     private final WindowManager.LayoutParams mWindowAttributes =
+         new WindowManager.LayoutParams();
+diff --git a/core/java/com/android/internal/widget/ActionBarView.java b/core/java/com/android/internal/widget/ActionBarView.java
+index 0f964b9..856a8ee 100644
+--- a/core/java/com/android/internal/widget/ActionBarView.java
++++ b/core/java/com/android/internal/widget/ActionBarView.java
+@@ -903,19 +903,8 @@ public class ActionBarView extends AbsActionBarView {
+         mIsCollapsed = false;
+ 
+         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+-        if (widthMode != MeasureSpec.EXACTLY) {
+-            throw new IllegalStateException(getClass().getSimpleName() + " can only be used " +
+-                    "with android:layout_width=\"match_parent\" (or fill_parent)");
+-        }
+-        
+         int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+-        if (heightMode != MeasureSpec.AT_MOST) {
+-            throw new IllegalStateException(getClass().getSimpleName() + " can only be used " +
+-                    "with android:layout_height=\"wrap_content\"");
+-        }
+-
+         int contentWidth = MeasureSpec.getSize(widthMeasureSpec);
+-
+         int maxHeight = mContentHeight >= 0 ?
+                 mContentHeight : MeasureSpec.getSize(heightMeasureSpec);
+         
+diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
+index 0ff9036..c2369bf 100644
+--- a/core/res/res/values/symbols.xml
++++ b/core/res/res/values/symbols.xml
+@@ -1162,6 +1162,8 @@
+   <java-symbol type="style" name="Theme.DeviceDefault.Dialog.NoFrame" />
+   <java-symbol type="style" name="Theme.IconMenu" />
+   <java-symbol type="style" name="Theme.Panel.Volume" />
++  <java-symbol type="style" name="Theme.DeviceDefault.FloatingWindow" />
++  <java-symbol type="style" name="Theme.DeviceDefault.FloatingWindowLight" />
+ 
+   <java-symbol type="attr" name="mediaRouteButtonStyle" />
+   <java-symbol type="attr" name="externalRouteEnabledDrawable" />
+diff --git a/core/res/res/values/themes_device_defaults.xml b/core/res/res/values/themes_device_defaults.xml
+index 4178cc4..e0dfd1f 100644
+--- a/core/res/res/values/themes_device_defaults.xml
++++ b/core/res/res/values/themes_device_defaults.xml
+@@ -485,8 +485,32 @@ easier.
+     decorations, so you basically have an empty rectangle in which to place your content. It makes
+     the window floating, with a transparent background, and turns off dimming behind the window. -->
+     <style name="Theme.DeviceDefault.Panel" parent="Theme.Holo.Panel" >
++    </style>
++
++    <style name="Theme.DeviceDefault.FloatingWindow">
++        <item name="android:windowIsFloating">false</item>
++        <item name="android:windowIsTranslucent">true</item>
++        <item name="android:windowFrame">@null</item>
++        <item name="android:windowContentOverlay">@null</item>
++        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
++        <item name="android:windowActionModeOverlay">true</item>
++        <item name="android:windowCloseOnTouchOutside">true</item>
++        <item name="android:windowFullscreen">false</item>
++        <item name="android:windowSoftInputMode">stateAlwaysHidden|adjustPan</item>
++    </style>
+ 
++    <style name="Theme.DeviceDefault.FloatingWindowLight" parent="Theme.Holo.Light.Dialog">
++        <item name="android:windowIsFloating">false</item>
++        <item name="android:windowIsTranslucent">true</item>
++        <item name="android:windowFrame">@null</item>
++        <item name="android:windowContentOverlay">@null</item>
++        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
++        <item name="android:windowActionModeOverlay">true</item>
++        <item name="android:windowCloseOnTouchOutside">true</item>
++        <item name="android:windowFullscreen">false</item>
++        <item name="android:windowSoftInputMode">stateAlwaysHidden|adjustPan</item>
+     </style>
++
+     <!-- DeviceDefault light theme for panel windows. This removes all extraneous window
+     decorations, so you basically have an empty rectangle in which to place your content. It makes
+     the window floating, with a transparent background, and turns off dimming behind the window. -->
+diff --git a/packages/SystemUI/AndroidManifest.xml b/packages/SystemUI/AndroidManifest.xml
+index 80bb24d..bbed46a 100644
+--- a/packages/SystemUI/AndroidManifest.xml
++++ b/packages/SystemUI/AndroidManifest.xml
+@@ -74,6 +74,9 @@
+     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+ 
++    <!--Halo-->
++    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
++
+     <application
+         android:persistent="true"
+         android:allowClearUserData="false"
+@@ -255,5 +258,8 @@
+                 <category android:name="android.intent.category.DESK_DOCK" />
+             </intent-filter>
+         </activity>
++
++        <activity android:name="com.android.systemui.Transparent"
++            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+     </application>
+ </manifest>
+diff --git a/packages/SystemUI/proguard.flags b/packages/SystemUI/proguard.flags
+index c886eea..f32be13 100644
+--- a/packages/SystemUI/proguard.flags
++++ b/packages/SystemUI/proguard.flags
+@@ -14,4 +14,13 @@
+   public void setGlowScale(float);
+ }
+ 
++-keep class com.android.systemui.statusbar.halo.HaloProperties {
++  public int getHaloX();
++  public int getHaloY();
++  public float getHaloContentAlpha();
++  public void setHaloX(int);
++  public void setHaloY(int);
++  public void setHaloContentAlpha(float);
++}
++
+ -keep class com.android.systemui.statusbar.tv.TvStatusBar
+diff --git a/packages/SystemUI/res/values-land/dimens.xml b/packages/SystemUI/res/values-land/dimens.xml
+index ab71371..3d42a3a 100644
+--- a/packages/SystemUI/res/values-land/dimens.xml
++++ b/packages/SystemUI/res/values-land/dimens.xml
+@@ -40,4 +40,8 @@
+ 
+     <!-- The fixed height of each tile -->
+     <dimen name="quick_settings_cell_height">100dp</dimen>
++
++    <dimen name="pie_panel_padding">100dp</dimen>
++
++    <dimen name="halo_content_max_width">350dp</dimen>
+ </resources>
+diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
+index 158c355..114827f 100644
+--- a/packages/SystemUI/res/values/dimens.xml
++++ b/packages/SystemUI/res/values/dimens.xml
+@@ -237,4 +237,7 @@
+ 
+     <dimen name="pie_sysinfo_radius">165dp</dimen>
+     <dimen name="pie_sysinfo_height">85sp</dimen>
++
++    <dimen name="halo_content_max_width">250dp</dimen>
++
+ </resources>
+diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
+index f3db062..0c3568e 100644
+--- a/packages/SystemUI/res/values/strings.xml
++++ b/packages/SystemUI/res/values/strings.xml
+@@ -426,6 +426,9 @@
+     <!-- Notification text: when GPS has found a fix [CHAR LIMIT=50] -->
+     <string name="gps_notification_found_text">Location set by GPS</string>
+ 
++    <!-- Content description of the halo button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
++    <string name="accessibility_halo">Create notification halo.</string>
++
+     <!-- Content description of the clear button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
+     <string name="accessibility_clear_all">Clear all notifications.</string>
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
+index bedc68d..ddd5ef9 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
+@@ -50,7 +50,12 @@ import android.content.res.Configuration;
+ import android.content.res.Resources;
+ import android.database.ContentObserver;
+ import android.graphics.Bitmap;
++import android.graphics.Canvas;
++import android.graphics.drawable.BitmapDrawable;
++import android.graphics.drawable.Drawable;
+ import android.graphics.Paint;
++import android.graphics.PorterDuff.Mode;
++import android.graphics.PorterDuffXfermode;
+ import android.graphics.Rect;
+ import android.net.Uri;
+ import android.os.Build;
+@@ -61,7 +66,6 @@ import android.os.RemoteException;
+ import android.os.ServiceManager;
+ import android.os.UserHandle;
+ import android.provider.Settings;
+-import android.service.pie.PieManager;
+ import android.text.TextUtils;
+ import android.util.DisplayMetrics;
+ import android.util.Log;
+@@ -83,6 +87,13 @@ import android.widget.PopupMenu;
+ import android.widget.RemoteViews;
+ import android.widget.TextView;
+ 
++import com.android.systemui.statusbar.halo.Halo;
++import com.android.systemui.statusbar.phone.QuickSettingsContainerView;
++import com.android.systemui.statusbar.phone.Ticker;
++import com.android.systemui.statusbar.policy.BatteryController;
++import com.android.systemui.statusbar.policy.Clock;
++import com.android.systemui.statusbar.policy.NetworkController;
++
+ import java.util.ArrayList;
+ 
+ public abstract class BaseStatusBar extends SystemUI implements
+@@ -156,6 +167,26 @@ public abstract class BaseStatusBar extends SystemUI implements
+     private ArrayList<NavigationBarCallback> mNavigationCallbacks =
+             new ArrayList<NavigationBarCallback>();
+ 
++    // Halo
++    protected Halo mHalo = null;
++    protected Ticker mTicker;
++    protected boolean mHaloActive;
++    protected boolean mHaloTaskerActive = false;
++    protected ImageView mHaloButton;
++    protected boolean mHaloButtonVisible = true;
++
++    // Policy
++    public NetworkController mNetworkController;
++    public BatteryController mBatteryController;
++    public SignalClusterView mSignalCluster;
++    public Clock mClock;
++
++    // left-hand icons 
++    public LinearLayout mStatusIcons;
++
++    // Statusbar view container
++    public ViewGroup mBarView;
++
+     // Pie Control
+     protected PieController mPieController;
+ 
+@@ -175,6 +206,34 @@ public abstract class BaseStatusBar extends SystemUI implements
+ 
+     private boolean mShowNotificationCounts;
+ 
++    public Ticker getTicker() {
++        return mTicker;
++    }
++
++    public void collapse() {
++    }
++
++    public QuickSettingsContainerView getQuickSettingsPanel() {
++        // This method should be overriden
++        return null;
++    }
++
++    public Handler getHandler() {
++        return mHandler;
++    }
++
++    public IStatusBarService getService() {
++        return mBarService;
++    }
++
++    public NotificationData getNotificationData() {
++        return mNotificationData;
++    }
++
++    public NotificationRowLayout getNotificationRowLayout() {
++        return mPile;
++    }
++
+     public IStatusBarService getStatusBarService() {
+         return mBarService;
+     }
+@@ -260,6 +319,9 @@ public abstract class BaseStatusBar extends SystemUI implements
+             // If the system process isn't there we're doomed anyway.
+         }
+ 
++        mHaloActive = Settings.System.getInt(mContext.getContentResolver(),
++                Settings.System.HALO_ACTIVE, 0) == 1;
++
+         createAndAddWindows();
+ 
+         disable(switches[0]);
+@@ -315,13 +377,54 @@ public abstract class BaseStatusBar extends SystemUI implements
+                     if (true) Slog.v(TAG, "userId " + mCurrentUserId + " is in the house");
+                     userSwitched(mCurrentUserId);
+                 }
+-            }
+-        }, filter);
++            }}, filter);
++
++        // Listen for HALO state
++        mContext.getContentResolver().registerContentObserver(
++                Settings.System.getUriFor(Settings.System.HALO_ACTIVE), false, new ContentObserver(new Handler()) {
++            @Override
++            public void onChange(boolean selfChange) {
++                updateHalo();
++            }});
++
++        updateHalo();
++    }
++
++    public void setHaloTaskerActive(boolean haloTaskerActive, boolean updateNotificationIcons) {
++        mHaloTaskerActive = haloTaskerActive;
++        if (updateNotificationIcons) {
++            updateNotificationIcons();
++        }
++    }
++
++    protected void updateHaloButton() {
++        if (mHaloButton != null) {
++            mHaloButton.setVisibility(mHaloButtonVisible && !mHaloActive ? View.VISIBLE : View.GONE);
++        }
++    }
+ 
+-        if (PieManager.getInstance().isPresent()) {
+-            mPieController = new PieController(mContext);
+-            mPieController.attachStatusBar(this);
+-            addNavigationBarCallback(mPieController);
++    protected void updateHalo() {
++        mHaloActive = Settings.System.getInt(mContext.getContentResolver(),
++                Settings.System.HALO_ACTIVE, 0) == 1;
++
++        updateHaloButton();
++
++        if (mHaloActive) {
++            if (mHalo == null) {
++                LayoutInflater inflater = (LayoutInflater) mContext
++                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE); 
++                mHalo = (Halo)inflater.inflate(R.layout.halo_trigger, null);
++                mHalo.setLayerType (View.LAYER_TYPE_HARDWARE, null);
++                WindowManager.LayoutParams params = mHalo.getWMParams();
++                mWindowManager.addView(mHalo,params);
++                mHalo.setStatusBar(this);
++            }
++        } else {
++            if (mHalo != null) {
++                mHalo.cleanUp();
++                mWindowManager.removeView(mHalo);
++                mHalo = null;
++            }
+         }
+     }
+ 
+@@ -843,11 +946,12 @@ public abstract class BaseStatusBar extends SystemUI implements
+         return new NotificationClicker(intent, pkg, tag, id);
+     }
+ 
+-    private class NotificationClicker implements View.OnClickListener {
+-        private PendingIntent mIntent;
+-        private String mPkg;
+-        private String mTag;
+-        private int mId;
++    public class NotificationClicker implements View.OnClickListener {
++        public PendingIntent mIntent;
++        public String mPkg;
++        public String mTag;
++        public int mId;
++        public boolean mFloat;
+ 
+         NotificationClicker(PendingIntent intent, String pkg, String tag, int id) {
+             mIntent = intent;
+@@ -856,6 +960,10 @@ public abstract class BaseStatusBar extends SystemUI implements
+             mId = id;
+         }
+ 
++        public void makeFloating(boolean floating) {
++            mFloat = floating;
++        }
++
+         public void onClick(View v) {
+             try {
+                 // The intent we are sending is for the application, which
+@@ -870,9 +978,17 @@ public abstract class BaseStatusBar extends SystemUI implements
+             }
+ 
+             if (mIntent != null) {
++
++                if (mFloat && !"android".equals(mPkg) && !"com.paranoid.halo".equals(mPkg)) {
++                    Intent transparent = new Intent(mContext, com.android.systemui.Transparent.class);
++                    transparent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FLOATING_WINDOW);
++                    mContext.startActivity(transparent);
++                }
++
+                 int[] pos = new int[2];
+                 v.getLocationOnScreen(pos);
+                 Intent overlay = new Intent();
++                if (mFloat) overlay.addFlags(Intent.FLAG_FLOATING_WINDOW | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                 overlay.setSourceBounds(
+                         new Rect(pos[0], pos[1], pos[0]+v.getWidth(), pos[1]+v.getHeight()));
+                 try {
+@@ -945,6 +1061,41 @@ public abstract class BaseStatusBar extends SystemUI implements
+         return entry.notification;
+     }
+ 
++    private Bitmap createRoundIcon(StatusBarNotification notification) {
++        // Construct the round icon
++        BitmapDrawable bd = (BitmapDrawable) mContext.getResources().getDrawable(R.drawable.halo_bg);
++        int iconSize = bd.getBitmap().getWidth();
++        int smallIconSize = mContext.getResources().getDimensionPixelSize(R.dimen.status_bar_icon_size);        
++        Bitmap roundIcon = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888);
++        Canvas canvas = new Canvas(roundIcon);
++        canvas.drawARGB(0, 0, 0, 0);
++
++        if (notification.notification.largeIcon != null) {           
++            Paint smoothingPaint = new Paint();
++            smoothingPaint.setAntiAlias(true);
++            smoothingPaint.setFilterBitmap(true);
++            smoothingPaint.setDither(true);
++            canvas.drawCircle(iconSize / 2, iconSize / 2, iconSize / 2.3f, smoothingPaint);
++            smoothingPaint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
++            Bitmap scaledBitmap = Bitmap.createScaledBitmap(notification.notification.largeIcon, iconSize, iconSize, true);
++            canvas.drawBitmap(scaledBitmap, null, new Rect(0, 0,
++                    iconSize, iconSize), smoothingPaint);
++        } else {
++            try {
++                Drawable icon = StatusBarIconView.getIcon(mContext,
++                    new StatusBarIcon(notification.pkg, notification.user, notification.notification.icon,
++                    notification.notification.iconLevel, 0, notification.notification.tickerText)); 
++                if (icon == null) icon = mContext.getPackageManager().getApplicationIcon(notification.pkg);
++                int margin = (iconSize - smallIconSize) / 2;
++                icon.setBounds(margin, margin, iconSize - margin, iconSize - margin);
++                icon.draw(canvas);
++            } catch (Exception e) {
++                // NameNotFoundException
++            }
++        }
++        return roundIcon;
++    }
++
+     protected StatusBarIconView addNotificationViews(IBinder key,
+             StatusBarNotification notification) {
+         if (DEBUG) {
+@@ -966,8 +1117,19 @@ public abstract class BaseStatusBar extends SystemUI implements
+             handleNotificationError(key, notification, "Couldn't create icon: " + ic);
+             return null;
+         }
++
++        NotificationData.Entry entry = new NotificationData.Entry(key, notification, iconView,
++                createRoundIcon(notification));
++        entry.hide = entry.notification.pkg.equals("com.paranoid.halo");
++
++        final PendingIntent contentIntent = notification.notification.contentIntent;
++        if (contentIntent != null) {
++            entry.floatingIntent = makeClicker(contentIntent,
++                    notification.pkg, notification.tag, notification.id);
++            entry.floatingIntent.makeFloating(true);
++        }
++
+         // Construct the expanded view.
+-        NotificationData.Entry entry = new NotificationData.Entry(key, notification, iconView);
+         if (!inflateViews(entry, mPile)) {
+             handleNotificationError(key, notification, "Couldn't expand RemoteViews for: "
+                     + notification);
+@@ -997,6 +1159,7 @@ public abstract class BaseStatusBar extends SystemUI implements
+             lp.height = rowHeight;
+         }
+         entry.row.setLayoutParams(lp);
++        if (entry.hide) entry.row.setVisibility(View.GONE);
+         return expand;
+     }
+ 
+@@ -1085,10 +1248,10 @@ public abstract class BaseStatusBar extends SystemUI implements
+         boolean orderUnchanged = notification.notification.when==oldNotification.notification.when
+                 && notification.score == oldNotification.score;
+                 // score now encompasses/supersedes isOngoing()
+-
+-        boolean updateTicker = notification.notification.tickerText != null
++        
++        boolean updateTicker = (notification.notification.tickerText != null
+                 && !TextUtils.equals(notification.notification.tickerText,
+-                        oldEntry.notification.notification.tickerText);
++                        oldEntry.notification.notification.tickerText)) || mHaloActive;
+         boolean isTopAnyway = isTopNotification(rowParent, oldEntry);
+         if (contentsUnchanged && bigContentsUnchanged && (orderUnchanged || isTopAnyway)) {
+             if (DEBUG) Slog.d(TAG, "reusing notification for key: " + key);
+@@ -1099,15 +1262,22 @@ public abstract class BaseStatusBar extends SystemUI implements
+                 if (bigContentView != null && oldEntry.getLargeView() != null) {
+                     bigContentView.reapply(mContext, oldEntry.getLargeView(), mOnClickHandler);
+                 }
+-                // update the contentIntent
++                // update contentIntent and floatingIntent
+                 final PendingIntent contentIntent = notification.notification.contentIntent;
+                 if (contentIntent != null) {
+                     final View.OnClickListener listener = makeClicker(contentIntent,
+                             notification.pkg, notification.tag, notification.id);
+                     oldEntry.content.setOnClickListener(listener);
++                    oldEntry.floatingIntent = makeClicker(contentIntent,
++                            notification.pkg, notification.tag, notification.id);
++                    oldEntry.floatingIntent.makeFloating(true);
+                 } else {
+                     oldEntry.content.setOnClickListener(null);
++                    oldEntry.floatingIntent = null;
+                 }
++                // Update the roundIcon
++                oldEntry.roundIcon = createRoundIcon(notification);
++
+                 // Update the icon.
+                 final StatusBarIcon ic = new StatusBarIcon(notification.pkg,
+                         notification.user,
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java b/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java
+index 9c947ae..15887f2 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java
+@@ -17,10 +17,12 @@
+ package com.android.systemui.statusbar;
+ 
+ import android.app.Notification;
++import android.graphics.Bitmap;
+ import android.os.IBinder;
+ import android.view.View;
+ import android.widget.ImageView;
+ 
++import com.android.systemui.statusbar.BaseStatusBar.NotificationClicker;
+ import com.android.internal.statusbar.StatusBarNotification;
+ import com.android.systemui.R;
+ 
+@@ -39,13 +41,22 @@ public class NotificationData {
+         public View content; // takes the click events and sends the PendingIntent
+         public View expanded; // the inflated RemoteViews
+         public ImageView largeIcon;
++        protected boolean hide = false;
++        protected Bitmap roundIcon;
+         protected View expandedLarge;
++        protected NotificationClicker floatingIntent;
+         public Entry() {}
+         public Entry(IBinder key, StatusBarNotification n, StatusBarIconView ic) {
+             this.key = key;
+             this.notification = n;
+             this.icon = ic;
+         }
++        public Entry(IBinder key, StatusBarNotification n, StatusBarIconView ic, Bitmap ri) {
++            this.key = key;
++            this.notification = n;
++            this.icon = ic;
++            this.roundIcon = ri;
++        }
+         public void setLargeView(View expandedLarge) {
+             this.expandedLarge = expandedLarge;
+             writeBooleanTag(row, R.id.expandable_tag, expandedLarge != null);
+@@ -53,6 +64,12 @@ public class NotificationData {
+         public View getLargeView() {
+             return expandedLarge;
+         }
++        public NotificationClicker getFloatingIntent() {
++            return floatingIntent;
++        }
++        public Bitmap getRoundIcon() {
++            return roundIcon;
++        }
+         /**
+          * Return whether the entry can be expanded.
+          */
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+index 84578f6..d77cf47 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+@@ -259,7 +259,6 @@ public class PhoneStatusBar extends BaseStatusBar {
+     PowerWidget mPowerWidget;
+ 
+     // ticker
+-    private Ticker mTicker;
+     private View mTickerView;
+     private boolean mTicking;
+ 
+@@ -381,6 +380,10 @@ public class PhoneStatusBar extends BaseStatusBar {
+             if (mSettingsButton != null && mHasFlipSettings) {
+                 mSettingsButton.setVisibility(userSetup ? View.VISIBLE : View.INVISIBLE);
+             }
++            if (mHaloButton != null && mHasFlipSettings) {
++                mHaloButtonVisible = userSetup;
++                updateHaloButton();
++            }
+             if (mSettingsPanel != null) {
+                 mSettingsPanel.setEnabled(userSetup);
+             }
+@@ -522,7 +525,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+         mClearButton = mStatusBarWindow.findViewById(R.id.clear_all_button);
+         mClearButton.setOnClickListener(mClearButtonListener);
+         mClearButton.setAlpha(0f);
+-        mClearButton.setVisibility(View.INVISIBLE);
++        mClearButton.setVisibility(View.GONE);
+         mClearButton.setEnabled(false);
+         mDateView = (DateView)mStatusBarWindow.findViewById(R.id.date);
+ 
+@@ -557,6 +560,14 @@ public class PhoneStatusBar extends BaseStatusBar {
+                 mSettingsButton.setImageResource(R.drawable.ic_notify_settings);
+             }
+         }
++
++        mHaloButton = (ImageView) mStatusBarWindow.findViewById(R.id.halo_button);
++        if (mHaloButton != null) {
++            mHaloButton.setOnClickListener(mHaloButtonListener);
++            mHaloButtonVisible = true;
++            updateHaloButton();
++        }
++
+         if (mHasFlipSettings) {
+             mNotificationButton = (ImageView) mStatusBarWindow.findViewById(R.id.notification_button);
+             if (mNotificationButton != null) {
+@@ -595,6 +606,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+         mTicker = new MyTicker(context, mStatusBarView);
+         TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
+         tickerView.mTicker = mTicker;
++        if (mHaloActive) mTickerView.setVisibility(View.GONE);
+ 
+         mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
+ 
+@@ -1150,6 +1162,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+         if (mSettingsButton != null) {
+             mSettingsButton.setEnabled(isDeviceProvisioned());
+         }
++        if (mHaloButton != null) {
++            mHaloButton.setEnabled(isDeviceProvisioned());
++        }
+     }
+ 
+     @Override
+@@ -1174,7 +1189,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+         for (int i=0; i<N; i++) {
+             Entry ent = mNotificationData.get(N-i-1);
+             if (!((provisioned && ent.notification.score >= HIDE_ICONS_BELOW_SCORE)
+-                    || showNotificationEvenIfUnprovisioned(ent.notification))) continue;
++                    || showNotificationEvenIfUnprovisioned(ent.notification) || mHaloTaskerActive)) continue;
+             if (!notificationIsForCurrentUser(ent.notification)) continue;
+             toShow.add(ent.icon);
+         }
+@@ -1257,7 +1272,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+                 && mFlipSettingsView.getVisibility() == View.VISIBLE
+                 && mScrollView.getVisibility() != View.VISIBLE) {
+             // the flip settings panel is unequivocally showing; we should not be shown
+-            mClearButton.setVisibility(View.INVISIBLE);
++            mClearButton.setVisibility(View.GONE);
+         } else if (mClearButton.isShown()) {
+             if (clearable != (mClearButton.getAlpha() == 1.0f)) {
+                 ObjectAnimator clearAnimation = ObjectAnimator.ofFloat(
+@@ -1281,7 +1296,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+             }
+         } else {
+             mClearButton.setAlpha(clearable ? 1.0f : 0.0f);
+-            mClearButton.setVisibility(clearable ? View.VISIBLE : View.INVISIBLE);
++            mClearButton.setVisibility(clearable ? View.VISIBLE : View.GONE);
+         }
+         mClearButton.setEnabled(clearable);
+ 
+@@ -1588,7 +1603,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+     final int FLIP_DURATION = (FLIP_DURATION_IN + FLIP_DURATION_OUT);
+ 
+     Animator mScrollViewAnim, mFlipSettingsViewAnim, mNotificationButtonAnim,
+-        mSettingsButtonAnim, mClearButtonAnim;
++        mSettingsButtonAnim, mHaloButtonAnim, mClearButtonAnim;
+ 
+     @Override
+     public void animateExpandNotificationsPanel() {
+@@ -1614,6 +1629,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+         if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
+         if (mScrollViewAnim != null) mScrollViewAnim.cancel();
+         if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
++        if (mHaloButtonAnim != null) mHaloButtonAnim.cancel();
+         if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
+         if (mClearButtonAnim != null) mClearButtonAnim.cancel();
+ 
+@@ -1651,6 +1667,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+         mSettingsButtonAnim = start(
+             ObjectAnimator.ofFloat(mSettingsButton, View.ALPHA, 1f)
+                 .setDuration(FLIP_DURATION));
++        mHaloButtonVisible = true;
++        updateHaloButton();
++        mHaloButtonAnim = start(
++            ObjectAnimator.ofFloat(mHaloButton, View.ALPHA, 1f)
++                .setDuration(FLIP_DURATION));
+         mClearButton.setVisibility(View.VISIBLE);
+         mClearButton.setAlpha(0f);
+         setAreThereNotifications(); // this will show/hide the button as necessary
+@@ -1696,6 +1717,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+         mFlipSettingsView.setScaleX(1f);
+         mFlipSettingsView.setVisibility(View.VISIBLE);
+         mSettingsButton.setVisibility(View.GONE);
++        mHaloButtonVisible = false;
++        updateHaloButton();
+         mScrollView.setVisibility(View.GONE);
+         mScrollView.setScaleX(0f);
+         mPowerWidget.setVisibility(View.GONE);
+@@ -1755,6 +1778,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+         if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
+         if (mScrollViewAnim != null) mScrollViewAnim.cancel();
+         if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
++        if (mHaloButtonAnim != null) mHaloButtonAnim.cancel();
+         if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
+         if (mClearButtonAnim != null) mClearButtonAnim.cancel();
+ 
+@@ -1786,6 +1810,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+                     .setDuration(FLIP_DURATION),
+                     mScrollView, View.INVISIBLE));
+         mPowerWidget.setVisibility(View.GONE);
++        mHaloButtonAnim = start(
++            setVisibilityWhenDone(
++                ObjectAnimator.ofFloat(mHaloButton, View.ALPHA, 0f)
++                    .setDuration(FLIP_DURATION),
++                    mScrollView, View.INVISIBLE));
+         mNotificationButton.setVisibility(View.VISIBLE);
+         mNotificationButtonAnim = start(
+             ObjectAnimator.ofFloat(mNotificationButton, View.ALPHA, 1f)
+@@ -1838,6 +1867,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+             if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
+             if (mScrollViewAnim != null) mScrollViewAnim.cancel();
+             if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
++            if (mHaloButtonAnim != null) mHaloButtonAnim.cancel();
+             if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
+             if (mClearButtonAnim != null) mClearButtonAnim.cancel();
+ 
+@@ -1846,6 +1876,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+             mPowerWidget.updateVisibility();
+             mSettingsButton.setAlpha(1f);
+             mSettingsButton.setVisibility(View.VISIBLE);
++            mHaloButton.setAlpha(1f);
++            mHaloButtonVisible = true;
++            updateHaloButton();
+             mNotificationPanel.setVisibility(View.GONE);
+             mFlipSettingsView.setVisibility(View.GONE);
+             mNotificationButton.setVisibility(View.GONE);
+@@ -2270,8 +2303,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+ 
+     @Override
+     protected void tick(IBinder key, StatusBarNotification n, boolean firstTime) {
+-        // no ticking in lights-out mode
+-        if (!areLightsOn()) return;
++        // no ticking in lights-out mode, except if halo is active
++        if (!areLightsOn() && !mHaloActive) return;
+ 
+         // no ticking in Setup
+         if (!isDeviceProvisioned()) return;
+@@ -2299,27 +2332,33 @@ public class PhoneStatusBar extends BaseStatusBar {
+         @Override
+         public void tickerStarting() {
+             mTicking = true;
+-            mStatusBarContents.setVisibility(View.GONE);
+-            mTickerView.setVisibility(View.VISIBLE);
+-            mTickerView.startAnimation(loadAnim(com.android.internal.R.anim.push_up_in, null));
+-            mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.push_up_out, null));
++            if (!mHaloActive) {
++                mStatusBarContents.setVisibility(View.GONE);
++                mTickerView.setVisibility(View.VISIBLE);
++                mTickerView.startAnimation(loadAnim(com.android.internal.R.anim.push_up_in, null));
++                mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.push_up_out, null));
++            }
+         }
+ 
+         @Override
+         public void tickerDone() {
+-            mStatusBarContents.setVisibility(View.VISIBLE);
+-            mTickerView.setVisibility(View.GONE);
+-            mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.push_down_in, null));
+-            mTickerView.startAnimation(loadAnim(com.android.internal.R.anim.push_down_out,
+-                        mTickingDoneListener));
++            if (!mHaloActive) {
++                mStatusBarContents.setVisibility(View.VISIBLE);
++                mTickerView.setVisibility(View.GONE);
++                mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.push_down_in, null));
++                mTickerView.startAnimation(loadAnim(com.android.internal.R.anim.push_down_out,
++                            mTickingDoneListener));
++            }
+         }
+ 
+         @Override
+         public void tickerHalting() {
+-            mStatusBarContents.setVisibility(View.VISIBLE);
+-            mTickerView.setVisibility(View.GONE);
+-            mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.fade_in, null));
+-            // we do not animate the ticker away at this point, just get rid of it (b/6992707)
++            if (!mHaloActive) {
++                mStatusBarContents.setVisibility(View.VISIBLE);
++                mTickerView.setVisibility(View.GONE);
++                mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.fade_in, null));
++                // we do not animate the ticker away at this point, just get rid of it (b/6992707)
++            }
+         }
+     }
+ 
+@@ -2613,6 +2652,18 @@ public class PhoneStatusBar extends BaseStatusBar {
+         }
+     };
+ 
++    private View.OnClickListener mHaloButtonListener = new View.OnClickListener() {
++        public void onClick(View v) {
++            // Activate HALO
++            Settings.System.putInt(mContext.getContentResolver(),
++                    Settings.System.HALO_ACTIVE, 1);
++            // Switch off regular ticker
++            mTickerView.setVisibility(View.GONE);
++            // Collapse
++            animateCollapsePanels();
++        }
++    };
++
+     private final View.OnClickListener mClockClickListener = new View.OnClickListener() {
+         @Override
+         public void onClick(View v) {
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
+index ecc70d6..1e1b014 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
+@@ -52,6 +52,16 @@ public abstract class Ticker {
+     private ImageSwitcher mIconSwitcher;
+     private TextSwitcher mTextSwitcher;
+     private float mIconScale;
++    private TickerCallback mEvent;
++
++    public interface TickerCallback  
++    {  
++        public void updateTicker(StatusBarNotification notification, String text);
++    }  
++
++    public void setUpdateEvent(TickerCallback event) {
++        mEvent = event;
++    }
+ 
+     public static boolean isGraphicOrEmoji(char c) {
+         int gc = Character.getType(c);
+@@ -63,21 +73,21 @@ public abstract class Ticker {
+                 && gc != Character.SPACE_SEPARATOR;
+     }
+ 
+-    private final class Segment {
+-        StatusBarNotification notification;
+-        Drawable icon;
+-        CharSequence text;
+-        int current;
+-        int next;
+-        boolean first;
++    public final class Segment {
++        public StatusBarNotification notification;
++        public Drawable icon;
++        public CharSequence text;
++        public int current;
++        public int next;
++        public boolean first;
+ 
+-        StaticLayout getLayout(CharSequence substr) {
++        public StaticLayout getLayout(CharSequence substr) {
+             int w = mTextSwitcher.getWidth() - mTextSwitcher.getPaddingLeft()
+                     - mTextSwitcher.getPaddingRight();
+             return new StaticLayout(substr, mPaint, w, Alignment.ALIGN_NORMAL, 1, 0, true);
+         }
+ 
+-        CharSequence rtrim(CharSequence substr, int start, int end) {
++        public CharSequence rtrim(CharSequence substr, int start, int end) {
+             while (end > start && !isGraphicOrEmoji(substr.charAt(end-1))) {
+                 end--;
+             }
+@@ -88,7 +98,7 @@ public abstract class Ticker {
+         }
+ 
+         /** returns null if there is no more text */
+-        CharSequence getText() {
++        public CharSequence getText() {
+             if (this.current > this.text.length()) {
+                 return null;
+             }
+@@ -107,7 +117,7 @@ public abstract class Ticker {
+         }
+ 
+         /** returns null if there is no more text */
+-        CharSequence advance() {
++        public CharSequence advance() {
+             this.first = false;
+             int index = this.next;
+             final int len = this.text.length();
+@@ -140,7 +150,7 @@ public abstract class Ticker {
+             return null;
+         }
+ 
+-        Segment(StatusBarNotification n, Drawable icon, CharSequence text) {
++        public Segment(StatusBarNotification n, Drawable icon, CharSequence text) {
+             this.notification = n;
+             this.icon = icon;
+             this.text = text;
+@@ -217,19 +227,24 @@ public abstract class Ticker {
+         }
+ 
+         mSegments.add(newSegment);
+-
++        if (mEvent != null) {
++            if (newSegment != null) {
++                mEvent.updateTicker(newSegment.notification, text.toString());
++            }
++        }
++        
+         if (initialCount == 0 && mSegments.size() > 0) {
+             Segment seg = mSegments.get(0);
+             seg.first = false;
+-            
++
+             mIconSwitcher.setAnimateFirstView(false);
+             mIconSwitcher.reset();
+             mIconSwitcher.setImageDrawable(seg.icon);
+-            
++
+             mTextSwitcher.setAnimateFirstView(false);
+             mTextSwitcher.reset();
+             mTextSwitcher.setText(seg.getText());
+-            
++
+             tickerStarting();
+             scheduleAdvance();
+         }
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java b/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java
+index 26b1eb2..faf9fb2 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java
+@@ -54,7 +54,8 @@ public class DateView extends TextView implements OnClickListener, OnLongClickLi
+             final String action = intent.getAction();
+             if (Intent.ACTION_TIME_TICK.equals(action)
+                     || Intent.ACTION_TIME_CHANGED.equals(action)
+-                    || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
++                    || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
++                    || Intent.ACTION_LOCALE_CHANGED.equals(action)) {
+                 updateClock();
+             }
+         }
+@@ -145,6 +146,7 @@ public class DateView extends TextView implements OnClickListener, OnLongClickLi
+                 filter.addAction(Intent.ACTION_TIME_TICK);
+                 filter.addAction(Intent.ACTION_TIME_CHANGED);
+                 filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
++                filter.addAction(Intent.ACTION_LOCALE_CHANGED);
+                 mContext.registerReceiver(mIntentReceiver, filter, null, null);
+                 updateClock();
+             } else {
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index 49b9059..428f6d8 100644
+index 49b9059..11c4f19 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 @@ -897,21 +897,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
@@ -42,6 +1226,544 @@ index 49b9059..428f6d8 100644
          }
      };
  
+@@ -2157,8 +2143,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+ 
+         if (DEBUG_INPUT) {
+             Log.d(TAG, "interceptKeyTi keyCode=" + keyCode + " down=" + down + " repeatCount="
+-                    + repeatCount + " keyguardOn=" + keyguardOn + " mHomePressed=" + mHomePressed
+-                    + " canceled=" + canceled);
++                    + repeatCount + " keyguardOn=" + keyguardOn + " canceled=" + canceled);
+         }
+ 
+         // If we think we might have a volume down & power/volume-up key chord on the way
+@@ -5359,7 +5344,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 pw.println(mForceStatusBarFromKeyguard);
+         pw.print(prefix); pw.print("mDismissKeyguard="); pw.print(mDismissKeyguard);
+                 pw.print(" mWinDismissingKeyguard="); pw.print(mWinDismissingKeyguard);
+-                pw.print(" mHomePressed="); pw.println(mHomePressed);
+         pw.print(prefix); pw.print("mAllowLockscreenWhenOn="); pw.print(mAllowLockscreenWhenOn);
+                 pw.print(" mLockScreenTimeout="); pw.print(mLockScreenTimeout);
+                 pw.print(" mLockScreenTimerActive="); pw.println(mLockScreenTimerActive);
+diff --git a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardAbsKeyInputView.java b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardAbsKeyInputView.java
+index 46dfc34..ee8f851 100644
+--- a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardAbsKeyInputView.java
++++ b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardAbsKeyInputView.java
+@@ -94,6 +94,7 @@ public abstract class KeyguardAbsKeyInputView extends LinearLayout
+ 
+     protected abstract int getPasswordTextViewId();
+     protected abstract void resetState();
++    protected abstract boolean getQuickUnlockAllowed();
+ 
+     @Override
+     protected void onFinishInflate() {
+diff --git a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPINView.java b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPINView.java
+index fa80352..82cb9b5 100644
+--- a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPINView.java
++++ b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPINView.java
+@@ -56,6 +56,11 @@ public class KeyguardPINView extends KeyguardAbsKeyInputView
+     }
+ 
+     @Override
++    protected boolean getQuickUnlockAllowed() {
++        return true;
++    }
++
++    @Override
+     protected void onFinishInflate() {
+         super.onFinishInflate();
+ 
+diff --git a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPasswordView.java b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPasswordView.java
+index d52c993..1dd129a 100644
+--- a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPasswordView.java
++++ b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardPasswordView.java
+@@ -69,6 +69,11 @@ public class KeyguardPasswordView extends KeyguardAbsKeyInputView
+     }
+ 
+     @Override
++    protected boolean getQuickUnlockAllowed() {
++        return true;
++    }
++
++    @Override
+     public boolean needsInput() {
+         return true;
+     }
+diff --git a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPinView.java b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPinView.java
+index ab364ee..fe10516 100644
+--- a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPinView.java
++++ b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPinView.java
+@@ -63,6 +63,11 @@ public class KeyguardSimPinView extends KeyguardAbsKeyInputView
+     }
+ 
+     @Override
++    protected boolean getQuickUnlockAllowed() {
++        return false;
++    }
++
++    @Override
+     protected void onFinishInflate() {
+         super.onFinishInflate();
+ 
+diff --git a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPukView.java b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPukView.java
+index e5b4b73..8ef6451 100644
+--- a/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPukView.java
++++ b/policy/src/com/android/internal/policy/impl/keyguard/KeyguardSimPukView.java
+@@ -114,6 +114,11 @@ public class KeyguardSimPukView extends KeyguardAbsKeyInputView
+     }
+ 
+     @Override
++    protected boolean getQuickUnlockAllowed() {
++        return false;
++    }
++
++    @Override
+     protected void onFinishInflate() {
+         super.onFinishInflate();
+ 
+diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
+index 06a8615..f82d955 100644
+--- a/services/java/com/android/server/NotificationManagerService.java
++++ b/services/java/com/android/server/NotificationManagerService.java
+@@ -175,67 +175,87 @@ public class NotificationManagerService extends INotificationManager.Stub
+     private boolean mQuietHoursDim = true;
+ 
+     // Notification control database. For now just contains disabled packages.
+-    private AtomicFile mPolicyFile;
++    private AtomicFile mPolicyFile, mHaloPolicyFile;
+     private HashSet<String> mBlockedPackages = new HashSet<String>();
++    private HashSet<String> mHaloBlacklist = new HashSet<String>();
++    private HashSet<String> mHaloWhitelist = new HashSet<String>();
++    private boolean mHaloPolicyisBlack = true;
+ 
+     private static final int DB_VERSION = 1;
+ 
+     private static final String TAG_BODY = "notification-policy";
+     private static final String ATTR_VERSION = "version";
++    private static final String ATTR_HALO_POLICY_IS_BLACK = "policy_is_black";
+ 
++    private static final String TAG_ALLOWED_PKGS = "allowed-packages";
+     private static final String TAG_BLOCKED_PKGS = "blocked-packages";
+     private static final String TAG_PACKAGE = "package";
+     private static final String ATTR_NAME = "name";
+ 
++    private int readPolicy(AtomicFile file, String lookUpTag, HashSet<String> db) {
++        return readPolicy(file, lookUpTag, db, null, 0);
++    }
++
++    private int readPolicy(AtomicFile file, String lookUpTag, HashSet<String> db, String resultTag, int defaultResult) {
++        int result = defaultResult;
++        FileInputStream infile = null;
++        try {
++            infile = file.openRead();
++            final XmlPullParser parser = Xml.newPullParser();
++            parser.setInput(infile, null);
++
++            int type;
++            String tag;
++            int version = DB_VERSION;
++            while ((type = parser.next()) != END_DOCUMENT) {
++                tag = parser.getName();
++                if (type == START_TAG) {
++                    if (TAG_BODY.equals(tag)) {
++                        version = Integer.parseInt(parser.getAttributeValue(null, ATTR_VERSION));
++                        if (resultTag != null) {
++                            String attribValue = parser.getAttributeValue(null, resultTag);
++                            result = Integer.parseInt((attribValue != null ? attribValue : "0"));
++                        }
++                    } else if (lookUpTag.equals(tag)) {
++                        while ((type = parser.next()) != END_DOCUMENT) {
++                            tag = parser.getName();
++                            if (TAG_PACKAGE.equals(tag)) {
++                                db.add(parser.getAttributeValue(null, ATTR_NAME));
++                            } else if (lookUpTag.equals(tag) && type == END_TAG) {
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++        } catch (Exception e) {
++            // Unable to read
++        } finally {
++            IoUtils.closeQuietly(infile);
++        }
++        return result;
++    }
++
+     private void loadBlockDb() {
+         synchronized(mBlockedPackages) {
+             if (mPolicyFile == null) {
+-                File dir = new File("/data/system");
+-                mPolicyFile = new AtomicFile(new File(dir, "notification_policy.xml"));
+-
++                mPolicyFile = new AtomicFile(new File("/data/system", "notification_policy.xml"));
+                 mBlockedPackages.clear();
+-
+-                FileInputStream infile = null;
+-                try {
+-                    infile = mPolicyFile.openRead();
+-                    final XmlPullParser parser = Xml.newPullParser();
+-                    parser.setInput(infile, null);
+-
+-                    int type;
+-                    String tag;
+-                    int version = DB_VERSION;
+-                    while ((type = parser.next()) != END_DOCUMENT) {
+-                        tag = parser.getName();
+-                        if (type == START_TAG) {
+-                            if (TAG_BODY.equals(tag)) {
+-                                version = Integer.parseInt(parser.getAttributeValue(null, ATTR_VERSION));
+-                            } else if (TAG_BLOCKED_PKGS.equals(tag)) {
+-                                while ((type = parser.next()) != END_DOCUMENT) {
+-                                    tag = parser.getName();
+-                                    if (TAG_PACKAGE.equals(tag)) {
+-                                        mBlockedPackages.add(parser.getAttributeValue(null, ATTR_NAME));
+-                                    } else if (TAG_BLOCKED_PKGS.equals(tag) && type == END_TAG) {
+-                                        break;
+-                                    }
+-                                }
+-                            }
+-                        }
+-                    }
+-                } catch (FileNotFoundException e) {
+-                    // No data yet
+-                } catch (IOException e) {
+-                    Log.wtf(TAG, "Unable to read blocked notifications database", e);
+-                } catch (NumberFormatException e) {
+-                    Log.wtf(TAG, "Unable to parse blocked notifications database", e);
+-                } catch (XmlPullParserException e) {
+-                    Log.wtf(TAG, "Unable to parse blocked notifications database", e);
+-                } finally {
+-                    IoUtils.closeQuietly(infile);
+-                }
++                readPolicy(mPolicyFile, TAG_BLOCKED_PKGS, mBlockedPackages);
+             }
+         }
+     }
+ 
++    private synchronized void loadHaloBlockDb() {
++        if (mHaloPolicyFile == null) {
++            mHaloPolicyFile = new AtomicFile(new File("/data/system", "halo_policy.xml"));
++            mHaloBlacklist.clear();
++            mHaloPolicyisBlack = readPolicy(mHaloPolicyFile, TAG_BLOCKED_PKGS, mHaloBlacklist, ATTR_HALO_POLICY_IS_BLACK, 1) == 1;
++            mHaloWhitelist.clear();
++            readPolicy(mHaloPolicyFile, TAG_ALLOWED_PKGS, mHaloWhitelist);
++        }
++    }
++
+     private void writeBlockDb() {
+         synchronized(mBlockedPackages) {
+             FileOutputStream outfile = null;
+@@ -270,6 +290,91 @@ public class NotificationManagerService extends INotificationManager.Stub
+         }
+     }
+ 
++    private synchronized void writeHaloBlockDb() {
++        FileOutputStream outfile = null;
++        try {
++            outfile = mHaloPolicyFile.startWrite();
++
++            XmlSerializer out = new FastXmlSerializer();
++            out.setOutput(outfile, "utf-8");
++
++            out.startDocument(null, true);
++
++            out.startTag(null, TAG_BODY); {
++                out.attribute(null, ATTR_VERSION, String.valueOf(DB_VERSION));
++                out.attribute(null, ATTR_HALO_POLICY_IS_BLACK, (mHaloPolicyisBlack ? "1" : "0"));
++
++                    out.startTag(null, TAG_BLOCKED_PKGS); {
++                        for (String blockedPkg : mHaloBlacklist) {
++                            out.startTag(null, TAG_PACKAGE); {
++                                out.attribute(null, ATTR_NAME, blockedPkg);
++                            } out.endTag(null, TAG_PACKAGE);
++                        }
++                    } out.endTag(null, TAG_BLOCKED_PKGS);
++                    
++                    out.startTag(null, TAG_ALLOWED_PKGS); {
++                        for (String allowedPkg : mHaloWhitelist) {
++                            out.startTag(null, TAG_PACKAGE); {
++                                out.attribute(null, ATTR_NAME, allowedPkg);
++                            } out.endTag(null, TAG_PACKAGE);
++                        }
++                    } out.endTag(null, TAG_ALLOWED_PKGS);
++
++            } out.endTag(null, TAG_BODY);
++
++            out.endDocument();
++
++            mHaloPolicyFile.finishWrite(outfile);
++        } catch (IOException e) {
++            if (outfile != null) {
++                mHaloPolicyFile.failWrite(outfile);
++            }
++        }
++    }
++
++    public void setHaloPolicyBlack(boolean state) {
++        mHaloPolicyisBlack = state;
++        writeHaloBlockDb();
++    }
++
++    public void setHaloStatus(String pkg, boolean status) {
++        if (mHaloPolicyisBlack) {
++            setHaloBlacklistStatus(pkg, status);
++        } else {
++            setHaloWhitelistStatus(pkg, status);
++        }
++    }
++
++    public void setHaloBlacklistStatus(String pkg, boolean status) {
++        if (status) {
++            mHaloBlacklist.add(pkg);            
++        } else {
++            mHaloBlacklist.remove(pkg);
++        }
++        writeHaloBlockDb();
++    }
++
++    public void setHaloWhitelistStatus(String pkg, boolean status) {
++        if (status) {
++            mHaloWhitelist.add(pkg);            
++        } else {
++            mHaloWhitelist.remove(pkg);
++        }
++        writeHaloBlockDb();
++    }
++
++    public boolean isHaloPolicyBlack() {
++        return mHaloPolicyisBlack;
++    }
++
++    public boolean isPackageAllowedForHalo(String pkg) {
++        if (mHaloPolicyisBlack) {
++            return !mHaloBlacklist.contains(pkg);
++        } else {
++            return mHaloWhitelist.contains(pkg);
++        }
++    }
++
+     public boolean areNotificationsEnabledForPackage(String pkg) {
+         checkCallerIsSystem();
+         return areNotificationsEnabledForPackageInt(pkg);
+@@ -730,6 +835,7 @@ public class NotificationManagerService extends INotificationManager.Stub
+         mHandler = new WorkerHandler();
+ 
+         loadBlockDb();
++        loadHaloBlockDb();
+ 
+         mStatusBar = statusBar;
+         statusBar.setNotificationCallbacks(mNotificationCallbacks);
+diff --git a/services/java/com/android/server/am/ActivityRecord.java b/services/java/com/android/server/am/ActivityRecord.java
+index de0f9ca..32aa93f 100644
+--- a/services/java/com/android/server/am/ActivityRecord.java
++++ b/services/java/com/android/server/am/ActivityRecord.java
+@@ -23,6 +23,7 @@ import com.android.server.am.ActivityStack.ActivityState;
+ import android.app.Activity;
+ import android.app.ActivityOptions;
+ import android.content.ComponentName;
++import android.content.Context;
+ import android.content.Intent;
+ import android.content.pm.ActivityInfo;
+ import android.content.pm.ApplicationInfo;
+@@ -42,6 +43,7 @@ import android.util.EventLog;
+ import android.util.Log;
+ import android.util.Slog;
+ import android.util.TimeUtils;
++import android.view.ContextThemeWrapper;
+ import android.view.IApplicationToken;
+ import android.view.WindowManager;
+ 
+@@ -124,6 +126,10 @@ final class ActivityRecord {
+     boolean immersive;      // immersive mode (don't interrupt if possible)
+     boolean forceNewConfig; // force re-create with new config next time
+ 
++    boolean topIntent;
++    boolean newTask;
++    boolean floatingWindow;
++
+     String stringName;      // for caching of toString().
+     
+     private boolean inHistory;  // are we in the history stack?
+@@ -380,6 +386,7 @@ final class ActivityRecord {
+                 labelRes = app.labelRes;
+             }
+             icon = aInfo.getIconResource();
++
+             theme = aInfo.getThemeResource();
+             realTheme = theme;
+             if (realTheme == 0) {
+@@ -388,6 +395,51 @@ final class ActivityRecord {
+                         ? android.R.style.Theme
+                         : android.R.style.Theme_Holo;
+             }
++
++            // This is where the package gets its first context from the attribute-cache
++            // In order to hook its attributes we set up our check for floating mutil windows here.
++            topIntent = true;
++
++            floatingWindow = (intent.getFlags() & Intent.FLAG_FLOATING_WINDOW) == Intent.FLAG_FLOATING_WINDOW;
++
++            ActivityRecord baseRecord = stack.mHistory.size() > 0 ? stack.mHistory.get(stack.mHistory.size() -1) : null;
++
++            if (baseRecord != null) {
++
++                final boolean floats = (baseRecord.intent.getFlags() & Intent.FLAG_FLOATING_WINDOW) == Intent.FLAG_FLOATING_WINDOW;
++                final boolean taskAffinity = aInfo.applicationInfo.packageName.equals(baseRecord.packageName);
++                newTask = (intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) == Intent.FLAG_ACTIVITY_NEW_TASK;
++
++                // If the current intent is not a new task we will check its top parent.
++                // Perhaps it started out as a multiwindow in which case we pass the flag on
++                if (floats && (!newTask || taskAffinity)) {
++                    intent.addFlags(Intent.FLAG_FLOATING_WINDOW);
++                    // Flag the activity as sub-task
++                    topIntent = false;
++                    floatingWindow = true;
++                }
++            }
++
++            // If this is a multiwindow activity we prevent it from messing up the history stack,
++            // like jumping back home, killing the current activity or polluting recents
++            if (floatingWindow) {
++                intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_TASK_ON_HOME);
++                intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_SINGLE_TOP);
++                intent.setFlags(intent.getFlags() & ~Intent.FLAG_ACTIVITY_CLEAR_TOP);
++                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
++                intent.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
++                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++                
++                // If this is the mother-intent we make it volatile
++                if (topIntent) {
++                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
++                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
++                }
++
++                // Change theme
++                realTheme = com.android.internal.R.style.Theme_DeviceDefault_FloatingWindow;
++            }
++
+             if ((aInfo.flags&ActivityInfo.FLAG_HARDWARE_ACCELERATED) != 0) {
+                 windowFlags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+             }
+@@ -406,7 +458,7 @@ final class ActivityRecord {
+             
+             packageName = aInfo.applicationInfo.packageName;
+             launchMode = aInfo.launchMode;
+-            
++
+             AttributeCache.Entry ent = AttributeCache.instance().get(userId, packageName,
+                     realTheme, com.android.internal.R.styleable.Window);
+             fullscreen = ent != null && !ent.array.getBoolean(
+diff --git a/services/java/com/android/server/am/ActivityStack.java b/services/java/com/android/server/am/ActivityStack.java
+index 885ec89..a3f2df9 100644
+--- a/services/java/com/android/server/am/ActivityStack.java
++++ b/services/java/com/android/server/am/ActivityStack.java
+@@ -1531,7 +1531,7 @@ final class ActivityStack {
+         
+         // We need to start pausing the current activity so the top one
+         // can be resumed...
+-        if (mResumedActivity != null) {
++        if (mResumedActivity != null && !next.floatingWindow) {
+             if (DEBUG_SWITCH) Slog.v(TAG, "Skip resume: need to start pausing");
+             // At this point we want to put the upcoming activity's process
+             // at the top of the LRU list, since we know we will be needing it
+@@ -1610,7 +1610,7 @@ final class ActivityStack {
+             if (prev.finishing) {
+                 if (DEBUG_TRANSITION) Slog.v(TAG,
+                         "Prepare close transition: prev=" + prev);
+-                if (mNoAnimActivities.contains(prev)) {
++                if (mNoAnimActivities.contains(prev) || next.floatingWindow) {
+                     mService.mWindowManager.prepareAppTransition(
+                             WindowManagerPolicy.TRANSIT_NONE, false);
+                 } else {
+@@ -1623,7 +1623,7 @@ final class ActivityStack {
+             } else {
+                 if (DEBUG_TRANSITION) Slog.v(TAG,
+                         "Prepare open transition: prev=" + prev);
+-                if (mNoAnimActivities.contains(next)) {
++                if (mNoAnimActivities.contains(next) || next.floatingWindow) {
+                     noAnim = true;
+                     mService.mWindowManager.prepareAppTransition(
+                             WindowManagerPolicy.TRANSIT_NONE, false);
+@@ -1755,7 +1755,7 @@ final class ActivityStack {
+                 if (!next.hasBeenLaunched) {
+                     next.hasBeenLaunched = true;
+                 } else {
+-                    if (SHOW_APP_STARTING_PREVIEW && mMainStack) {
++                    if (SHOW_APP_STARTING_PREVIEW && mMainStack && !next.floatingWindow) {
+                         mService.mWindowManager.setAppStartingWindow(
+                                 next.appToken, next.packageName, next.theme,
+                                 mService.compatibilityInfoForPackageLocked(
+@@ -1789,7 +1789,7 @@ final class ActivityStack {
+             if (!next.hasBeenLaunched) {
+                 next.hasBeenLaunched = true;
+             } else {
+-                if (SHOW_APP_STARTING_PREVIEW) {
++                if (SHOW_APP_STARTING_PREVIEW && !next.floatingWindow) {
+                     mService.mWindowManager.setAppStartingWindow(
+                             next.appToken, next.packageName, next.theme,
+                             mService.compatibilityInfoForPackageLocked(
+@@ -1888,12 +1888,13 @@ final class ActivityStack {
+             }
+             if (DEBUG_TRANSITION) Slog.v(TAG,
+                     "Prepare open transition: starting " + r);
+-            if ((r.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
++
++            if (((r.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) || (r.floatingWindow && !r.topIntent)) {
+                 mService.mWindowManager.prepareAppTransition(
+                         WindowManagerPolicy.TRANSIT_NONE, keepCurTransition);
+                 mNoAnimActivities.add(r);
+             } else {
+-                mService.mWindowManager.prepareAppTransition(newTask
++                mService.mWindowManager.prepareAppTransition(newTask && !r.floatingWindow
+                         ? WindowManagerPolicy.TRANSIT_TASK_OPEN
+                         : WindowManagerPolicy.TRANSIT_ACTIVITY_OPEN, keepCurTransition);
+                 mNoAnimActivities.remove(r);
+@@ -1915,7 +1916,7 @@ final class ActivityStack {
+                     doShow = topRunningNonDelayedActivityLocked(null) == r;
+                 }
+             }
+-            if (SHOW_APP_STARTING_PREVIEW && doShow) {
++            if (SHOW_APP_STARTING_PREVIEW && doShow && !r.floatingWindow) {
+                 // Figure out if we are transitioning from another activity that is
+                 // "has the same starting icon" as the next one.  This allows the
+                 // window manager to keep the previous window it had previously
+@@ -3816,7 +3817,7 @@ final class ActivityStack {
+                     || (mHistory.get(index-1)).task != r.task;
+             if (DEBUG_TRANSITION) Slog.v(TAG,
+                     "Prepare close transition: finishing " + r);
+-            mService.mWindowManager.prepareAppTransition(endTask
++            mService.mWindowManager.prepareAppTransition(endTask && !r.floatingWindow
+                     ? WindowManagerPolicy.TRANSIT_TASK_CLOSE
+                     : WindowManagerPolicy.TRANSIT_ACTIVITY_CLOSE, false);
+     
+@@ -4302,7 +4303,7 @@ final class ActivityStack {
+         if (top < 0 || (mHistory.get(top)).task.taskId == task) {
+             // nothing to do!
+             if (reason != null &&
+-                    (reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
++                    ((reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0 || reason.floatingWindow)) {
+                 ActivityOptions.abort(options);
+             } else {
+                 updateTransitLocked(WindowManagerPolicy.TRANSIT_TASK_TO_FRONT, options);
+@@ -4341,7 +4342,7 @@ final class ActivityStack {
+         if (DEBUG_TRANSITION) Slog.v(TAG,
+                 "Prepare to front transition: task=" + tr);
+         if (reason != null &&
+-                (reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
++                ((reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0 || reason.floatingWindow)) {
+             mService.mWindowManager.prepareAppTransition(
+                     WindowManagerPolicy.TRANSIT_NONE, false);
+             ActivityRecord r = topRunningActivityLocked(null);
+@@ -4434,7 +4435,7 @@ final class ActivityStack {
+         }
+ 
+         if (reason != null &&
+-                (reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
++                ((reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0 || reason.floatingWindow)) {
+             mService.mWindowManager.prepareAppTransition(
+                     WindowManagerPolicy.TRANSIT_NONE, false);
+             ActivityRecord r = topRunningActivityLocked(null);
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
 index 0d2ba34..2ed8fa0 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java

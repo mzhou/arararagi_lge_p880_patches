@@ -26,6 +26,9 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
 #f90658c55fbf7b21a80b5f75b1760839484278fd
+git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
+
+#f90658c55fbf7b21a80b5f75b1760839484278fd
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
