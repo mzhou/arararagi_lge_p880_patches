@@ -5384,7 +5384,7 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 84578f6..d77cf47 100644
+index 84578f6..b970dff 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 @@ -259,7 +259,6 @@ public class PhoneStatusBar extends BaseStatusBar {
@@ -5562,7 +5562,17 @@ index 84578f6..d77cf47 100644
  
          // no ticking in Setup
          if (!isDeviceProvisioned()) return;
-@@ -2299,27 +2332,33 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2283,7 +2316,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+         // until status bar window is attached to the window manager,
+         // because...  well, what's the point otherwise?  And trying to
+         // run a ticker without being attached will crash!
+-        if (n.notification.tickerText != null && mStatusBarContainer.getWindowToken() != null) {
++        if (n.notification.tickerText != null && mStatusBarContainer.getWindowToken() != null
++                && !mHaloActive) {
+             if (0 == (mDisabled & (StatusBarManager.DISABLE_NOTIFICATION_ICONS
+                             | StatusBarManager.DISABLE_NOTIFICATION_TICKER))) {
+                 mTicker.addEntry(n);
+@@ -2299,27 +2333,33 @@ public class PhoneStatusBar extends BaseStatusBar {
          @Override
          public void tickerStarting() {
              mTicking = true;
@@ -5609,7 +5619,7 @@ index 84578f6..d77cf47 100644
          }
      }
  
-@@ -2613,6 +2652,18 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2613,6 +2653,18 @@ public class PhoneStatusBar extends BaseStatusBar {
          }
      };
  
