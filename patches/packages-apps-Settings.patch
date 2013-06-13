@@ -78,7 +78,7 @@ index e28feca..b2c516c 100644
      <string name="advanced_reboot_title">Advanced reboot</string>
      <string name="advanced_reboot_summary">When unlocked, include options in the power menu for rebooting into recovery or bootloader</string>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index edde20f..a9fa384 100644
+index edde20f..52533d6 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -4334,6 +4334,9 @@
@@ -91,7 +91,7 @@ index edde20f..a9fa384 100644
  
      <!--  Help URLs for some screens. Not specified here. Specified in product overlays --><skip/>
      <!-- Help menu label [CHAR LIMIT=20] -->
-@@ -4378,4 +4381,15 @@
+@@ -4378,4 +4381,17 @@
      <string name="cell_broadcast_settings">Cell broadcasts</string>
      <!-- Cell Broadcast settings description [CHAR LIMIT=100] -->
      <string name="cell_broadcast_settings_summary">Select the types of emergency alerts to display.</string>
@@ -105,10 +105,12 @@ index edde20f..a9fa384 100644
 +    <string name="halo_state_summary">For black/white-listing notifications pinging through HALO</string>
 +    <string name="halo_state_black">Black list</string>
 +    <string name="halo_state_white">White list</string>
++    <string name="halo_pause_title">HALO pause active app</string>
++    <string name="halo_pause_summary">When opening an app with HALO the underlying app will get paused (enabled by default on low memory devices)</string>
 +
  </resources>
 diff --git a/res/xml/system_settings.xml b/res/xml/system_settings.xml
-index c5ffb5d..ff4bb80 100644
+index c5ffb5d..e3c052c 100644
 --- a/res/xml/system_settings.xml
 +++ b/res/xml/system_settings.xml
 @@ -71,6 +71,13 @@
@@ -125,7 +127,7 @@ index c5ffb5d..ff4bb80 100644
      <PreferenceScreen
          android:key="hardware_keys"
          android:fragment="com.android.settings.cyanogenmod.HardwareKeys"
-@@ -97,4 +104,24 @@
+@@ -97,4 +104,29 @@
  
      </PreferenceCategory>
  
@@ -148,6 +150,11 @@ index c5ffb5d..ff4bb80 100644
 +        android:title="@string/halo_reversed_title"
 +        android:summary="@string/halo_reversed_summary"
 +        android:defaultValue="true" />
++
++    <CheckBoxPreference
++        android:key="halo_pause"
++        android:title="@string/halo_pause_title"
++        android:summary="@string/halo_pause_summary" />
 +
  </PreferenceScreen>
 diff --git a/src/com/android/settings/applications/InstalledAppDetails.java b/src/com/android/settings/applications/InstalledAppDetails.java

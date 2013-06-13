@@ -234,10 +234,10 @@ index 519eb36..ae52b7b 100644
       * called -- no BroadcastReceiver components will be launched.
       */
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 90b9b32..8d67050 100644
+index 90b9b32..7e6b5f2 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
-@@ -2706,6 +2706,25 @@ public final class Settings {
+@@ -2706,6 +2706,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -260,10 +260,17 @@ index 90b9b32..8d67050 100644
 +        public static final String HALO_HIDE = "halo_hide";
 +
 +        /**
++         * HALO pause activities?, defaults to 0 (no, do not pause) on devices which isLargeRAM() == true
++         * otherwise it defaults to 1 (yes, do pause)
++         * @hide
++         */
++        public static final String HALO_PAUSE = "halo_pause";
++
++        /**
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2819,6 +2838,12 @@ public final class Settings {
+@@ -2819,6 +2845,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -6207,19 +6214,27 @@ index de0f9ca..32aa93f 100644
                      realTheme, com.android.internal.R.styleable.Window);
              fullscreen = ent != null && !ent.array.getBoolean(
 diff --git a/services/java/com/android/server/am/ActivityStack.java b/services/java/com/android/server/am/ActivityStack.java
-index 885ec89..a3f2df9 100644
+index 885ec89..98db9e0 100644
 --- a/services/java/com/android/server/am/ActivityStack.java
 +++ b/services/java/com/android/server/am/ActivityStack.java
-@@ -1531,7 +1531,7 @@ final class ActivityStack {
+@@ -58,6 +58,7 @@ import android.os.ServiceManager;
+ import android.os.SystemClock;
+ import android.os.SystemProperties;
+ import android.os.UserHandle;
++import android.provider.Settings;
+ import android.util.EventLog;
+ import android.util.Log;
+ import android.util.Slog;
+@@ -1531,7 +1532,7 @@ final class ActivityStack {
          
          // We need to start pausing the current activity so the top one
          // can be resumed...
 -        if (mResumedActivity != null) {
-+        if (mResumedActivity != null && !next.floatingWindow) {
++        if (mResumedActivity != null && (pauseActiveAppWhenUsingHalo() || !next.floatingWindow)) {
              if (DEBUG_SWITCH) Slog.v(TAG, "Skip resume: need to start pausing");
              // At this point we want to put the upcoming activity's process
              // at the top of the LRU list, since we know we will be needing it
-@@ -1610,7 +1610,7 @@ final class ActivityStack {
+@@ -1610,7 +1611,7 @@ final class ActivityStack {
              if (prev.finishing) {
                  if (DEBUG_TRANSITION) Slog.v(TAG,
                          "Prepare close transition: prev=" + prev);
@@ -6228,7 +6243,7 @@ index 885ec89..a3f2df9 100644
                      mService.mWindowManager.prepareAppTransition(
                              WindowManagerPolicy.TRANSIT_NONE, false);
                  } else {
-@@ -1623,7 +1623,7 @@ final class ActivityStack {
+@@ -1623,7 +1624,7 @@ final class ActivityStack {
              } else {
                  if (DEBUG_TRANSITION) Slog.v(TAG,
                          "Prepare open transition: prev=" + prev);
@@ -6237,7 +6252,7 @@ index 885ec89..a3f2df9 100644
                      noAnim = true;
                      mService.mWindowManager.prepareAppTransition(
                              WindowManagerPolicy.TRANSIT_NONE, false);
-@@ -1755,7 +1755,7 @@ final class ActivityStack {
+@@ -1755,7 +1756,7 @@ final class ActivityStack {
                  if (!next.hasBeenLaunched) {
                      next.hasBeenLaunched = true;
                  } else {
@@ -6246,7 +6261,7 @@ index 885ec89..a3f2df9 100644
                          mService.mWindowManager.setAppStartingWindow(
                                  next.appToken, next.packageName, next.theme,
                                  mService.compatibilityInfoForPackageLocked(
-@@ -1789,7 +1789,7 @@ final class ActivityStack {
+@@ -1789,7 +1790,7 @@ final class ActivityStack {
              if (!next.hasBeenLaunched) {
                  next.hasBeenLaunched = true;
              } else {
@@ -6255,7 +6270,7 @@ index 885ec89..a3f2df9 100644
                      mService.mWindowManager.setAppStartingWindow(
                              next.appToken, next.packageName, next.theme,
                              mService.compatibilityInfoForPackageLocked(
-@@ -1888,12 +1888,13 @@ final class ActivityStack {
+@@ -1888,12 +1889,13 @@ final class ActivityStack {
              }
              if (DEBUG_TRANSITION) Slog.v(TAG,
                      "Prepare open transition: starting " + r);
@@ -6271,7 +6286,7 @@ index 885ec89..a3f2df9 100644
                          ? WindowManagerPolicy.TRANSIT_TASK_OPEN
                          : WindowManagerPolicy.TRANSIT_ACTIVITY_OPEN, keepCurTransition);
                  mNoAnimActivities.remove(r);
-@@ -1915,7 +1916,7 @@ final class ActivityStack {
+@@ -1915,7 +1917,7 @@ final class ActivityStack {
                      doShow = topRunningNonDelayedActivityLocked(null) == r;
                  }
              }
@@ -6280,7 +6295,7 @@ index 885ec89..a3f2df9 100644
                  // Figure out if we are transitioning from another activity that is
                  // "has the same starting icon" as the next one.  This allows the
                  // window manager to keep the previous window it had previously
-@@ -3816,7 +3817,7 @@ final class ActivityStack {
+@@ -3816,7 +3818,7 @@ final class ActivityStack {
                      || (mHistory.get(index-1)).task != r.task;
              if (DEBUG_TRANSITION) Slog.v(TAG,
                      "Prepare close transition: finishing " + r);
@@ -6289,7 +6304,7 @@ index 885ec89..a3f2df9 100644
                      ? WindowManagerPolicy.TRANSIT_TASK_CLOSE
                      : WindowManagerPolicy.TRANSIT_ACTIVITY_CLOSE, false);
      
-@@ -4302,7 +4303,7 @@ final class ActivityStack {
+@@ -4302,7 +4304,7 @@ final class ActivityStack {
          if (top < 0 || (mHistory.get(top)).task.taskId == task) {
              // nothing to do!
              if (reason != null &&
@@ -6298,7 +6313,7 @@ index 885ec89..a3f2df9 100644
                  ActivityOptions.abort(options);
              } else {
                  updateTransitLocked(WindowManagerPolicy.TRANSIT_TASK_TO_FRONT, options);
-@@ -4341,7 +4342,7 @@ final class ActivityStack {
+@@ -4341,7 +4343,7 @@ final class ActivityStack {
          if (DEBUG_TRANSITION) Slog.v(TAG,
                  "Prepare to front transition: task=" + tr);
          if (reason != null &&
@@ -6307,7 +6322,7 @@ index 885ec89..a3f2df9 100644
              mService.mWindowManager.prepareAppTransition(
                      WindowManagerPolicy.TRANSIT_NONE, false);
              ActivityRecord r = topRunningActivityLocked(null);
-@@ -4434,7 +4435,7 @@ final class ActivityStack {
+@@ -4434,7 +4436,7 @@ final class ActivityStack {
          }
  
          if (reason != null &&
@@ -6316,6 +6331,21 @@ index 885ec89..a3f2df9 100644
              mService.mWindowManager.prepareAppTransition(
                      WindowManagerPolicy.TRANSIT_NONE, false);
              ActivityRecord r = topRunningActivityLocked(null);
+@@ -4754,7 +4756,13 @@ final class ActivityStack {
+ 
+         return true;
+     }
+-    
++
++    private boolean pauseActiveAppWhenUsingHalo() {
++        int isLowRAM = (ActivityManager.isLargeRAM()) ? 0 : 1;
++        return Settings.System.getInt(mContext.getContentResolver(),
++                Settings.System.HALO_PAUSE, isLowRAM) == 1;
++    }
++
+     public void dismissKeyguardOnNextActivityLocked() {
+         mDismissKeyguardOnNextActivity = true;
+     }
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
 index 0d2ba34..2ed8fa0 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java
