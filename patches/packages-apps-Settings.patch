@@ -64,10 +64,10 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index a95a675..1783584 100644
+index e28feca..b2c516c 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -851,6 +851,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -853,6 +853,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
