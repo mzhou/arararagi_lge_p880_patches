@@ -269,10 +269,19 @@ index 75c9485..9b21e30 100644
      }
  }
 diff --git a/src/com/android/settings/cyanogenmod/SystemSettings.java b/src/com/android/settings/cyanogenmod/SystemSettings.java
-index 0b0d29c..b3cbf54 100644
+index 0b0d29c..63092ec 100644
 --- a/src/com/android/settings/cyanogenmod/SystemSettings.java
 +++ b/src/com/android/settings/cyanogenmod/SystemSettings.java
-@@ -35,12 +35,16 @@ import android.view.WindowManagerGlobal;
+@@ -16,6 +16,8 @@
+ 
+ package com.android.settings.cyanogenmod;
+ 
++import android.app.ActivityManager;
++import android.app.INotificationManager;
+ import android.content.ContentResolver;
+ import android.content.Context;
+ import android.content.res.Resources;
+@@ -35,12 +37,20 @@ import android.view.WindowManagerGlobal;
  import com.android.settings.R;
  import com.android.settings.SettingsPreferenceFragment;
  
@@ -284,21 +293,34 @@ index 0b0d29c..b3cbf54 100644
 +    // If there is not setting in the provider, use this
 +    private static final int FALLBACK_BUTTON_BACKLIGHT_VALUE = 0;
 +
++    private static final String KEY_HALO_STATE = "halo_state";
++    private static final String KEY_HALO_HIDE = "halo_hide";
++    private static final String KEY_HALO_REVERSED = "halo_reversed";
++    private static final String KEY_HALO_PAUSE = "halo_pause";
      private static final String KEY_NOTIFICATION_PULSE = "notification_pulse";
      private static final String KEY_BATTERY_LIGHT = "battery_light";
 +    private static final String KEY_BUTTON_BACKLIGHT = "button_backlight_mode";
      private static final String KEY_HARDWARE_KEYS = "hardware_keys";
      private static final String KEY_NAVIGATION_BAR = "navigation_bar";
      private static final String KEY_NAVIGATION_RING = "navigation_ring";
-@@ -56,6 +60,7 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -56,10 +66,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
  
      private PreferenceScreen mNotificationPulse;
      private PreferenceScreen mBatteryPulse;
 +    private ListPreference mButtonBacklightPref;
      private PreferenceScreen mPieControl;
++    private ListPreference mHaloState;
++    private CheckBoxPreference mHaloHide;
++    private CheckBoxPreference mHaloReversed;
++    private CheckBoxPreference mHaloPause;
      private ListPreference mExpandedDesktopPref;
      private CheckBoxPreference mExpandedDesktopNoNavbarPref;
-@@ -69,8 +74,9 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+ 
++    private INotificationManager mNotificationManager;
+     private boolean mIsPrimary;
+ 
+     @Override
+@@ -69,8 +85,9 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          addPreferencesFromResource(R.xml.system_settings);
          PreferenceScreen prefScreen = getPreferenceScreen();
  
@@ -310,7 +332,7 @@ index 0b0d29c..b3cbf54 100644
          boolean removeKeys = false;
          boolean removeNavbar = false;
  
-@@ -110,7 +116,8 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -110,7 +127,8 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
                  prefScreen.removePreference(findPreference(KEY_NAVIGATION_BAR_CATEGORY));
              }
          } else {
@@ -320,7 +342,7 @@ index 0b0d29c..b3cbf54 100644
              prefScreen.removePreference(findPreference(KEY_BATTERY_LIGHT));
              prefScreen.removePreference(findPreference(KEY_HARDWARE_KEYS));
              prefScreen.removePreference(findPreference(KEY_NAVIGATION_BAR));
-@@ -122,11 +129,24 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -122,11 +140,24 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
              prefScreen.removePreference(findPreference(KEY_NOTIFICATION_DRAWER));
          }
  
@@ -346,7 +368,35 @@ index 0b0d29c..b3cbf54 100644
                  prefScreen.removePreference(mNotificationPulse);
                  mNotificationPulse = null;
              }
-@@ -199,6 +219,10 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -140,6 +171,27 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+             mPieControl = null;
+         }
+ 
++        // Halo
++        mNotificationManager = INotificationManager.Stub.asInterface(
++                ServiceManager.getService(Context.NOTIFICATION_SERVICE));
++
++        mHaloState = (ListPreference) findPreference(KEY_HALO_STATE);
++        mHaloState.setValue(String.valueOf((isHaloPolicyBlack() ? "1" : "0")));
++        mHaloState.setOnPreferenceChangeListener(this);
++
++        mHaloHide = (CheckBoxPreference) findPreference(KEY_HALO_HIDE);
++        mHaloHide.setChecked(Settings.System.getInt(getContentResolver(),
++                Settings.System.HALO_HIDE, 0) == 1);
++
++        mHaloReversed = (CheckBoxPreference) findPreference(KEY_HALO_REVERSED);
++        mHaloReversed.setChecked(Settings.System.getInt(getContentResolver(),
++                Settings.System.HALO_REVERSED, 1) == 1);
++
++        int isLowRAM = (ActivityManager.isLargeRAM()) ? 0 : 1;
++        mHaloPause = (CheckBoxPreference) findPreference(KEY_HALO_PAUSE);
++        mHaloPause.setChecked(Settings.System.getInt(getContentResolver(),
++                Settings.System.HALO_PAUSE, isLowRAM) == 1);
++
+         // Expanded desktop
+         mExpandedDesktopPref = (ListPreference) findPreference(KEY_EXPANDED_DESKTOP);
+         mExpandedDesktopNoNavbarPref = (CheckBoxPreference) findPreference(KEY_EXPANDED_DESKTOP_NO_NAVBAR);
+@@ -199,6 +251,36 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
              boolean value = (Boolean) objValue;
              updateExpandedDesktop(value ? 2 : 0);
              return true;
@@ -354,19 +404,54 @@ index 0b0d29c..b3cbf54 100644
 +            int value = Integer.parseInt((String) objValue);
 +            updateButtonBacklight(value);
 +            return true;
++        } else if (preference == mHaloHide) {
++            boolean value = (Boolean) objValue;
++            Settings.System.putInt(getContentResolver(),
++                    Settings.System.HALO_HIDE, value
++                    ? 1 : 0);
++            return true;
++        } else if (preference == mHaloReversed) {
++            boolean value = (Boolean) objValue;
++            Settings.System.putInt(getContentResolver(),
++                    Settings.System.HALO_REVERSED, value
++                    ? 1 : 0);
++            return true;
++        } else if (preference == mHaloPause) {
++            boolean value = (Boolean) objValue;
++            Settings.System.putInt(getContentResolver(),
++                    Settings.System.HALO_PAUSE, value
++                    ? 1 : 0);
++            return true;
++        } else if (preference == mHaloState) {
++            boolean state = Integer.valueOf((String) objValue) == 1;
++            try {
++                mNotificationManager.setHaloPolicyBlack(state);
++            } catch (android.os.RemoteException ex) {
++                // System dead
++            }
++            return true;
          }
  
          return false;
-@@ -220,7 +244,7 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -220,7 +302,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          } else {
              mBatteryPulse.setSummary(getString(R.string.notification_light_disabled));
          }
 -     }
 +    }
++
++    private boolean isHaloPolicyBlack() {
++        try {
++            return mNotificationManager.isHaloPolicyBlack();
++        } catch (android.os.RemoteException ex) {
++                // System dead
++        }
++        return true;
++    }
  
      private void updatePieControlDescription() {
          if (Settings.System.getInt(getActivity().getContentResolver(),
-@@ -231,6 +255,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -231,6 +322,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          }
      }
  
