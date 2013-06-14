@@ -28,7 +28,7 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#c5c33031ad8a0b1fab388319f925155ce58528d4
+#2849e6f6636d794900dd5dfa569204c17df7289e
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
@@ -52,10 +52,10 @@ git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 #3aca6c3137f968f4c4103e15f0fbbe0141dd518e
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#7dae958adefd8f4a7594a74f8e05f1e3449e6cc6
+#2c54e018b6d609563b174f78e9c7295f1869b70d
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
 
-#023a4556d6218089c9ee08541437c294fd0b0ebe
+#4de793e258e098cb5bec3474190e012bcd999103
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
 #cd8df62842b81c93022feabfacda8efd257e1754

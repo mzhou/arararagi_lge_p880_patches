@@ -8209,10 +8209,10 @@ index 26b1eb2..faf9fb2 100644
                  updateClock();
              } else {
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index b1df302..aa08972 100644
+index f620c6d..eb670fc 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-@@ -903,21 +903,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -914,21 +914,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
  
      private final Runnable mRingerChordLongPress = new Runnable() {
          public void run() {
@@ -8222,8 +8222,8 @@ index b1df302..aa08972 100644
 -            final VolumePanel volumePanel = new VolumePanel(ThemeUtils.createUiContext(mContext),
 -                                                              (AudioService) getAudioService());
 -            if (ringerMode == AudioManager.RINGER_MODE_NORMAL) {
--                boolean vibrateSetting = Settings.System.getInt(mContext.getContentResolver(),
--                                           Settings.System.VIBRATE_WHEN_RINGING, 0) != 0;
+-                boolean vibrateSetting = Settings.System.getIntForUser(mContext.getContentResolver(),
+-                        Settings.System.VIBRATE_WHEN_RINGING, 0, UserHandle.USER_CURRENT) != 0;
 -                am.setRingerMode(vibrateSetting ? AudioManager.RINGER_MODE_VIBRATE :
 -                                   AudioManager.RINGER_MODE_SILENT);
 -            } else {
@@ -8235,7 +8235,7 @@ index b1df302..aa08972 100644
          }
      };
  
-@@ -2165,8 +2151,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -2185,8 +2171,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
  
          if (DEBUG_INPUT) {
              Log.d(TAG, "interceptKeyTi keyCode=" + keyCode + " down=" + down + " repeatCount="
@@ -8245,7 +8245,7 @@ index b1df302..aa08972 100644
          }
  
          // If we think we might have a volume down & power/volume-up key chord on the way
-@@ -5382,7 +5367,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -5402,7 +5387,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                  pw.println(mForceStatusBarFromKeyguard);
          pw.print(prefix); pw.print("mDismissKeyguard="); pw.print(mDismissKeyguard);
                  pw.print(" mWinDismissingKeyguard="); pw.print(mWinDismissingKeyguard);
