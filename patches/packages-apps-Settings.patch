@@ -64,10 +64,10 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index e28feca..b2c516c 100644
+index e417e45..be65dc9 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -853,6 +853,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -859,6 +859,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
@@ -158,7 +158,7 @@ index c5ffb5d..e3c052c 100644
 +
  </PreferenceScreen>
 diff --git a/src/com/android/settings/applications/InstalledAppDetails.java b/src/com/android/settings/applications/InstalledAppDetails.java
-index 75c9485..9b21e30 100644
+index be515df..bce7072 100644
 --- a/src/com/android/settings/applications/InstalledAppDetails.java
 +++ b/src/com/android/settings/applications/InstalledAppDetails.java
 @@ -107,11 +107,13 @@ public class InstalledAppDetails extends Fragment
@@ -232,7 +232,7 @@ index 75c9485..9b21e30 100644
  
          return view;
      }
-@@ -1258,17 +1271,22 @@ public class InstalledAppDetails extends Fragment
+@@ -1262,17 +1275,22 @@ public class InstalledAppDetails extends Fragment
      }
  
      private void setNotificationsEnabled(boolean enabled) {
@@ -259,7 +259,7 @@ index 75c9485..9b21e30 100644
      private int getPremiumSmsPermission(String packageName) {
          try {
              if (mSmsManager != null) {
-@@ -1366,6 +1384,8 @@ public class InstalledAppDetails extends Fragment
+@@ -1370,6 +1388,8 @@ public class InstalledAppDetails extends Fragment
              } else {
                  setNotificationsEnabled(true);
              }

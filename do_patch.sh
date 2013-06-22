@@ -7,7 +7,7 @@ git apply --directory='bionic' "$PATCH_DIR/bionic.cached.patch"
 #c9a8d3d5c6a9363590372fa73ac43273817af43b
 git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 
-#7da16d025b2c972200ffb5b308fe1683e62e564a
+#ba2d49d4cdb95e6508d775f3ff148579318a1051
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 
 #54148870b37e288b3cdf7830026adf67c2e00254
@@ -28,13 +28,16 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#2849e6f6636d794900dd5dfa569204c17df7289e
+#7fcde1a8a300f634d9fa8e6c7266a7fedb1f141c
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
+
+#7fcde1a8a300f634d9fa8e6c7266a7fedb1f141c
+git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
 git apply --directory='frameworks/rs' "$PATCH_DIR/frameworks-rs.patch"
 
-#aee7b8203fae90edbc91ed879ffb6e53bb90b2d2
+#2d29503e883845cc053cf4f3d8c634720e9bf8b2
 git apply --directory='frameworks/opt/telephony' "$PATCH_DIR/frameworks-opt-telephony.cached.patch"
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
@@ -49,13 +52,13 @@ git apply --directory='kernel/lge/p880' "$PATCH_DIR/kernel-lge-p880.patch"
 #8a22bed790b6699fc5e52c7d796b556ef92ecb9c
 git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 
-#3aca6c3137f968f4c4103e15f0fbbe0141dd518e
+#2b46e3ce287e8f31e61e504075d27dc77767896c
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#2c54e018b6d609563b174f78e9c7295f1869b70d
+#db66a296cbb45cbf8e13089dc324d28ec954be08
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
 
-#4de793e258e098cb5bec3474190e012bcd999103
+#d91f217cb50f7c92f8276e12e9bba9d00af55008
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
 #cd8df62842b81c93022feabfacda8efd257e1754
