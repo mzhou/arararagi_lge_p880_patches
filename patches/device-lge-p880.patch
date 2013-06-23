@@ -1,5 +1,5 @@
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index 76cf475..cd1b71c 100644
+index 76cf475..313e849 100644
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
 @@ -16,6 +16,7 @@ TARGET_CPU_SMP := true
@@ -10,6 +10,12 @@ index 76cf475..cd1b71c 100644
  
  BOARD_KERNEL_CMDLINE := 
  BOARD_KERNEL_BASE := 0x10000000
+@@ -76,3 +77,5 @@ BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
+ 
+ BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery-gfx.c
+ BOARD_CHARGER_ENABLE_SUSPEND := true
++
++WITH_DEXPREOPT := true
 diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
 index 3f1ae1e..81fb896 100755
 --- a/overlay/frameworks/base/core/res/res/values/config.xml

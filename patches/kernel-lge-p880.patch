@@ -1442,6 +1442,19 @@ index be6e9fa..e47e135 100644
  }
  static DEVICE_ATTR(torch, 0666, NULL, torch_store);
  
+diff --git a/drivers/misc/tspdrv/ImmVibeSPI.c b/drivers/misc/tspdrv/ImmVibeSPI.c
+index b86e513..82aedfd 100644
+--- a/drivers/misc/tspdrv/ImmVibeSPI.c
++++ b/drivers/misc/tspdrv/ImmVibeSPI.c
+@@ -95,7 +95,7 @@ static int status = 0;
+ 
+ #define PWM_PERIOD_DEFAULT              44000 //20.3KHz
+ //#define PWM_DUTY_DEFAULT              (PWM_PERIOD_DEFAULT >> 1) //50%
+-#define PWM_DUTY_DEFAULT              (PWM_PERIOD_DEFAULT *.75 ) //75%
++#define PWM_DUTY_DEFAULT              (PWM_PERIOD_DEFAULT *1 ) //100%
+ 
+ VibeUInt32 g_nPWM_Freq = PWM_PERIOD_DEFAULT;
+ 
 diff --git a/drivers/power/max8971-charger.c b/drivers/power/max8971-charger.c
 index c6787eb..8b246403 100644
 --- a/drivers/power/max8971-charger.c

@@ -10,6 +10,9 @@ git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 #ba2d49d4cdb95e6508d775f3ff148579318a1051
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 
+#ba2d49d4cdb95e6508d775f3ff148579318a1051
+git apply --directory='build' "$PATCH_DIR/build.patch"
+
 #54148870b37e288b3cdf7830026adf67c2e00254
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.cached.patch"
 
@@ -28,10 +31,10 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#7fcde1a8a300f634d9fa8e6c7266a7fedb1f141c
+#14530a851cb581b48e5d5eca33ca9a1b56c9887f
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
-#7fcde1a8a300f634d9fa8e6c7266a7fedb1f141c
+#14530a851cb581b48e5d5eca33ca9a1b56c9887f
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
@@ -55,7 +58,7 @@ git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 #2b46e3ce287e8f31e61e504075d27dc77767896c
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#db66a296cbb45cbf8e13089dc324d28ec954be08
+#0733be1e3674427a885a9a49cc07a7d45268942d
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
 
 #d91f217cb50f7c92f8276e12e9bba9d00af55008

@@ -64,7 +64,7 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index e417e45..be65dc9 100644
+index b4bcd88..ca8fb66 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
 @@ -859,6 +859,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
