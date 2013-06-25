@@ -1,10 +1,10 @@
 diff --git a/res/layout/installed_app_details.xml b/res/layout/installed_app_details.xml
-index b7f8f15..686c441 100644
+index 577cfd4..0f5a32f 100644
 --- a/res/layout/installed_app_details.xml
 +++ b/res/layout/installed_app_details.xml
-@@ -62,6 +62,13 @@
+@@ -70,6 +70,13 @@
                  android:layout_marginTop="4dip"
-                 android:text="@string/app_notifications_switch_label" />
+                 android:text="@string/privacy_guard_switch_label" />
  
 +            <!-- HALO notification state for this package -->
 +            <CheckBox android:id="@+id/halo_state"
@@ -64,10 +64,10 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index b4bcd88..ca8fb66 100644
+index 9396d75..2aaebf1 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -859,6 +859,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -861,6 +861,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
@@ -78,7 +78,7 @@ index b4bcd88..ca8fb66 100644
      <string name="advanced_reboot_title">Advanced reboot</string>
      <string name="advanced_reboot_summary">When unlocked, include options in the power menu for rebooting into recovery or bootloader</string>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index edde20f..52533d6 100644
+index 912782d..c0e68ce 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -4334,6 +4334,9 @@
@@ -158,7 +158,7 @@ index c5ffb5d..e3c052c 100644
 +
  </PreferenceScreen>
 diff --git a/src/com/android/settings/applications/InstalledAppDetails.java b/src/com/android/settings/applications/InstalledAppDetails.java
-index be515df..bce7072 100644
+index 36adae2..7749110 100644
 --- a/src/com/android/settings/applications/InstalledAppDetails.java
 +++ b/src/com/android/settings/applications/InstalledAppDetails.java
 @@ -107,11 +107,13 @@ public class InstalledAppDetails extends Fragment
@@ -175,16 +175,15 @@ index be515df..bce7072 100644
      private PackageInfo mPackageInfo;
      private CanBeOnSdCardChecker mCanBeOnSdCardChecker;
      private View mRootView;
-@@ -139,7 +141,7 @@ public class InstalledAppDetails extends Fragment
-     private Button mForceStopButton;
-     private Button mClearDataButton;
+@@ -141,6 +143,7 @@ public class InstalledAppDetails extends Fragment
      private Button mMoveAppButton;
--    private CompoundButton mNotificationSwitch;
-+    private CompoundButton mNotificationSwitch, mHaloState;
+     private CompoundButton mNotificationSwitch;
+     private CompoundButton mPrivacyGuardSwitch;
++    private CompoundButton mHaloState;
  
      private PackageMoveObserver mPackageMoveObserver;
  
-@@ -381,15 +383,17 @@ public class InstalledAppDetails extends Fragment
+@@ -383,15 +386,17 @@ public class InstalledAppDetails extends Fragment
      }
  
      private void initNotificationButton() {
@@ -205,7 +204,7 @@ index be515df..bce7072 100644
          if (isThisASystemPackage()) {
              mNotificationSwitch.setEnabled(false);
          } else {
-@@ -412,9 +416,16 @@ public class InstalledAppDetails extends Fragment
+@@ -421,9 +426,16 @@ public class InstalledAppDetails extends Fragment
          mAppWidgetManager = AppWidgetManager.getInstance(getActivity());
          mDpm = (DevicePolicyManager)getActivity().getSystemService(Context.DEVICE_POLICY_SERVICE);
          mSmsManager = ISms.Stub.asInterface(ServiceManager.getService("isms"));
@@ -223,16 +222,16 @@ index be515df..bce7072 100644
          // Need to make sure we have loaded applications at this point.
          mSession.resume();
  
-@@ -474,6 +485,8 @@ public class InstalledAppDetails extends Fragment
+@@ -483,6 +495,8 @@ public class InstalledAppDetails extends Fragment
          mEnableCompatibilityCB = (CheckBox)view.findViewById(R.id.enable_compatibility_cb);
          
          mNotificationSwitch = (CompoundButton) view.findViewById(R.id.notification_switch);
 +        mHaloState = (CompoundButton) view.findViewById(R.id.halo_state);
 +        mHaloState.setText((mHaloPolicyIsBlack ? R.string.app_halo_label_black : R.string.app_halo_label_white));
  
-         return view;
-     }
-@@ -1262,17 +1275,22 @@ public class InstalledAppDetails extends Fragment
+         mPrivacyGuardSwitch = (CompoundButton) view.findViewById(R.id.privacy_guard_switch);
+ 
+@@ -1293,12 +1307,9 @@ public class InstalledAppDetails extends Fragment
      }
  
      private void setNotificationsEnabled(boolean enabled) {
@@ -246,6 +245,8 @@ index be515df..bce7072 100644
          } catch (android.os.RemoteException ex) {
              mNotificationSwitch.setChecked(!enabled); // revert
          }
+@@ -1309,6 +1320,14 @@ public class InstalledAppDetails extends Fragment
+         mPm.setPrivacyGuardSetting(packageName, enabled);
      }
  
 +    private void setHaloState(boolean state) {
@@ -259,9 +260,9 @@ index be515df..bce7072 100644
      private int getPremiumSmsPermission(String packageName) {
          try {
              if (mSmsManager != null) {
-@@ -1370,6 +1388,8 @@ public class InstalledAppDetails extends Fragment
+@@ -1412,6 +1431,8 @@ public class InstalledAppDetails extends Fragment
              } else {
-                 setNotificationsEnabled(true);
+                 setPrivacyGuard(false);
              }
 +        } else if (buttonView == mHaloState) {
 +            setHaloState(isChecked);
@@ -269,7 +270,7 @@ index be515df..bce7072 100644
      }
  }
 diff --git a/src/com/android/settings/cyanogenmod/SystemSettings.java b/src/com/android/settings/cyanogenmod/SystemSettings.java
-index 0b0d29c..63092ec 100644
+index 7be4e03..56dbb83 100644
 --- a/src/com/android/settings/cyanogenmod/SystemSettings.java
 +++ b/src/com/android/settings/cyanogenmod/SystemSettings.java
 @@ -16,6 +16,8 @@
@@ -281,7 +282,7 @@ index 0b0d29c..63092ec 100644
  import android.content.ContentResolver;
  import android.content.Context;
  import android.content.res.Resources;
-@@ -35,12 +37,20 @@ import android.view.WindowManagerGlobal;
+@@ -36,12 +38,20 @@ import android.view.WindowManagerGlobal;
  import com.android.settings.R;
  import com.android.settings.SettingsPreferenceFragment;
  
@@ -303,7 +304,7 @@ index 0b0d29c..63092ec 100644
      private static final String KEY_HARDWARE_KEYS = "hardware_keys";
      private static final String KEY_NAVIGATION_BAR = "navigation_bar";
      private static final String KEY_NAVIGATION_RING = "navigation_ring";
-@@ -56,10 +66,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -57,10 +67,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
  
      private PreferenceScreen mNotificationPulse;
      private PreferenceScreen mBatteryPulse;
@@ -320,7 +321,7 @@ index 0b0d29c..63092ec 100644
      private boolean mIsPrimary;
  
      @Override
-@@ -69,8 +85,9 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -70,8 +86,9 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          addPreferencesFromResource(R.xml.system_settings);
          PreferenceScreen prefScreen = getPreferenceScreen();
  
@@ -332,18 +333,14 @@ index 0b0d29c..63092ec 100644
          boolean removeKeys = false;
          boolean removeNavbar = false;
  
-@@ -110,7 +127,8 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
-                 prefScreen.removePreference(findPreference(KEY_NAVIGATION_BAR_CATEGORY));
+@@ -111,15 +128,29 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+                 }
              }
          } else {
 -            // Secondary user is logged in, remove all primary user specific preferences
 +            // Secondary user is logged in, remove all primary user specific
 +            // preferences
              prefScreen.removePreference(findPreference(KEY_BATTERY_LIGHT));
-             prefScreen.removePreference(findPreference(KEY_HARDWARE_KEYS));
-             prefScreen.removePreference(findPreference(KEY_NAVIGATION_BAR));
-@@ -122,11 +140,24 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
-             prefScreen.removePreference(findPreference(KEY_NOTIFICATION_DRAWER));
          }
  
 +        // Button lights. Per user.
@@ -368,7 +365,7 @@ index 0b0d29c..63092ec 100644
                  prefScreen.removePreference(mNotificationPulse);
                  mNotificationPulse = null;
              }
-@@ -140,6 +171,27 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -133,6 +164,27 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
              mPieControl = null;
          }
  
@@ -396,7 +393,7 @@ index 0b0d29c..63092ec 100644
          // Expanded desktop
          mExpandedDesktopPref = (ListPreference) findPreference(KEY_EXPANDED_DESKTOP);
          mExpandedDesktopNoNavbarPref = (CheckBoxPreference) findPreference(KEY_EXPANDED_DESKTOP_NO_NAVBAR);
-@@ -199,6 +251,36 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -192,6 +244,36 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
              boolean value = (Boolean) objValue;
              updateExpandedDesktop(value ? 2 : 0);
              return true;
@@ -433,7 +430,7 @@ index 0b0d29c..63092ec 100644
          }
  
          return false;
-@@ -220,7 +302,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -213,7 +295,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          } else {
              mBatteryPulse.setSummary(getString(R.string.notification_light_disabled));
          }
@@ -451,7 +448,7 @@ index 0b0d29c..63092ec 100644
  
      private void updatePieControlDescription() {
          if (Settings.System.getInt(getActivity().getContentResolver(),
-@@ -231,6 +322,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -224,6 +315,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          }
      }
  

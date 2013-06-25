@@ -1,10 +1,10 @@
 #!/bin/bash -ux
 PATCH_DIR='../arararagi_lge_p880_patches/patches'
 
-#c9a8d3d5c6a9363590372fa73ac43273817af43b
+#80fcbd05207cd2d1e3673ed9536d7a86c2fa251a
 git apply --directory='bionic' "$PATCH_DIR/bionic.cached.patch"
 
-#c9a8d3d5c6a9363590372fa73ac43273817af43b
+#80fcbd05207cd2d1e3673ed9536d7a86c2fa251a
 git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 
 #ba2d49d4cdb95e6508d775f3ff148579318a1051
@@ -31,11 +31,8 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#14530a851cb581b48e5d5eca33ca9a1b56c9887f
+#faf556956cb8d33ef496aff0a897cf26c7ade6e1
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
-
-#14530a851cb581b48e5d5eca33ca9a1b56c9887f
-git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
 git apply --directory='frameworks/rs' "$PATCH_DIR/frameworks-rs.patch"
@@ -55,11 +52,11 @@ git apply --directory='kernel/lge/p880' "$PATCH_DIR/kernel-lge-p880.patch"
 #8a22bed790b6699fc5e52c7d796b556ef92ecb9c
 git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 
-#2b46e3ce287e8f31e61e504075d27dc77767896c
+#d5757a2a47aec7b14132b85702d441ef39edd6ca
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#0733be1e3674427a885a9a49cc07a7d45268942d
-git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
+#41ef818e08ebb13cedf999c347ed79d75d938364
+git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
 
 #d91f217cb50f7c92f8276e12e9bba9d00af55008
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
