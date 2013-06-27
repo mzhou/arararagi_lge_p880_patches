@@ -62,7 +62,7 @@ index 0ff0fbc..1d90e07 100644
      field public static final android.os.Parcelable.Creator CREATOR;
    }
 diff --git a/core/java/android/app/Activity.java b/core/java/android/app/Activity.java
-index e779746..94e9b42 100644
+index e779746..c94466f 100644
 --- a/core/java/android/app/Activity.java
 +++ b/core/java/android/app/Activity.java
 @@ -55,13 +55,17 @@ import android.text.TextUtils;
@@ -93,7 +93,7 @@ index e779746..94e9b42 100644
          }
  
          if (mActionBar != null) {
-@@ -5056,11 +5063,47 @@ public class Activity extends ContextThemeWrapper
+@@ -5056,11 +5063,49 @@ public class Activity extends ContextThemeWrapper
              CharSequence title, Activity parent, String id,
              NonConfigurationInstances lastNonConfigurationInstances,
              Configuration config) {
@@ -127,12 +127,14 @@ index e779746..94e9b42 100644
 +            mWindow.setCloseOnTouchOutsideIfNotSet(true);
 +            mWindow.setGravity(Gravity.CENTER);
 +
-+            mWindow.setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-+                    WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-+            WindowManager.LayoutParams params = mWindow.getAttributes(); 
-+            params.alpha = 1f;
-+            params.dimAmount = 0.25f;
-+            mWindow.setAttributes((android.view.WindowManager.LayoutParams) params);
++            if (this instanceof LayerActivity || android.os.Process.myUid() == android.os.Process.SYSTEM_UID) {
++                mWindow.setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
++                        WindowManager.LayoutParams.FLAG_DIM_BEHIND);
++                WindowManager.LayoutParams params = mWindow.getAttributes();
++                params.alpha = 1f;
++                params.dimAmount = 0.25f;
++                mWindow.setAttributes((android.view.WindowManager.LayoutParams) params);
++            }
 +
 +            // Scale it
 +            scaleFloatingWindow(context);
@@ -143,7 +145,7 @@ index e779746..94e9b42 100644
          mWindow.setCallback(this);
          mWindow.getLayoutInflater().setPrivateFactory(this);
          if (info.softInputMode != WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED) {
-@@ -5095,6 +5138,26 @@ public class Activity extends ContextThemeWrapper
+@@ -5095,6 +5140,26 @@ public class Activity extends ContextThemeWrapper
          mCurrentConfig = config;
      }
  
@@ -170,7 +172,7 @@ index e779746..94e9b42 100644
      /** @hide */
      public final IBinder getActivityToken() {
          return mParent != null ? mParent.getActivityToken() : mToken;
-@@ -5218,7 +5281,7 @@ public class Activity extends ContextThemeWrapper
+@@ -5218,7 +5283,7 @@ public class Activity extends ContextThemeWrapper
          onUserInteraction();
          onUserLeaveHint();
      }
@@ -179,7 +181,7 @@ index e779746..94e9b42 100644
      final void performStop() {
          if (mLoadersStarted) {
              mLoadersStarted = false;
-@@ -5264,6 +5327,14 @@ public class Activity extends ContextThemeWrapper
+@@ -5264,6 +5329,14 @@ public class Activity extends ContextThemeWrapper
              mStopped = true;
          }
          mResumed = false;
@@ -1465,7 +1467,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 2f05dfe..6badde6 100644
+index 9e1177f..33ae5e3 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -60,6 +60,17 @@ import java.net.URISyntaxException;
@@ -1486,7 +1488,7 @@ index 2f05dfe..6badde6 100644
  /**
   * The Settings provider contains global system-level device preferences.
   */
-@@ -2709,6 +2720,32 @@ public final class Settings {
+@@ -2703,6 +2714,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -1519,7 +1521,7 @@ index 2f05dfe..6badde6 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2822,6 +2859,12 @@ public final class Settings {
+@@ -2816,6 +2853,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -1532,7 +1534,7 @@ index 2f05dfe..6badde6 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -3672,6 +3715,46 @@ public final class Settings {
+@@ -3666,6 +3709,46 @@ public final class Settings {
                  }
              }
  
@@ -1579,7 +1581,7 @@ index 2f05dfe..6badde6 100644
              return sNameValueCache.getStringForUser(resolver, name, userHandle);
          }
  
-@@ -3972,7 +4055,71 @@ public final class Settings {
+@@ -3966,7 +4049,71 @@ public final class Settings {
                  int userHandle) {
              return putStringForUser(cr, name, Float.toString(value), userHandle);
          }
@@ -1930,7 +1932,7 @@ index 0290857..acfd996 100644
  
  void android_os_Process_readProcLines(JNIEnv* env, jobject clazz, jstring fileStr,
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index 3679acb..093ff6a 100644
+index f386b28..ae1ed4b 100644
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
 @@ -1162,6 +1162,8 @@
@@ -6075,6 +6077,28 @@ index e8ceeed..64f8d47 100644
          >
          <ImageView android:id="@+id/settings_button"
              android:layout_width="50dp"
+diff --git a/packages/SystemUI/res/menu/recent_popup_menu.xml b/packages/SystemUI/res/menu/recent_popup_menu.xml
+index eecfb9a..b992707 100644
+--- a/packages/SystemUI/res/menu/recent_popup_menu.xml
++++ b/packages/SystemUI/res/menu/recent_popup_menu.xml
+@@ -20,4 +20,5 @@
+ <menu xmlns:android="http://schemas.android.com/apk/res/android">
+     <item android:id="@+id/recent_remove_item" android:title="@string/status_bar_recent_remove_item_title" />
+     <item android:id="@+id/recent_inspect_item" android:title="@string/status_bar_recent_inspect_item_title" />
++    <item android:id="@+id/recent_launch_floating" android:title="@string/status_bar_recent_floating_item_title" />
+ </menu>
+diff --git a/packages/SystemUI/res/values-es/strings.xml b/packages/SystemUI/res/values-es/strings.xml
+index 892016f..7cb3048 100644
+--- a/packages/SystemUI/res/values-es/strings.xml
++++ b/packages/SystemUI/res/values-es/strings.xml
+@@ -25,6 +25,7 @@
+     <string name="status_bar_please_disturb_button" msgid="3345398298841572813">"Mostrar notificaciones"</string>
+     <string name="status_bar_recent_remove_item_title" msgid="6026395868129852968">"Eliminar de la lista"</string>
+     <string name="status_bar_recent_inspect_item_title" msgid="7793624864528818569">"Información de la aplicación"</string>
++    <string name="status_bar_recent_floating_item_title">Modo flotante</string>
+     <string name="status_bar_no_recent_apps" msgid="6576392951053994640">"No hay aplicaciones recientes."</string>
+     <string name="status_bar_accessibility_dismiss_recents" msgid="4576076075226540105">"Ignorar aplicaciones recientes"</string>
+   <plurals name="status_bar_accessibility_recent_apps">
 diff --git a/packages/SystemUI/res/values-land/dimens.xml b/packages/SystemUI/res/values-land/dimens.xml
 index ab71371..3d42a3a 100644
 --- a/packages/SystemUI/res/values-land/dimens.xml
@@ -6101,10 +6125,20 @@ index 158c355..114827f 100644
 +
  </resources>
 diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
-index f3db062..0c3568e 100644
+index f3db062..02ece9f 100644
 --- a/packages/SystemUI/res/values/strings.xml
 +++ b/packages/SystemUI/res/values/strings.xml
-@@ -426,6 +426,9 @@
+@@ -41,6 +41,9 @@
+     <!-- Title shown in recents popup for inspecting an application's properties -->
+     <string name="status_bar_recent_inspect_item_title">App info</string>
+ 
++    <!-- Title shown in recents popup for showing app in floating mode -->
++    <string name="status_bar_recent_floating_item_title">Floating mode</string>
++
+     <!-- Message shown in the middle of the screen after clicking on the recent apps button
+          when there are no recent apps to show. Also used for accessibility. [CHAR LIMIT=45]-->
+     <string name="status_bar_no_recent_apps">No recent apps</string>
+@@ -426,6 +429,9 @@
      <!-- Notification text: when GPS has found a fix [CHAR LIMIT=50] -->
      <string name="gps_notification_found_text">Location set by GPS</string>
  
@@ -6116,32 +6150,56 @@ index f3db062..0c3568e 100644
  
 diff --git a/packages/SystemUI/src/com/android/systemui/Transparent.java b/packages/SystemUI/src/com/android/systemui/Transparent.java
 new file mode 100644
-index 0000000..478b9b4
+index 0000000..7d36b3f
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/Transparent.java
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2013 ParanoidAndroid Project.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
 +package com.android.systemui;
 +
-+import android.app.Activity;
-+import android.os.Handler;
++import android.app.LayerActivity;
 +
-+public class Transparent extends Activity {
++public class Transparent extends LayerActivity {
 +
-+    @Override
-+    public void onStart() {
-+        super.onStart();
-+
-+        new Handler().postDelayed(new Runnable() {
-+
-+            @Override
-+            public void run() {
-+                Transparent.this.finish();
-+            }
-+        }, 500);
-+    }
 +}
+diff --git a/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java b/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
+index 3b4155c..73f5389 100644
+--- a/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
++++ b/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
+@@ -774,6 +774,16 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
+                     } else {
+                         throw new IllegalStateException("Oops, no tag on view " + selectedView);
+                     }
++                } else if (item.getItemId() == R.id.recent_launch_floating) {
++                    ViewHolder viewHolder = (ViewHolder) selectedView.getTag();
++                    if (viewHolder != null) {
++                        final TaskDescription ad = viewHolder.taskDescription;
++                        Intent intent = ad.intent;
++                        intent.addFlags(Intent.FLAG_FLOATING_WINDOW
++                                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
++                        dismissAndGoBack();
++                        getContext().startActivity(intent);
++                    }
+                 } else {
+                     return false;
+                 }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
-index 633687a..469b6e3 100644
+index 633687a..c4943e3 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
 @@ -50,7 +50,12 @@ import android.content.res.Configuration;
@@ -6336,7 +6394,7 @@ index 633687a..469b6e3 100644
  
              if (mIntent != null) {
 +
-+                if (mFloat && !"android".equals(mPkg) && !"com.paranoid.halo".equals(mPkg)) {
++                if (mFloat && !"android".equals(mPkg)) {
 +                    Intent transparent = new Intent(mContext, com.android.systemui.Transparent.class);
 +                    transparent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_FLOATING_WINDOW);
 +                    mContext.startActivity(transparent);
@@ -7862,7 +7920,7 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 7bc056a..d72c59f 100644
+index 7bc056a..ca77322 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 @@ -267,7 +267,6 @@ public class PhoneStatusBar extends BaseStatusBar {
@@ -7944,6 +8002,15 @@ index 7bc056a..d72c59f 100644
          } else if (mClearButton.isShown()) {
              if (clearable != (mClearButton.getAlpha() == 1.0f)) {
                  ObjectAnimator clearAnimation = ObjectAnimator.ofFloat(
+@@ -1285,7 +1300,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+                     @Override
+                     public void onAnimationEnd(Animator animation) {
+                         if (mClearButton.getAlpha() <= 0.0f) {
+-                            mClearButton.setVisibility(View.INVISIBLE);
++                            mClearButton.setVisibility(View.GONE);
+                         }
+                     }
+ 
 @@ -1300,7 +1315,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              }
          } else {
@@ -15085,7 +15152,7 @@ index de0f9ca..32aa93f 100644
                      realTheme, com.android.internal.R.styleable.Window);
              fullscreen = ent != null && !ent.array.getBoolean(
 diff --git a/services/java/com/android/server/am/ActivityStack.java b/services/java/com/android/server/am/ActivityStack.java
-index 4e9973f..05e8814 100644
+index 4e9973f..66eca93 100644
 --- a/services/java/com/android/server/am/ActivityStack.java
 +++ b/services/java/com/android/server/am/ActivityStack.java
 @@ -58,6 +58,7 @@ import android.os.ServiceManager;
@@ -15166,7 +15233,30 @@ index 4e9973f..05e8814 100644
                  // Figure out if we are transitioning from another activity that is
                  // "has the same starting icon" as the next one.  This allows the
                  // window manager to keep the previous window it had previously
-@@ -3850,7 +3852,7 @@ final class ActivityStack {
+@@ -3316,6 +3318,11 @@ final class ActivityStack {
+         try {
+             synchronized (mService) {
+ 
++                // we must resolve if the last intent in the stack is floating to give the flag to the previous
++                boolean floating = false;
++                if (intents.length > 0) {
++                    floating = (intents[intents.length - 1].getFlags()&Intent.FLAG_FLOATING_WINDOW) == Intent.FLAG_FLOATING_WINDOW;
++                }
+                 for (int i=0; i<intents.length; i++) {
+                     Intent intent = intents[i];
+                     if (intent == null) {
+@@ -3344,6 +3351,10 @@ final class ActivityStack {
+                                 "FLAG_CANT_SAVE_STATE not supported here");
+                     }
+ 
++                    if (floating) {
++                        intent.addFlags(Intent.FLAG_FLOATING_WINDOW);
++                    }
++
+                     Bundle theseOptions;
+                     if (options != null && i == intents.length-1) {
+                         theseOptions = options;
+@@ -3850,7 +3861,7 @@ final class ActivityStack {
                      || (mHistory.get(index-1)).task != r.task;
              if (DEBUG_TRANSITION) Slog.v(TAG,
                      "Prepare close transition: finishing " + r);
@@ -15175,7 +15265,7 @@ index 4e9973f..05e8814 100644
                      ? WindowManagerPolicy.TRANSIT_TASK_CLOSE
                      : WindowManagerPolicy.TRANSIT_ACTIVITY_CLOSE, false);
      
-@@ -4336,7 +4338,7 @@ final class ActivityStack {
+@@ -4336,7 +4347,7 @@ final class ActivityStack {
          if (top < 0 || (mHistory.get(top)).task.taskId == task) {
              // nothing to do!
              if (reason != null &&
@@ -15184,7 +15274,7 @@ index 4e9973f..05e8814 100644
                  ActivityOptions.abort(options);
              } else {
                  updateTransitLocked(WindowManagerPolicy.TRANSIT_TASK_TO_FRONT, options);
-@@ -4375,7 +4377,7 @@ final class ActivityStack {
+@@ -4375,7 +4386,7 @@ final class ActivityStack {
          if (DEBUG_TRANSITION) Slog.v(TAG,
                  "Prepare to front transition: task=" + tr);
          if (reason != null &&
@@ -15193,7 +15283,7 @@ index 4e9973f..05e8814 100644
              mService.mWindowManager.prepareAppTransition(
                      WindowManagerPolicy.TRANSIT_NONE, false);
              ActivityRecord r = topRunningActivityLocked(null);
-@@ -4468,7 +4470,7 @@ final class ActivityStack {
+@@ -4468,7 +4479,7 @@ final class ActivityStack {
          }
  
          if (reason != null &&
@@ -15202,7 +15292,7 @@ index 4e9973f..05e8814 100644
              mService.mWindowManager.prepareAppTransition(
                      WindowManagerPolicy.TRANSIT_NONE, false);
              ActivityRecord r = topRunningActivityLocked(null);
-@@ -4788,7 +4790,13 @@ final class ActivityStack {
+@@ -4788,7 +4799,13 @@ final class ActivityStack {
  
          return true;
      }

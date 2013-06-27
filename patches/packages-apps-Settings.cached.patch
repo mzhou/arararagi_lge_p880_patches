@@ -270,7 +270,7 @@ index 36adae2..7749110 100644
      }
  }
 diff --git a/src/com/android/settings/cyanogenmod/SystemSettings.java b/src/com/android/settings/cyanogenmod/SystemSettings.java
-index 7be4e03..56dbb83 100644
+index 7be4e03..22709bf 100644
 --- a/src/com/android/settings/cyanogenmod/SystemSettings.java
 +++ b/src/com/android/settings/cyanogenmod/SystemSettings.java
 @@ -16,6 +16,8 @@
@@ -365,7 +365,7 @@ index 7be4e03..56dbb83 100644
                  prefScreen.removePreference(mNotificationPulse);
                  mNotificationPulse = null;
              }
-@@ -133,6 +164,27 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -133,6 +164,30 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
              mPieControl = null;
          }
  
@@ -380,20 +380,23 @@ index 7be4e03..56dbb83 100644
 +        mHaloHide = (CheckBoxPreference) findPreference(KEY_HALO_HIDE);
 +        mHaloHide.setChecked(Settings.System.getInt(getContentResolver(),
 +                Settings.System.HALO_HIDE, 0) == 1);
++        mHaloHide.setOnPreferenceChangeListener(this);
 +
 +        mHaloReversed = (CheckBoxPreference) findPreference(KEY_HALO_REVERSED);
 +        mHaloReversed.setChecked(Settings.System.getInt(getContentResolver(),
 +                Settings.System.HALO_REVERSED, 1) == 1);
++        mHaloReversed.setOnPreferenceChangeListener(this);
 +
 +        int isLowRAM = (ActivityManager.isLargeRAM()) ? 0 : 1;
 +        mHaloPause = (CheckBoxPreference) findPreference(KEY_HALO_PAUSE);
 +        mHaloPause.setChecked(Settings.System.getInt(getContentResolver(),
 +                Settings.System.HALO_PAUSE, isLowRAM) == 1);
++        mHaloPause.setOnPreferenceChangeListener(this);
 +
          // Expanded desktop
          mExpandedDesktopPref = (ListPreference) findPreference(KEY_EXPANDED_DESKTOP);
          mExpandedDesktopNoNavbarPref = (CheckBoxPreference) findPreference(KEY_EXPANDED_DESKTOP_NO_NAVBAR);
-@@ -192,6 +244,36 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -192,6 +247,36 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
              boolean value = (Boolean) objValue;
              updateExpandedDesktop(value ? 2 : 0);
              return true;
@@ -430,7 +433,7 @@ index 7be4e03..56dbb83 100644
          }
  
          return false;
-@@ -213,7 +295,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -213,7 +298,16 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          } else {
              mBatteryPulse.setSummary(getString(R.string.notification_light_disabled));
          }
@@ -448,7 +451,7 @@ index 7be4e03..56dbb83 100644
  
      private void updatePieControlDescription() {
          if (Settings.System.getInt(getActivity().getContentResolver(),
-@@ -224,6 +315,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
+@@ -224,6 +318,12 @@ public class SystemSettings extends SettingsPreferenceFragment  implements
          }
      }
  

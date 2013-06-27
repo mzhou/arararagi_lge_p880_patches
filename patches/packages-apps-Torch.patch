@@ -1,8 +1,8 @@
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index 4c6afe2..1ec62a8 100644
+index df7e208..70feaf9 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -38,6 +38,7 @@
+@@ -39,6 +39,7 @@
          <receiver android:name="TorchSwitch" android:enabled="true" android:label="@string/app_name" >
              <intent-filter>
                  <action android:name="net.cactii.flash2.TOGGLE_FLASHLIGHT"></action>
@@ -77,7 +77,7 @@ index dd499a0..64a273e 100644
 -</PreferenceScreen>  
 +</PreferenceScreen>
 diff --git a/src/net/cactii/flash2/MainActivity.java b/src/net/cactii/flash2/MainActivity.java
-index a752392..a40e8b7 100755
+index ec4b919..634fbbb 100755
 --- a/src/net/cactii/flash2/MainActivity.java
 +++ b/src/net/cactii/flash2/MainActivity.java
 @@ -11,21 +11,18 @@ import android.content.IntentFilter;
@@ -104,21 +104,23 @@ index a752392..a40e8b7 100755
  
  public class MainActivity extends Activity {
  
-@@ -37,11 +34,9 @@ public class MainActivity extends Activity {
+@@ -37,12 +34,12 @@ public class MainActivity extends Activity {
      // Strobe toggle
      private CheckBox buttonStrobe;
  
 -    private CheckBox buttonBright;
+-
+-    private boolean bright;
 +    private SeekBar buttonBright;
  
--    private boolean bright;
--
--    private boolean mTorchOn;
-+    private int bright;
+     private boolean mTorchOn;
  
++    private int bright;
++
      // Strobe frequency slider.
      private SeekBar slider;
-@@ -54,14 +49,16 @@ public class MainActivity extends Activity {
+ 
+@@ -54,14 +51,16 @@ public class MainActivity extends Activity {
      // Label showing strobe frequency
      private TextView strobeLabel;
  
@@ -139,7 +141,7 @@ index a752392..a40e8b7 100755
  
      private static boolean useBrightSetting = !Build.DEVICE.equals("crespo");
  
-@@ -75,13 +72,9 @@ public class MainActivity extends Activity {
+@@ -75,13 +74,9 @@ public class MainActivity extends Activity {
          buttonStrobe = (CheckBox) findViewById(R.id.strobe);
          strobeLabel = (TextView) findViewById(R.id.strobeTimeLabel);
          slider = (SeekBar) findViewById(R.id.slider);
@@ -154,7 +156,7 @@ index a752392..a40e8b7 100755
  
          mWidgetProvider = TorchWidgetProvider.getInstance();
  
-@@ -92,24 +85,51 @@ public class MainActivity extends Activity {
+@@ -92,24 +87,51 @@ public class MainActivity extends Activity {
          this.mPrefsEditor = this.mPrefs.edit();
  
          if (useBrightSetting) {
@@ -218,7 +220,7 @@ index a752392..a40e8b7 100755
          }
          strobeLabel.setOnClickListener(new OnClickListener() {
              @Override
-@@ -144,7 +164,7 @@ public class MainActivity extends Activity {
+@@ -144,7 +166,7 @@ public class MainActivity extends Activity {
                  strobeperiod = 401 - progress;
                  if (strobeperiod < 20)
                      strobeperiod = 20;
@@ -227,7 +229,7 @@ index a752392..a40e8b7 100755
                  strobeLabel.setText(strStrobeLabel + ": " +
                          666 / strobeperiod + "Hz / " + 40000 / strobeperiod + "BPM");
  
-@@ -207,30 +227,58 @@ public class MainActivity extends Activity {
+@@ -207,30 +229,58 @@ public class MainActivity extends Activity {
      private void openAboutDialog() {
          LayoutInflater li = LayoutInflater.from(this);
          View view = li.inflate(R.layout.aboutview, null);
@@ -301,25 +303,14 @@ index a752392..a40e8b7 100755
      }
  
      public void updateWidget() {
-@@ -240,15 +288,13 @@ public class MainActivity extends Activity {
+@@ -239,11 +289,19 @@ public class MainActivity extends Activity {
+ 
      private void updateBigButtonState() {
-         if (Settings.System.getInt(context.getContentResolver(),
-                 Settings.System.TORCH_STATE, 0) == 1) {
--            mTorchOn = true;
-             buttonOn.setChecked(true);
--            buttonBright.setEnabled(false);
-+            // buttonBright.setEnabled(false);
-             buttonStrobe.setEnabled(false);
-             if (!buttonStrobe.isChecked()) {
-                 slider.setEnabled(false);
-             }
-         } else {
--            mTorchOn = false;
-             buttonOn.setChecked(false);
-             buttonBright.setEnabled(useBrightSetting);
-             buttonStrobe.setEnabled(true);
-@@ -256,6 +302,14 @@ public class MainActivity extends Activity {
-         }
+         buttonOn.setChecked(mTorchOn);
+-        buttonBright.setEnabled(!mTorchOn && useBrightSetting);
++        //buttonBright.setEnabled(!mTorchOn && useBrightSetting);
+         buttonStrobe.setEnabled(!mTorchOn);
+         slider.setEnabled(!mTorchOn || buttonStrobe.isChecked());
      }
  
 +    private void updateService() {
@@ -334,7 +325,7 @@ index a752392..a40e8b7 100755
          @Override
          public void onReceive(Context context, Intent intent) {
 diff --git a/src/net/cactii/flash2/TorchService.java b/src/net/cactii/flash2/TorchService.java
-index 4017ff5..798dc25 100644
+index cc8f2e9..63b44a0 100644
 --- a/src/net/cactii/flash2/TorchService.java
 +++ b/src/net/cactii/flash2/TorchService.java
 @@ -36,7 +36,9 @@ public class TorchService extends Service {
@@ -434,15 +425,7 @@ index 4017ff5..798dc25 100644
          registerReceiver(mReceiver, new IntentFilter("net.cactii.flash2.SET_STROBE"));
  
          mNotificationBuilder = new Notification.Builder(this);
-@@ -120,28 +129,32 @@ public class TorchService extends Service {
-         mNotificationManager.notify(getString(R.string.app_name).hashCode(), mNotification);
- 
-         startForeground(getString(R.string.app_name).hashCode(), mNotification);
--        Settings.System.putInt(this.getContentResolver(), Settings.System.TORCH_STATE, 1);
--        this.sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
-+        Settings.System.putInt(getContentResolver(), Settings.System.TORCH_STATE, 1);
-+        sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
-         return START_STICKY;
+@@ -125,11 +134,15 @@ public class TorchService extends Service {
      }
  
      public void onDestroy() {
@@ -460,10 +443,9 @@ index 4017ff5..798dc25 100644
 +            mStrobeTimer.cancel();
 +        }
          FlashDevice.instance(mContext).setFlashMode(FlashDevice.OFF);
--        Settings.System.putInt(this.getContentResolver(), Settings.System.TORCH_STATE, 0);
--        this.sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
-+        Settings.System.putInt(getContentResolver(), Settings.System.TORCH_STATE, 0);
-+        sendBroadcast(new Intent(TorchSwitch.TORCH_STATE_CHANGED));
+         updateState(false);
+     }
+@@ -141,11 +154,11 @@ public class TorchService extends Service {
      }
  
      public void Reshedule(int period) {
@@ -479,7 +461,7 @@ index 4017ff5..798dc25 100644
      }
  
      public class WrapperTask extends TimerTask {
-@@ -162,16 +175,13 @@ public class TorchService extends Service {
+@@ -166,16 +179,13 @@ public class TorchService extends Service {
      }
  
      public class IntentReceiver extends BroadcastReceiver {
@@ -579,10 +561,10 @@ index 9a6f197..7cd7eb7 100644
      }
  
 diff --git a/src/net/cactii/flash2/TorchWidgetProvider.java b/src/net/cactii/flash2/TorchWidgetProvider.java
-index f7f5b6d..166dfc7 100644
+index 4ae40f2..5ad6465 100644
 --- a/src/net/cactii/flash2/TorchWidgetProvider.java
 +++ b/src/net/cactii/flash2/TorchWidgetProvider.java
-@@ -24,8 +24,8 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+@@ -25,8 +25,8 @@ public class TorchWidgetProvider extends AppWidgetProvider {
      }
  
      private enum WidgetState {
@@ -593,7 +575,7 @@ index f7f5b6d..166dfc7 100644
  
          /**
           * The drawable resources associated with this widget state.
-@@ -58,13 +58,11 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+@@ -59,13 +59,11 @@ public class TorchWidgetProvider extends AppWidgetProvider {
          launchIntent.setClass(context, TorchWidgetProvider.class);
          launchIntent.addCategory(Intent.CATEGORY_ALTERNATIVE);
          launchIntent.setData(Uri.parse("custom:" + appWidgetId + "/" + buttonId));
@@ -612,7 +594,7 @@ index f7f5b6d..166dfc7 100644
          return pi;
      }
  
-@@ -79,11 +77,17 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+@@ -80,11 +78,17 @@ public class TorchWidgetProvider extends AppWidgetProvider {
              buttonId = Integer.parseInt(data.getSchemeSpecificPart().split("/")[1]);
  
              if (buttonId == 0) {
@@ -632,7 +614,7 @@ index f7f5b6d..166dfc7 100644
                  pendingIntent.putExtra("period",
                          mPrefs.getInt("widget_strobe_freq_" + widgetId, 200));
                  context.sendBroadcast(pendingIntent);
-@@ -122,10 +126,13 @@ public class TorchWidgetProvider extends AppWidgetProvider {
+@@ -125,10 +129,13 @@ public class TorchWidgetProvider extends AppWidgetProvider {
              views.setImageViewResource(R.id.img_torch, WidgetState.OFF.getImgDrawable());
              views.setImageViewResource(R.id.ind_torch, WidgetState.OFF.getIndDrawable());
          }
