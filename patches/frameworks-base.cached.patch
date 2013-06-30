@@ -1922,6 +1922,18 @@ index fcf0924..aa8aebf 100644
      // The current window attributes.
      private final WindowManager.LayoutParams mWindowAttributes =
          new WindowManager.LayoutParams();
+diff --git a/core/java/com/android/internal/util/cm/QSConstants.java b/core/java/com/android/internal/util/cm/QSConstants.java
+index 044d5f9..bc440b4 100644
+--- a/core/java/com/android/internal/util/cm/QSConstants.java
++++ b/core/java/com/android/internal/util/cm/QSConstants.java
+@@ -6,6 +6,7 @@ public class QSConstants {
+         public static final String TILE_USER = "toggleUser";
+         public static final String TILE_BATTERY = "toggleBattery";
+         public static final String TILE_SETTINGS = "toggleSettings";
++        public static final String TILE_QUICKMEMO = "toggleQuickMemo";
+         public static final String TILE_WIFI = "toggleWifi";
+         public static final String TILE_GPS = "toggleGPS";
+         public static final String TILE_BLUETOOTH = "toggleBluetooth";
 diff --git a/core/java/com/android/internal/widget/ActionBarView.java b/core/java/com/android/internal/widget/ActionBarView.java
 index 0f964b9..856a8ee 100644
 --- a/core/java/com/android/internal/widget/ActionBarView.java
@@ -5969,6 +5981,26 @@ N002ovPDHLkV1mNVR5t(s
 literal 0
 HcmV?d00001
 
+diff --git a/packages/SystemUI/res/drawable-xhdpi/ic_qs_quickmemo.png b/packages/SystemUI/res/drawable-xhdpi/ic_qs_quickmemo.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..9c17ced5daa5d78080f1c044805a960f1c262082
+GIT binary patch
+literal 721
+zcmeAS@N?(olHy`uVBq!ia0vp^Mj*_=3?wxlRx|^t8v#BcuK$NA*s>t+BhZf?B|(0{
+z3?Zw}{J**}fz#}vU--{_=JRj)ml~`q-Eza&>5rVm2cd6s4$pjE&2wApbJPSj(PPrP
+zE_GFG51g!`>pji#Nv!MMSH11Y9*Sw1X2+SAFfcGCc)B=-cpQH_^>$FRfk4|zwk52d
+znpeYCh-tHWt?UYW{qsUq#eefjGHb<Ko*cV4^WEM3lk+$IET5clOYL8g$+m5c3MI+M
+z|8Sa=21x5>&)rbo=wp#xeL|4oMo&YoC({nuFtKTI;ZOXE`SoutzjWAT?o!(=t9)JM
+zJDaVJxUXjNXz6xY&L{cc6kn%BkOSL)!HshlYAtI1uw!+bNkCDG^VH3A9;jZlnC9+N
+z)jBEU-bNFZGb)qKEt8Gy&w873r~WcZJ@Zm>)_)JCljkLcf3Dc#wCMMTCc}fNnvZv$
+zIS}J3kuoLkaP~~e=nv1ecK$q<loDauxAFK4gU2UXUfzBsS@vUg>GaD}8bj`{NqZ;1
+z<MtPw{s>Y3s~6tPG}O1-XfJ46zCL5d!%4gMD!unrNOD{8b=J{4eJ74-D>g^3*X62`
+ziFy<5eS{^sMtZ~Tch>u5<%`1^z82iJ^WLs|biH2eui5|ql|SNU)l+(BE82Vs7=H|&
+Lu6{1-oD!M<()zoo
+
+literal 0
+HcmV?d00001
+
 diff --git a/packages/SystemUI/res/layout/halo_bubble.xml b/packages/SystemUI/res/layout/halo_bubble.xml
 new file mode 100644
 index 0000000..add6355
@@ -6107,6 +6139,37 @@ index 0000000..f16a4a7
 +    android:layout_width="match_parent"
 +    android:layout_height="match_parent">
 +</com.android.systemui.statusbar.halo.Halo>
+diff --git a/packages/SystemUI/res/layout/quick_settings_tile_quickmemo.xml b/packages/SystemUI/res/layout/quick_settings_tile_quickmemo.xml
+new file mode 100644
+index 0000000..bf61913
+--- /dev/null
++++ b/packages/SystemUI/res/layout/quick_settings_tile_quickmemo.xml
+@@ -0,0 +1,25 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2012 The Android Open Source Project
++
++     Licensed under the Apache License, Version 2.0 (the "License");
++     you may not use this file except in compliance with the License.
++     You may obtain a copy of the License at
++
++          http://www.apache.org/licenses/LICENSE-2.0
++
++     Unless required by applicable law or agreed to in writing, software
++     distributed under the License is distributed on an "AS IS" BASIS,
++     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++     See the License for the specific language governing permissions and
++     limitations under the License.
++-->
++<TextView
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    style="@style/TextAppearance.QuickSettings.TileView"
++    android:id="@+id/quickmemo_tileview"
++    android:layout_width="wrap_content"
++    android:layout_height="wrap_content"
++    android:layout_gravity="center"
++    android:gravity="center"
++    android:drawableTop="@drawable/ic_qs_quickmemo"
++    />
 diff --git a/packages/SystemUI/res/layout/status_bar_expanded_header.xml b/packages/SystemUI/res/layout/status_bar_expanded_header.xml
 index e8ceeed..64f8d47 100644
 --- a/packages/SystemUI/res/layout/status_bar_expanded_header.xml
@@ -6188,7 +6251,7 @@ index 158c355..114827f 100644
 +
  </resources>
 diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
-index f3db062..02ece9f 100644
+index f3db062..2787539 100644
 --- a/packages/SystemUI/res/values/strings.xml
 +++ b/packages/SystemUI/res/values/strings.xml
 @@ -41,6 +41,9 @@
@@ -6211,6 +6274,15 @@ index f3db062..02ece9f 100644
      <!-- Content description of the clear button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
      <string name="accessibility_clear_all">Clear all notifications.</string>
  
+@@ -485,6 +491,8 @@
+     <string name="quick_settings_location_label">Location in use</string>
+     <!-- QuickSettings: Media device [CHAR LIMIT=NONE] -->
+     <string name="quick_settings_media_device_label">Media device</string>
++    <!-- QuickSettings: QuickMemo [CHAR LIMIT=NONE] -->
++    <string name="quick_settings_quickmemo_label">QuickMemo</string>
+     <!-- QuickSettings: RSSI [CHAR LIMIT=NONE] -->
+     <string name="quick_settings_rssi_label">RSSI</string>
+     <!-- QuickSettings: RSSI (No network) [CHAR LIMIT=NONE] -->
 diff --git a/packages/SystemUI/src/com/android/systemui/Transparent.java b/packages/SystemUI/src/com/android/systemui/Transparent.java
 new file mode 100644
 index 0000000..7d36b3f
@@ -6239,6 +6311,53 @@ index 0000000..7d36b3f
 +
 +public class Transparent extends LayerActivity {
 +
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/quicksettings/QuickMemoTile.java b/packages/SystemUI/src/com/android/systemui/quicksettings/QuickMemoTile.java
+new file mode 100644
+index 0000000..a905e7a
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/quicksettings/QuickMemoTile.java
+@@ -0,0 +1,41 @@
++
++package com.android.systemui.quicksettings;
++
++import android.content.Context;
++import android.content.Intent;
++import android.view.View;
++
++import com.android.systemui.R;
++import com.android.systemui.statusbar.phone.QuickSettingsController;
++
++public class QuickMemoTile extends QuickSettingsTile {
++
++    public QuickMemoTile(Context context, QuickSettingsController qsc) {
++        super(context, qsc);
++
++        mOnClick = new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                mQsc.mBar.collapseAllPanels(true);
++                mContext.sendBroadcast(new Intent("com.lge.QuickClip.action.START_QUICKCLIP"));
++            }
++        };
++    }
++
++    @Override
++    void onPostCreate() {
++        updateTile();
++        super.onPostCreate();
++    }
++
++    @Override
++    public void updateResources() {
++        updateTile();
++        super.updateResources();
++    }
++
++    private synchronized void updateTile() {
++        mDrawable = R.drawable.ic_qs_quickmemo;
++        mLabel = mContext.getString(R.string.quick_settings_quickmemo_label);
++    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java b/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
 index 3b4155c..73f5389 100644
@@ -8246,6 +8365,101 @@ index 86cbd8c..7658d2d 100644
      private final View.OnClickListener mClockClickListener = new View.OnClickListener() {
          @Override
          public void onClick(View v) {
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
+index 9e22567..39b513d 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
+@@ -394,6 +394,27 @@ class QuickSettings {
+         });
+         parent.addView(settingsTile);
+         mDynamicSpannedTiles.add(settingsTile);
++
++        // QuickMemo
++        QuickSettingsTileView quickMemoTile = (QuickSettingsTileView)
++                inflater.inflate(R.layout.quick_settings_tile, parent, false);
++        quickMemoTile.setContent(R.layout.quick_settings_tile_quickmemo, inflater);
++        quickMemoTile.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                mBar.collapseAllPanels(true);
++                mContext.sendBroadcast(new Intent("com.lge.QuickClip.action.START_QUICKCLIP"));
++            }
++        });
++        mModel.addQuickMemoTile(quickMemoTile, new QuickSettingsModel.RefreshCallback() {
++            @Override
++            public void refreshView(QuickSettingsTileView view, State state) {
++                TextView tv = (TextView) view.findViewById(R.id.quickmemo_tileview);
++                tv.setText(state.label);
++            }
++        });
++        parent.addView(quickMemoTile);
++        mDynamicSpannedTiles.add(quickMemoTile);
+     }
+ 
+     private void addSystemTiles(ViewGroup parent, LayoutInflater inflater) {
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
+index 568d73d..a48237a 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
+@@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;
+ import static com.android.internal.util.cm.QSConstants.TILE_NETWORKMODE;
+ import static com.android.internal.util.cm.QSConstants.TILE_NFC;
+ import static com.android.internal.util.cm.QSConstants.TILE_PROFILE;
++import static com.android.internal.util.cm.QSConstants.TILE_QUICKMEMO;
+ import static com.android.internal.util.cm.QSConstants.TILE_QUIETHOURS;
+ import static com.android.internal.util.cm.QSConstants.TILE_RINGER;
+ import static com.android.internal.util.cm.QSConstants.TILE_SCREENTIMEOUT;
+@@ -80,6 +81,7 @@ import com.android.systemui.quicksettings.NfcTile;
+ import com.android.systemui.quicksettings.PreferencesTile;
+ import com.android.systemui.quicksettings.ProfileTile;
+ import com.android.systemui.quicksettings.QuickSettingsTile;
++import com.android.systemui.quicksettings.QuickMemoTile;
+ import com.android.systemui.quicksettings.QuietHoursTile;
+ import com.android.systemui.quicksettings.RingerModeTile;
+ import com.android.systemui.quicksettings.ScreenTimeoutTile;
+@@ -189,6 +191,8 @@ public class QuickSettingsController {
+                 qs = new BatteryTile(mContext, this, mStatusBarService.mBatteryController);
+             } else if (tile.equals(TILE_SETTINGS)) {
+                 qs = new PreferencesTile(mContext, this);
++            } else if (tile.equals(TILE_QUICKMEMO)) {
++                qs = new QuickMemoTile(mContext, this);
+             } else if (tile.equals(TILE_WIFI)) {
+                 qs = new WiFiTile(mContext, this, mStatusBarService.mNetworkController);
+             } else if (tile.equals(TILE_GPS)) {
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java
+index 5bb5f5f..0aaac91 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java
+@@ -235,6 +235,10 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
+     private RefreshCallback mSettingsCallback;
+     private State mSettingsState = new State();
+ 
++    private QuickSettingsTileView mQuickMemoTile;
++    private RefreshCallback mQuickMemoCallback;
++    private State mQuickMemoState = new State();
++
+     public QuickSettingsModel(Context context) {
+         mContext = context;
+         mHandler = new Handler();
+@@ -282,6 +286,18 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
+         mSettingsCallback.refreshView(mSettingsTile, mSettingsState);
+     }
+ 
++    // QuickMemo
++    void addQuickMemoTile(QuickSettingsTileView view, RefreshCallback cb) {
++        mQuickMemoTile = view;
++        mQuickMemoCallback = cb;
++        refreshQuickMemoTile();
++    }
++    void refreshQuickMemoTile() {
++        Resources r = mContext.getResources();
++        mQuickMemoState.label = r.getString(R.string.quick_settings_quickmemo_label);
++        mQuickMemoCallback.refreshView(mQuickMemoTile, mQuickMemoState);
++    }
++
+     // User
+     void addUserTile(QuickSettingsTileView view, RefreshCallback cb) {
+         mUserTile = view;
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
 index ecc70d6..1e1b014 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java

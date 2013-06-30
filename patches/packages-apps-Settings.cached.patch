@@ -64,10 +64,18 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 1769df4..39f21f8 100644
+index 1769df4..bfb0f0c 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -867,6 +867,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -726,6 +726,7 @@
+     <string name="title_tile_profile">Profile</string>
+     <string name="title_tile_autorotate">Orientation</string>
+     <string name="title_tile_settings">Settings</string>
++    <string name="title_tile_quickmemo">QuickMemo</string>
+     <string name="title_tile_sound">Sound</string>
+     <string name="title_tile_sync">Sync</string>
+     <string name="title_tile_wifiap">Wi-Fi AP</string>
+@@ -867,6 +868,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
@@ -269,6 +277,28 @@ index 778ef44..a6602f1 100644
          }
      }
  }
+diff --git a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
+index d2d3e65..5d625ce 100644
+--- a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
++++ b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
+@@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;
+ import static com.android.internal.util.cm.QSConstants.TILE_NETWORKMODE;
+ import static com.android.internal.util.cm.QSConstants.TILE_NFC;
+ import static com.android.internal.util.cm.QSConstants.TILE_PROFILE;
++import static com.android.internal.util.cm.QSConstants.TILE_QUICKMEMO;
+ import static com.android.internal.util.cm.QSConstants.TILE_QUIETHOURS;
+ import static com.android.internal.util.cm.QSConstants.TILE_RINGER;
+ import static com.android.internal.util.cm.QSConstants.TILE_SCREENTIMEOUT;
+@@ -115,6 +116,9 @@ public class QuickSettingsUtil {
+         TILES.put(TILE_SETTINGS, new QuickSettingsUtil.TileInfo(
+                 TILE_SETTINGS, R.string.title_tile_settings,
+                 "com.android.systemui:drawable/ic_qs_settings"));
++        TILES.put(TILE_QUICKMEMO, new QuickSettingsUtil.TileInfo(
++                TILE_QUICKMEMO, R.string.title_tile_quickmemo,
++                "com.android.systemui:drawable/ic_qs_quickmemo"));
+         TILES.put(TILE_RINGER, new QuickSettingsUtil.TileInfo(
+                 TILE_RINGER, R.string.title_tile_sound,
+                 "com.android.systemui:drawable/ic_qs_ring_on"));
 diff --git a/src/com/android/settings/cyanogenmod/SystemSettings.java b/src/com/android/settings/cyanogenmod/SystemSettings.java
 index 7be4e03..22709bf 100644
 --- a/src/com/android/settings/cyanogenmod/SystemSettings.java
