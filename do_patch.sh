@@ -7,10 +7,10 @@ git apply --directory='bionic' "$PATCH_DIR/bionic.cached.patch"
 #80fcbd05207cd2d1e3673ed9536d7a86c2fa251a
 git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 
-#ba2d49d4cdb95e6508d775f3ff148579318a1051
+#767350772b93c8dad1a438b67ef04ebab9b7cafe
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 
-#ba2d49d4cdb95e6508d775f3ff148579318a1051
+#767350772b93c8dad1a438b67ef04ebab9b7cafe
 git apply --directory='build' "$PATCH_DIR/build.patch"
 
 #84886c0b05d26690854da772e916fcef787ddaca
@@ -31,13 +31,13 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#1621c284856753f674a0f54ec6f0f7c71a3a98ba
+#9929e6bc78030aa92bfe14094ea3c3696818915a
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
 git apply --directory='frameworks/rs' "$PATCH_DIR/frameworks-rs.patch"
 
-#2d29503e883845cc053cf4f3d8c634720e9bf8b2
+#769f93cddca0b70ab9cb8895bb08645c9db8ccd7
 git apply --directory='frameworks/opt/telephony' "$PATCH_DIR/frameworks-opt-telephony.cached.patch"
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
@@ -52,18 +52,18 @@ git apply --directory='kernel/lge/p880' "$PATCH_DIR/kernel-lge-p880.patch"
 #8a22bed790b6699fc5e52c7d796b556ef92ecb9c
 git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 
-#d5757a2a47aec7b14132b85702d441ef39edd6ca
+#05fe8b2b748163c909ed677c0d333eb565d6f1d8
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#dabc269158d4d6ff0305a17ab63704c74acaebc1
+#765742df4c111ed7cad8c2b2798c748d7bd14cc5
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
 
-#6e5a47498bc45044d3ddb021f756038e9f8cbaca
+#9fdf522be2654e42cc374f0c85278b08c6cb8328
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
 #cd8df62842b81c93022feabfacda8efd257e1754
 git apply --directory='system/security' "$PATCH_DIR/system-security.patch"
 
-#f1c038529d31462ab206d759e02c7f5cd01edfa4
+#4852f0ab4d60a74a6d858b728d94d7bb393178c2
 git apply --directory='system/core' "$PATCH_DIR/system-core.patch"
 

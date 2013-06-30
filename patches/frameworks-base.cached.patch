@@ -838,6 +838,69 @@ index e0856ae..432a7bf 100644
          try {
              intent.setAllowFds(false);
              intent.migrateExtraStreamToClipData();
+diff --git a/core/java/android/app/LayerActivity.java b/core/java/android/app/LayerActivity.java
+new file mode 100644
+index 0000000..c460f6b
+--- /dev/null
++++ b/core/java/android/app/LayerActivity.java
+@@ -0,0 +1,57 @@
++/*
++ * Copyright (C) 2013 ParanoidAndroid Project.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package android.app;
++
++import android.app.Activity;
++import android.os.Bundle;
++
++public class LayerActivity extends Activity {
++
++    private Bundle mSavedInstanceState;
++    private boolean mShouldFinish = false;
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        mSavedInstanceState = savedInstanceState;
++    }
++
++    @Override
++    public void onStart() {
++        super.onStart();
++        mShouldFinish = false;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!mShouldFinish) {
++            mShouldFinish = true;
++            return;
++        }
++        mShouldFinish = false;
++        finish();
++    }
++
++    @Override
++    public void onStop() {
++        super.onStop();
++        if (mSavedInstanceState != null) {
++            finish();
++        }
++    }
++}
 diff --git a/core/java/android/app/TaskStackBuilder.java b/core/java/android/app/TaskStackBuilder.java
 index 3e0ac7e..f3d07cc 100644
 --- a/core/java/android/app/TaskStackBuilder.java
@@ -2861,10 +2924,10 @@ index 544410f..e1a20c1 100644
 +    
  }
 diff --git a/packages/SystemUI/AndroidManifest.xml b/packages/SystemUI/AndroidManifest.xml
-index 80bb24d..bbed46a 100644
+index 57d31a1..8ddc191 100644
 --- a/packages/SystemUI/AndroidManifest.xml
 +++ b/packages/SystemUI/AndroidManifest.xml
-@@ -74,6 +74,9 @@
+@@ -75,6 +75,9 @@
      <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
      <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
  
@@ -2874,7 +2937,7 @@ index 80bb24d..bbed46a 100644
      <application
          android:persistent="true"
          android:allowClearUserData="false"
-@@ -255,5 +258,8 @@
+@@ -256,5 +259,8 @@
                  <category android:name="android.intent.category.DESK_DOCK" />
              </intent-filter>
          </activity>
@@ -7920,7 +7983,7 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 7bc056a..ca77322 100644
+index 86cbd8c..7658d2d 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 @@ -267,7 +267,6 @@ public class PhoneStatusBar extends BaseStatusBar {
@@ -14179,10 +14242,10 @@ index 0000000..005865c
 +	}
 +}
 diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
-index 06a8615..f82d955 100644
+index 8a02380..9652a3d 100644
 --- a/services/java/com/android/server/NotificationManagerService.java
 +++ b/services/java/com/android/server/NotificationManagerService.java
-@@ -175,67 +175,87 @@ public class NotificationManagerService extends INotificationManager.Stub
+@@ -176,67 +176,87 @@ public class NotificationManagerService extends INotificationManager.Stub
      private boolean mQuietHoursDim = true;
  
      // Notification control database. For now just contains disabled packages.
@@ -14312,7 +14375,7 @@ index 06a8615..f82d955 100644
      private void writeBlockDb() {
          synchronized(mBlockedPackages) {
              FileOutputStream outfile = null;
-@@ -270,6 +290,91 @@ public class NotificationManagerService extends INotificationManager.Stub
+@@ -271,6 +291,91 @@ public class NotificationManagerService extends INotificationManager.Stub
          }
      }
  
@@ -14404,7 +14467,7 @@ index 06a8615..f82d955 100644
      public boolean areNotificationsEnabledForPackage(String pkg) {
          checkCallerIsSystem();
          return areNotificationsEnabledForPackageInt(pkg);
-@@ -730,6 +835,7 @@ public class NotificationManagerService extends INotificationManager.Stub
+@@ -741,6 +846,7 @@ public class NotificationManagerService extends INotificationManager.Stub
          mHandler = new WorkerHandler();
  
          loadBlockDb();

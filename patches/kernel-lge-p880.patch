@@ -1687,14 +1687,14 @@ index c6787eb..8b246403 100644
  MODULE_VERSION("3.3");
  MODULE_ALIAS("platform:max8971-charger");
 diff --git a/drivers/video/backlight/lm3533_bl.c b/drivers/video/backlight/lm3533_bl.c
-index f0ee1d9..95270ae 100644
+index f0ee1d9..bc83070 100644
 --- a/drivers/video/backlight/lm3533_bl.c
 +++ b/drivers/video/backlight/lm3533_bl.c
 @@ -46,6 +46,10 @@
  #define LEDS_BACKLIGHT_NAME 		"lcd-backlight"
  #endif
  
-+#define LM3533_BL_MAX_MAXCURRENT	23
++#define LM3533_BL_MAX_MAXCURRENT	31
 +#define LM3533_BL_DEFAULT_MAXCURRENT	19
 +#define LM3533_BL_MIN_MAXCURRENT	0
 +
