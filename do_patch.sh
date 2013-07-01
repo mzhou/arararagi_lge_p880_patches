@@ -31,13 +31,13 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#9929e6bc78030aa92bfe14094ea3c3696818915a
+#9e3fa9cb673f69aa69de0294bebba61d10befddc
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
 git apply --directory='frameworks/rs' "$PATCH_DIR/frameworks-rs.patch"
 
-#769f93cddca0b70ab9cb8895bb08645c9db8ccd7
+#3dba6580fc385399d726233692d5abb3b5b8208b
 git apply --directory='frameworks/opt/telephony' "$PATCH_DIR/frameworks-opt-telephony.cached.patch"
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0

@@ -15429,7 +15429,7 @@ index de0f9ca..32aa93f 100644
                      realTheme, com.android.internal.R.styleable.Window);
              fullscreen = ent != null && !ent.array.getBoolean(
 diff --git a/services/java/com/android/server/am/ActivityStack.java b/services/java/com/android/server/am/ActivityStack.java
-index 4e9973f..66eca93 100644
+index 6f6bf4d..74679fa 100644
 --- a/services/java/com/android/server/am/ActivityStack.java
 +++ b/services/java/com/android/server/am/ActivityStack.java
 @@ -58,6 +58,7 @@ import android.os.ServiceManager;
@@ -15440,7 +15440,7 @@ index 4e9973f..66eca93 100644
  import android.util.EventLog;
  import android.util.Log;
  import android.util.Slog;
-@@ -1531,7 +1532,7 @@ final class ActivityStack {
+@@ -1537,7 +1538,7 @@ final class ActivityStack {
          
          // We need to start pausing the current activity so the top one
          // can be resumed...
@@ -15449,7 +15449,7 @@ index 4e9973f..66eca93 100644
              if (DEBUG_SWITCH) Slog.v(TAG, "Skip resume: need to start pausing");
              // At this point we want to put the upcoming activity's process
              // at the top of the LRU list, since we know we will be needing it
-@@ -1610,7 +1611,7 @@ final class ActivityStack {
+@@ -1616,7 +1617,7 @@ final class ActivityStack {
              if (prev.finishing) {
                  if (DEBUG_TRANSITION) Slog.v(TAG,
                          "Prepare close transition: prev=" + prev);
@@ -15458,7 +15458,7 @@ index 4e9973f..66eca93 100644
                      mService.mWindowManager.prepareAppTransition(
                              WindowManagerPolicy.TRANSIT_NONE, false);
                  } else {
-@@ -1623,7 +1624,7 @@ final class ActivityStack {
+@@ -1629,7 +1630,7 @@ final class ActivityStack {
              } else {
                  if (DEBUG_TRANSITION) Slog.v(TAG,
                          "Prepare open transition: prev=" + prev);
@@ -15467,7 +15467,7 @@ index 4e9973f..66eca93 100644
                      noAnim = true;
                      mService.mWindowManager.prepareAppTransition(
                              WindowManagerPolicy.TRANSIT_NONE, false);
-@@ -1755,7 +1756,7 @@ final class ActivityStack {
+@@ -1761,7 +1762,7 @@ final class ActivityStack {
                  if (!next.hasBeenLaunched) {
                      next.hasBeenLaunched = true;
                  } else {
@@ -15476,7 +15476,7 @@ index 4e9973f..66eca93 100644
                          mService.mWindowManager.setAppStartingWindow(
                                  next.appToken, next.packageName, next.theme,
                                  mService.compatibilityInfoForPackageLocked(
-@@ -1789,7 +1790,7 @@ final class ActivityStack {
+@@ -1795,7 +1796,7 @@ final class ActivityStack {
              if (!next.hasBeenLaunched) {
                  next.hasBeenLaunched = true;
              } else {
@@ -15691,46 +15691,6 @@ index fc4ecda..d4e67bc 100644
      final void setBroadcastTimeoutLocked(long timeoutTime) {
          if (! mPendingBroadcastTimeoutMessage) {
              Message msg = mHandler.obtainMessage(BROADCAST_TIMEOUT_MSG, this);
-diff --git a/services/java/com/android/server/am/ProcessList.java b/services/java/com/android/server/am/ProcessList.java
-index 9e25e30..cd84f2f 100644
---- a/services/java/com/android/server/am/ProcessList.java
-+++ b/services/java/com/android/server/am/ProcessList.java
-@@ -96,29 +96,29 @@ class ProcessList {
- 
-     // The minimum number of hidden apps we want to be able to keep around,
-     // without empty apps being able to push them out of memory.
--    static final int MIN_HIDDEN_APPS = 2;
-+    static final int MIN_HIDDEN_APPS = 8; // arararagi
- 
-     // The maximum number of hidden processes we will keep around before
-     // killing them; this is just a control to not let us go too crazy with
-     // keeping around processes on devices with large amounts of RAM.
--    static final int MAX_HIDDEN_APPS = 24;
-+    static final int MAX_HIDDEN_APPS = 48; // arararagi
- 
-     // We allow empty processes to stick around for at most 30 minutes.
-     static final long MAX_EMPTY_TIME = 30*60*1000;
- 
-     // The number of hidden at which we don't consider it necessary to do
-     // memory trimming.
--    static final int TRIM_HIDDEN_APPS = 3;
-+    static final int TRIM_HIDDEN_APPS = 6; // arararagi
- 
-     // The number of empty apps at which we don't consider it necessary to do
-     // memory trimming.
--    static final int TRIM_EMPTY_APPS = 3;
-+    static final int TRIM_EMPTY_APPS = 6; // arararagi
- 
-     // Threshold of number of hidden+empty where we consider memory critical.
--    static final int TRIM_CRITICAL_THRESHOLD = 3;
-+    static final int TRIM_CRITICAL_THRESHOLD = 6; // arararagi
- 
-     // Threshold of number of hidden+empty where we consider memory critical.
--    static final int TRIM_LOW_THRESHOLD = 5;
-+    static final int TRIM_LOW_THRESHOLD = 10; // arararagi
- 
-     // We put empty content processes after any hidden processes that have
-     // been idle for less than 15 seconds.
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
 index 0d2ba34..2ed8fa0 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java
