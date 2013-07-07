@@ -1,5 +1,5 @@
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index 76cf475..313e849 100644
+index 351a1ca..da6c9f5 100644
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
 @@ -16,6 +16,7 @@ TARGET_CPU_SMP := true
@@ -10,9 +10,9 @@ index 76cf475..313e849 100644
  
  BOARD_KERNEL_CMDLINE := 
  BOARD_KERNEL_BASE := 0x10000000
-@@ -76,3 +77,5 @@ BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
- 
+@@ -77,3 +78,5 @@ BOARD_RIL_CLASS := ../../../device/lge/p880/ril/
  BOARD_CUSTOM_GRAPHICS := ../../../device/lge/p880/recovery-gfx.c
+ BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/p880/recovery-keys.c
  BOARD_CHARGER_ENABLE_SUSPEND := true
 +
 +WITH_DEXPREOPT := true
@@ -70,7 +70,7 @@ index ceedb9b..62950b9 100644
 +    <integer name="valueDeathRay">36</integer>
  </resources>
 diff --git a/p880.mk b/p880.mk
-index dfb3fa7..b8a5c4e 100644
+index f0352c2..f7e6330 100644
 --- a/p880.mk
 +++ b/p880.mk
 @@ -1,8 +1,5 @@
@@ -82,7 +82,7 @@ index dfb3fa7..b8a5c4e 100644
  $(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
  
  DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
-@@ -44,6 +41,8 @@ PRODUCT_COPY_FILES += \
+@@ -43,6 +40,8 @@ PRODUCT_COPY_FILES += \
  ## GPS
  PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer \
@@ -91,7 +91,7 @@ index dfb3fa7..b8a5c4e 100644
      $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
  
  ## Input
-@@ -54,6 +53,12 @@ PRODUCT_COPY_FILES += \
+@@ -52,6 +51,25 @@ PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
      $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
  
@@ -101,10 +101,23 @@ index dfb3fa7..b8a5c4e 100644
 +    $(LOCAL_PATH)/pulled/com.lge.app.floating.res.apk:system/framework/com.lge.app.floating.res.apk \
 +    $(LOCAL_PATH)/pulled/QMemobin.apk:system/app/QMemobin.apk
 +
++# Hidden Menu
++PRODUCT_COPY_FILES += \
++    $(LOCAL_PATH)/pulled/com.lge.core.jar:system/framework/com.lge.core.jar \
++    $(LOCAL_PATH)/pulled/com.lge.core.xml:system/etc/permissions/com.lge.core.xml \
++    $(LOCAL_PATH)/pulled/com.lge.fota.jar:system/framework/com.lge.fota.jar \
++    $(LOCAL_PATH)/pulled/com.lge.fota.xml:system/etc/permissions/com.lge.fota.xml \
++    $(LOCAL_PATH)/pulled/com.lge.nfcaddon.jar:system/framework/com.lge.nfcaddon.jar \
++    $(LOCAL_PATH)/pulled/com.lge.nfcaddon.xml:system/etc/permissions/com.lge.nfcaddon.xml \
++    $(LOCAL_PATH)/pulled/com.lge.systemservice.core.jar:system/framework/com.lge.systemservice.core.jar \
++    $(LOCAL_PATH)/pulled/com.lge.systemservice.core.xml:system/etc/permissions/com.lge.systemservice.core.xml \
++    $(LOCAL_PATH)/pulled/GnssPosTs.apk:system/app/GnssPosTs.apk \
++    $(LOCAL_PATH)/pulled/HiddenMenu.apk:system/app/HiddenMenu.apk
++
  ## ALSA Config
- 
  PRODUCT_COPY_FILES += \
-@@ -105,6 +110,9 @@ PRODUCT_PACKAGES += \
+     $(LOCAL_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
+@@ -101,6 +119,9 @@ PRODUCT_PACKAGES += \
      charger_res_images
  
  PRODUCT_PACKAGES += \
@@ -115,7 +128,7 @@ index dfb3fa7..b8a5c4e 100644
      com.android.future.usb.accessory
  
 diff --git a/proprietary-files.txt b/proprietary-files.txt
-index 8ccb6fd..3c61405 100644
+index ddaf513..2fcc23b 100644
 --- a/proprietary-files.txt
 +++ b/proprietary-files.txt
 @@ -6,7 +6,6 @@ bin/rild

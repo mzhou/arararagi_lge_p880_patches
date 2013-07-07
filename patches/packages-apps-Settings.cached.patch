@@ -64,10 +64,10 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 1769df4..bfb0f0c 100644
+index 182849a..0ea89af 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -726,6 +726,7 @@
+@@ -732,6 +732,7 @@
      <string name="title_tile_profile">Profile</string>
      <string name="title_tile_autorotate">Orientation</string>
      <string name="title_tile_settings">Settings</string>
@@ -75,7 +75,7 @@ index 1769df4..bfb0f0c 100644
      <string name="title_tile_sound">Sound</string>
      <string name="title_tile_sync">Sync</string>
      <string name="title_tile_wifiap">Wi-Fi AP</string>
-@@ -867,6 +868,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -881,6 +882,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
@@ -166,7 +166,7 @@ index c5ffb5d..e3c052c 100644
 +
  </PreferenceScreen>
 diff --git a/src/com/android/settings/applications/InstalledAppDetails.java b/src/com/android/settings/applications/InstalledAppDetails.java
-index 778ef44..a6602f1 100644
+index 4091b13..a8771da 100644
 --- a/src/com/android/settings/applications/InstalledAppDetails.java
 +++ b/src/com/android/settings/applications/InstalledAppDetails.java
 @@ -107,11 +107,13 @@ public class InstalledAppDetails extends Fragment
@@ -212,7 +212,7 @@ index 778ef44..a6602f1 100644
          if (isThisASystemPackage()) {
              mNotificationSwitch.setEnabled(false);
          } else {
-@@ -421,9 +426,16 @@ public class InstalledAppDetails extends Fragment
+@@ -430,9 +435,16 @@ public class InstalledAppDetails extends Fragment
          mAppWidgetManager = AppWidgetManager.getInstance(getActivity());
          mDpm = (DevicePolicyManager)getActivity().getSystemService(Context.DEVICE_POLICY_SERVICE);
          mSmsManager = ISms.Stub.asInterface(ServiceManager.getService("isms"));
@@ -230,7 +230,7 @@ index 778ef44..a6602f1 100644
          // Need to make sure we have loaded applications at this point.
          mSession.resume();
  
-@@ -483,6 +495,8 @@ public class InstalledAppDetails extends Fragment
+@@ -492,6 +504,8 @@ public class InstalledAppDetails extends Fragment
          mEnableCompatibilityCB = (CheckBox)view.findViewById(R.id.enable_compatibility_cb);
          
          mNotificationSwitch = (CompoundButton) view.findViewById(R.id.notification_switch);
@@ -239,7 +239,7 @@ index 778ef44..a6602f1 100644
  
          mPrivacyGuardSwitch = (CompoundButton) view.findViewById(R.id.privacy_guard_switch);
  
-@@ -1311,12 +1325,9 @@ public class InstalledAppDetails extends Fragment
+@@ -1327,12 +1341,9 @@ public class InstalledAppDetails extends Fragment
      }
  
      private void setNotificationsEnabled(boolean enabled) {
@@ -253,7 +253,7 @@ index 778ef44..a6602f1 100644
          } catch (android.os.RemoteException ex) {
              mNotificationSwitch.setChecked(!enabled); // revert
          }
-@@ -1327,6 +1338,14 @@ public class InstalledAppDetails extends Fragment
+@@ -1343,6 +1354,14 @@ public class InstalledAppDetails extends Fragment
          mPm.setPrivacyGuardSetting(packageName, enabled);
      }
  
@@ -268,7 +268,7 @@ index 778ef44..a6602f1 100644
      private int getPremiumSmsPermission(String packageName) {
          try {
              if (mSmsManager != null) {
-@@ -1430,6 +1449,8 @@ public class InstalledAppDetails extends Fragment
+@@ -1446,6 +1465,8 @@ public class InstalledAppDetails extends Fragment
              } else {
                  setPrivacyGuard(false);
              }

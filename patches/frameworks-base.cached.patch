@@ -1530,7 +1530,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 9e1177f..33ae5e3 100644
+index 896ff4c..7f25f5f 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -60,6 +60,17 @@ import java.net.URISyntaxException;
@@ -1551,7 +1551,7 @@ index 9e1177f..33ae5e3 100644
  /**
   * The Settings provider contains global system-level device preferences.
   */
-@@ -2703,6 +2714,32 @@ public final class Settings {
+@@ -2710,6 +2721,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -1584,7 +1584,7 @@ index 9e1177f..33ae5e3 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2816,6 +2853,12 @@ public final class Settings {
+@@ -2823,6 +2860,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -1597,7 +1597,7 @@ index 9e1177f..33ae5e3 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -3666,6 +3709,46 @@ public final class Settings {
+@@ -3682,6 +3725,46 @@ public final class Settings {
                  }
              }
  
@@ -1644,7 +1644,7 @@ index 9e1177f..33ae5e3 100644
              return sNameValueCache.getStringForUser(resolver, name, userHandle);
          }
  
-@@ -3966,7 +4049,71 @@ public final class Settings {
+@@ -3982,7 +4065,71 @@ public final class Settings {
                  int userHandle) {
              return putStringForUser(cr, name, Float.toString(value), userHandle);
          }
@@ -2007,7 +2007,7 @@ index 0290857..acfd996 100644
  
  void android_os_Process_readProcLines(JNIEnv* env, jobject clazz, jstring fileStr,
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index f386b28..ae1ed4b 100644
+index e9aa1e4..4ea922c 100644
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
 @@ -1162,6 +1162,8 @@
@@ -2959,10 +2959,10 @@ index 57d31a1..8ddc191 100644
      </application>
  </manifest>
 diff --git a/packages/SystemUI/proguard.flags b/packages/SystemUI/proguard.flags
-index c886eea..f32be13 100644
+index ab45d99..f0223cc 100644
 --- a/packages/SystemUI/proguard.flags
 +++ b/packages/SystemUI/proguard.flags
-@@ -14,4 +14,13 @@
+@@ -7,4 +7,13 @@
    public void setGlowScale(float);
  }
  
@@ -6381,7 +6381,7 @@ index 3b4155c..73f5389 100644
                      return false;
                  }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
-index 633687a..c4943e3 100644
+index 9f57e72..557d4dd 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
 @@ -50,7 +50,12 @@ import android.content.res.Configuration;
@@ -14456,10 +14456,10 @@ index 0000000..005865c
 +	}
 +}
 diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
-index 8a02380..9652a3d 100644
+index 4928a86..742f1f9 100644
 --- a/services/java/com/android/server/NotificationManagerService.java
 +++ b/services/java/com/android/server/NotificationManagerService.java
-@@ -176,67 +176,87 @@ public class NotificationManagerService extends INotificationManager.Stub
+@@ -177,67 +177,87 @@ public class NotificationManagerService extends INotificationManager.Stub
      private boolean mQuietHoursDim = true;
  
      // Notification control database. For now just contains disabled packages.
@@ -14589,7 +14589,7 @@ index 8a02380..9652a3d 100644
      private void writeBlockDb() {
          synchronized(mBlockedPackages) {
              FileOutputStream outfile = null;
-@@ -271,6 +291,91 @@ public class NotificationManagerService extends INotificationManager.Stub
+@@ -272,6 +292,91 @@ public class NotificationManagerService extends INotificationManager.Stub
          }
      }
  
@@ -14681,7 +14681,7 @@ index 8a02380..9652a3d 100644
      public boolean areNotificationsEnabledForPackage(String pkg) {
          checkCallerIsSystem();
          return areNotificationsEnabledForPackageInt(pkg);
-@@ -741,6 +846,7 @@ public class NotificationManagerService extends INotificationManager.Stub
+@@ -742,6 +847,7 @@ public class NotificationManagerService extends INotificationManager.Stub
          mHandler = new WorkerHandler();
  
          loadBlockDb();
