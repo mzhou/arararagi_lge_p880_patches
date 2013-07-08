@@ -14456,7 +14456,7 @@ index 0000000..005865c
 +	}
 +}
 diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
-index 4928a86..742f1f9 100644
+index 4bbf452..02ba1c9 100644
 --- a/services/java/com/android/server/NotificationManagerService.java
 +++ b/services/java/com/android/server/NotificationManagerService.java
 @@ -177,67 +177,87 @@ public class NotificationManagerService extends INotificationManager.Stub
@@ -15691,6 +15691,22 @@ index fc4ecda..d4e67bc 100644
      final void setBroadcastTimeoutLocked(long timeoutTime) {
          if (! mPendingBroadcastTimeoutMessage) {
              Message msg = mHandler.obtainMessage(BROADCAST_TIMEOUT_MSG, this);
+diff --git a/services/java/com/android/server/location/GpsLocationProvider.java b/services/java/com/android/server/location/GpsLocationProvider.java
+index 22c52f4..7461f67 100644
+--- a/services/java/com/android/server/location/GpsLocationProvider.java
++++ b/services/java/com/android/server/location/GpsLocationProvider.java
+@@ -892,6 +892,11 @@ public class GpsLocationProvider implements LocationProviderInterface {
+ 
+     @Override
+     public boolean sendExtraCommand(String command, Bundle extras) {
++        // arararagi
++        Log.i(TAG, "sendExtraCommand: " + command);
++        for (String k : extras.keySet()) {
++            Log.i(TAG, "extras: " + k + "=" + extras.get(k));
++        }
+ 
+         long identity = Binder.clearCallingIdentity();
+         boolean result = false;
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
 index 0d2ba34..2ed8fa0 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java

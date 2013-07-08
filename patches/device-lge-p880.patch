@@ -70,7 +70,7 @@ index ceedb9b..62950b9 100644
 +    <integer name="valueDeathRay">36</integer>
  </resources>
 diff --git a/p880.mk b/p880.mk
-index f0352c2..f7e6330 100644
+index f0352c2..e44856c 100644
 --- a/p880.mk
 +++ b/p880.mk
 @@ -1,8 +1,5 @@
@@ -91,7 +91,7 @@ index f0352c2..f7e6330 100644
      $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
  
  ## Input
-@@ -52,6 +51,25 @@ PRODUCT_COPY_FILES += \
+@@ -52,6 +51,29 @@ PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
      $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
  
@@ -114,10 +114,14 @@ index f0352c2..f7e6330 100644
 +    $(LOCAL_PATH)/pulled/GnssPosTs.apk:system/app/GnssPosTs.apk \
 +    $(LOCAL_PATH)/pulled/HiddenMenu.apk:system/app/HiddenMenu.apk
 +
++# Modified RIL from rmcc
++PRODUCT_COPY_FILES += \
++    $(LOCAL_PATH)/pulled/lge-ril.so:system/lib/lge-ril.so
++
  ## ALSA Config
  PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
-@@ -101,6 +119,9 @@ PRODUCT_PACKAGES += \
+@@ -101,6 +123,9 @@ PRODUCT_PACKAGES += \
      charger_res_images
  
  PRODUCT_PACKAGES += \
@@ -128,7 +132,7 @@ index f0352c2..f7e6330 100644
      com.android.future.usb.accessory
  
 diff --git a/proprietary-files.txt b/proprietary-files.txt
-index ddaf513..2fcc23b 100644
+index ddaf513..bac3dc8 100644
 --- a/proprietary-files.txt
 +++ b/proprietary-files.txt
 @@ -6,7 +6,6 @@ bin/rild
@@ -139,3 +143,11 @@ index ddaf513..2fcc23b 100644
  lib/hw/sensors.tegra.so
  lib/hw/audio_policy.tegra.so
  lib/hw/audio.primary.tegra.so
+@@ -46,7 +45,6 @@ lib/libnvos.so
+ lib/libnvrm_graphics.so
+ lib/libnvrm.so
+ lib/libnvwsi.so
+-lib/lge-ril.so
+ lib/libini.so
+ lib/libril.so
+ lib/libnvomx.so
