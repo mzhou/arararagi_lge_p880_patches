@@ -9,7 +9,7 @@ mkdir -p ~/CyanogenMod/android
 cd ~/CyanogenMod
 git clone git://github.com/mzhou/arararagi_lge_p880_patches.git
 cd ~/CyanogenMod/android
-repo init -u git://github.com/CyanogenMod/android.git -b cm10.1
+repo init -u git://github.com/mzhou/arararagi_android.git -b cm10.1
 repo sync -j128
 . build/envsetup.sh
 breakfast p880
@@ -21,7 +21,7 @@ popd
 brunch p880
 
 ===========================
-How to update these patches
+How to modify these patches
 ===========================
 cd ~/CyanogenMod/android
 ../arararagi_lge_p880_patches/generate.sh
