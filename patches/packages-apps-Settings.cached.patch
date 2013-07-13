@@ -64,10 +64,10 @@ index 14e1fc8..d6ac05e 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 182849a..0ea89af 100644
+index cc507c3..2880242 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -732,6 +732,7 @@
+@@ -733,6 +733,7 @@
      <string name="title_tile_profile">Profile</string>
      <string name="title_tile_autorotate">Orientation</string>
      <string name="title_tile_settings">Settings</string>
@@ -75,7 +75,7 @@ index 182849a..0ea89af 100644
      <string name="title_tile_sound">Sound</string>
      <string name="title_tile_sync">Sync</string>
      <string name="title_tile_wifiap">Wi-Fi AP</string>
-@@ -881,6 +882,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -882,6 +883,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  

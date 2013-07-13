@@ -983,10 +983,10 @@ index 9e406d4..55c62d9 100644
              if (qCursor == null) {
                  return null;
 diff --git a/core/java/android/content/Intent.java b/core/java/android/content/Intent.java
-index 519eb36..ae52b7b 100644
+index da254fd..e8f2a9b 100644
 --- a/core/java/android/content/Intent.java
 +++ b/core/java/android/content/Intent.java
-@@ -3126,7 +3126,6 @@ public class Intent implements Parcelable, Cloneable {
+@@ -3145,7 +3145,6 @@ public class Intent implements Parcelable, Cloneable {
       * places where the framework may automatically set the exclude flag).
       */
      public static final int FLAG_INCLUDE_STOPPED_PACKAGES = 0x00000020;
@@ -994,7 +994,7 @@ index 519eb36..ae52b7b 100644
      /**
       * If set, the new activity is not kept in the history stack.  As soon as
       * the user navigates away from it, the activity is finished.  This may also
-@@ -3343,6 +3342,11 @@ public class Intent implements Parcelable, Cloneable {
+@@ -3362,6 +3361,11 @@ public class Intent implements Parcelable, Cloneable {
       */
      public static final int FLAG_ACTIVITY_TASK_ON_HOME = 0X00004000;
      /**
@@ -1530,7 +1530,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 2e88fd3..b7ca419 100644
+index dc06167..1aa5301 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -60,6 +60,17 @@ import java.net.URISyntaxException;
@@ -1551,7 +1551,7 @@ index 2e88fd3..b7ca419 100644
  /**
   * The Settings provider contains global system-level device preferences.
   */
-@@ -2716,6 +2727,32 @@ public final class Settings {
+@@ -2723,6 +2734,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -1584,7 +1584,7 @@ index 2e88fd3..b7ca419 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2829,6 +2866,12 @@ public final class Settings {
+@@ -2836,6 +2873,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -1597,7 +1597,7 @@ index 2e88fd3..b7ca419 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -3688,6 +3731,46 @@ public final class Settings {
+@@ -3696,6 +3739,46 @@ public final class Settings {
                  }
              }
  
@@ -1644,7 +1644,7 @@ index 2e88fd3..b7ca419 100644
              return sNameValueCache.getStringForUser(resolver, name, userHandle);
          }
  
-@@ -3988,7 +4071,71 @@ public final class Settings {
+@@ -3996,7 +4079,71 @@ public final class Settings {
                  int userHandle) {
              return putStringForUser(cr, name, Float.toString(value), userHandle);
          }
@@ -8102,10 +8102,10 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 86cbd8c..7658d2d 100644
+index 82b6538..5a3714a 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-@@ -267,7 +267,6 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -265,7 +265,6 @@ public class PhoneStatusBar extends BaseStatusBar {
      PowerWidget mPowerWidget;
  
      // ticker
@@ -8113,7 +8113,7 @@ index 86cbd8c..7658d2d 100644
      private View mTickerView;
      private boolean mTicking;
  
-@@ -388,6 +387,10 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -386,6 +385,10 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mSettingsButton != null && mHasFlipSettings) {
                  mSettingsButton.setVisibility(userSetup ? View.VISIBLE : View.INVISIBLE);
              }
@@ -8124,7 +8124,7 @@ index 86cbd8c..7658d2d 100644
              if (mSettingsPanel != null) {
                  mSettingsPanel.setEnabled(userSetup);
              }
-@@ -529,7 +532,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -527,7 +530,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mClearButton = mStatusBarWindow.findViewById(R.id.clear_all_button);
          mClearButton.setOnClickListener(mClearButtonListener);
          mClearButton.setAlpha(0f);
@@ -8133,7 +8133,7 @@ index 86cbd8c..7658d2d 100644
          mClearButton.setEnabled(false);
          mDateView = (DateView)mStatusBarWindow.findViewById(R.id.date);
  
-@@ -564,6 +567,14 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -562,6 +565,14 @@ public class PhoneStatusBar extends BaseStatusBar {
                  mSettingsButton.setImageResource(R.drawable.ic_notify_settings);
              }
          }
@@ -8148,7 +8148,7 @@ index 86cbd8c..7658d2d 100644
          if (mHasFlipSettings) {
              mNotificationButton = (ImageView) mStatusBarWindow.findViewById(R.id.notification_button);
              if (mNotificationButton != null) {
-@@ -602,6 +613,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -600,6 +611,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mTicker = new MyTicker(context, mStatusBarView);
          TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
          tickerView.mTicker = mTicker;
@@ -8156,7 +8156,7 @@ index 86cbd8c..7658d2d 100644
  
          mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
  
-@@ -1169,6 +1181,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1162,6 +1174,9 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mSettingsButton != null) {
              mSettingsButton.setEnabled(isDeviceProvisioned());
          }
@@ -8166,7 +8166,7 @@ index 86cbd8c..7658d2d 100644
      }
  
      @Override
-@@ -1193,7 +1208,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1186,7 +1201,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          for (int i=0; i<N; i++) {
              Entry ent = mNotificationData.get(N-i-1);
              if (!((provisioned && ent.notification.score >= HIDE_ICONS_BELOW_SCORE)
@@ -8175,7 +8175,7 @@ index 86cbd8c..7658d2d 100644
              if (!notificationIsForCurrentUser(ent.notification)) continue;
              toShow.add(ent.icon);
          }
-@@ -1276,7 +1291,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1269,7 +1284,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                  && mFlipSettingsView.getVisibility() == View.VISIBLE
                  && mScrollView.getVisibility() != View.VISIBLE) {
              // the flip settings panel is unequivocally showing; we should not be shown
@@ -8184,7 +8184,7 @@ index 86cbd8c..7658d2d 100644
          } else if (mClearButton.isShown()) {
              if (clearable != (mClearButton.getAlpha() == 1.0f)) {
                  ObjectAnimator clearAnimation = ObjectAnimator.ofFloat(
-@@ -1285,7 +1300,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1278,7 +1293,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                      @Override
                      public void onAnimationEnd(Animator animation) {
                          if (mClearButton.getAlpha() <= 0.0f) {
@@ -8193,7 +8193,7 @@ index 86cbd8c..7658d2d 100644
                          }
                      }
  
-@@ -1300,7 +1315,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1293,7 +1308,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              }
          } else {
              mClearButton.setAlpha(clearable ? 1.0f : 0.0f);
@@ -8202,7 +8202,7 @@ index 86cbd8c..7658d2d 100644
          }
          mClearButton.setEnabled(clearable);
  
-@@ -1602,7 +1617,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1595,7 +1610,7 @@ public class PhoneStatusBar extends BaseStatusBar {
      final int FLIP_DURATION = (FLIP_DURATION_IN + FLIP_DURATION_OUT);
  
      Animator mScrollViewAnim, mFlipSettingsViewAnim, mNotificationButtonAnim,
@@ -8211,7 +8211,7 @@ index 86cbd8c..7658d2d 100644
  
      @Override
      public void animateExpandNotificationsPanel() {
-@@ -1628,6 +1643,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1621,6 +1636,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8219,7 +8219,7 @@ index 86cbd8c..7658d2d 100644
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1665,6 +1681,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1658,6 +1674,11 @@ public class PhoneStatusBar extends BaseStatusBar {
          mSettingsButtonAnim = start(
              ObjectAnimator.ofFloat(mSettingsButton, View.ALPHA, 1f)
                  .setDuration(FLIP_DURATION));
@@ -8231,7 +8231,7 @@ index 86cbd8c..7658d2d 100644
          mClearButton.setVisibility(View.VISIBLE);
          mClearButton.setAlpha(0f);
          setAreThereNotifications(); // this will show/hide the button as necessary
-@@ -1710,6 +1731,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1703,6 +1724,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          mFlipSettingsView.setScaleX(1f);
          mFlipSettingsView.setVisibility(View.VISIBLE);
          mSettingsButton.setVisibility(View.GONE);
@@ -8240,7 +8240,7 @@ index 86cbd8c..7658d2d 100644
          mScrollView.setVisibility(View.GONE);
          mScrollView.setScaleX(0f);
          mPowerWidget.setVisibility(View.GONE);
-@@ -1769,6 +1792,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1762,6 +1785,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8248,7 +8248,7 @@ index 86cbd8c..7658d2d 100644
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1800,6 +1824,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1793,6 +1817,11 @@ public class PhoneStatusBar extends BaseStatusBar {
                      .setDuration(FLIP_DURATION),
                      mScrollView, View.INVISIBLE));
          mPowerWidget.setVisibility(View.GONE);
@@ -8260,7 +8260,7 @@ index 86cbd8c..7658d2d 100644
          mNotificationButton.setVisibility(View.VISIBLE);
          mNotificationButtonAnim = start(
              ObjectAnimator.ofFloat(mNotificationButton, View.ALPHA, 1f)
-@@ -1852,6 +1881,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1845,6 +1874,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
              if (mScrollViewAnim != null) mScrollViewAnim.cancel();
              if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8268,7 +8268,7 @@ index 86cbd8c..7658d2d 100644
              if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
              if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1860,6 +1890,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1853,6 +1883,9 @@ public class PhoneStatusBar extends BaseStatusBar {
              mPowerWidget.updateVisibility();
              mSettingsButton.setAlpha(1f);
              mSettingsButton.setVisibility(View.VISIBLE);
@@ -8278,7 +8278,7 @@ index 86cbd8c..7658d2d 100644
              mNotificationPanel.setVisibility(View.GONE);
              mFlipSettingsView.setVisibility(View.GONE);
              mNotificationButton.setVisibility(View.GONE);
-@@ -2284,8 +2317,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2277,8 +2310,8 @@ public class PhoneStatusBar extends BaseStatusBar {
  
      @Override
      protected void tick(IBinder key, StatusBarNotification n, boolean firstTime) {
@@ -8289,7 +8289,7 @@ index 86cbd8c..7658d2d 100644
  
          // no ticking in Setup
          if (!isDeviceProvisioned()) return;
-@@ -2297,7 +2330,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2290,7 +2323,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          // until status bar window is attached to the window manager,
          // because...  well, what's the point otherwise?  And trying to
          // run a ticker without being attached will crash!
@@ -8299,7 +8299,7 @@ index 86cbd8c..7658d2d 100644
              if (0 == (mDisabled & (StatusBarManager.DISABLE_NOTIFICATION_ICONS
                              | StatusBarManager.DISABLE_NOTIFICATION_TICKER))) {
                  mTicker.addEntry(n);
-@@ -2313,27 +2347,33 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2306,27 +2340,33 @@ public class PhoneStatusBar extends BaseStatusBar {
          @Override
          public void tickerStarting() {
              mTicking = true;
@@ -8346,7 +8346,7 @@ index 86cbd8c..7658d2d 100644
          }
      }
  
-@@ -2627,6 +2667,18 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2620,6 +2660,18 @@ public class PhoneStatusBar extends BaseStatusBar {
          }
      };
  
