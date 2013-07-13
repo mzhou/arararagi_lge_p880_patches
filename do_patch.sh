@@ -31,13 +31,13 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#c5eaec1f52d5d51a32d7ed10b8354e5861c92782
+#34b32f417964496d14d043368eac521159247ea7
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
 git apply --directory='frameworks/rs' "$PATCH_DIR/frameworks-rs.patch"
 
-#57f67b4244ea8953296f6e4905286e951c3b2918
+#b7abe4eecf521ec79c0797cfa8ea67e4505a97c4
 git apply --directory='frameworks/opt/telephony' "$PATCH_DIR/frameworks-opt-telephony.cached.patch"
 
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
@@ -46,19 +46,16 @@ git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.ca
 #86fc2992b5a91da8840637f90cf4453f75e44bf0
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.patch"
 
-#267b77b7ad75dd190ff1ee7173d900d262a9a750
-git apply --directory='kernel/lge/p880' "$PATCH_DIR/kernel-lge-p880.patch"
-
 #fe70e697810a7a8b9ce47325f53d16fdbc19f1f8
 git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 
-#599dded8e0e7a7939ea362f7220bb539c9617414
+#62d2a73f7172766a32d120db0c90c14931bdb6c4
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#83d6c342cb7e0ad11bf1360e790690bdaf6b8521
+#5a62ab4a34c4cbc3d9cb31b81eb0495b43a61b02
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
 
-#7aeb49c1c9bf37e83fb4dc919fcfa1f30c300668
+#597cae6164277cc6244e59ecfe04dba8b93f3d03
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
 #cd8df62842b81c93022feabfacda8efd257e1754

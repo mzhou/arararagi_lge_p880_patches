@@ -1530,7 +1530,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 896ff4c..7f25f5f 100644
+index 2e88fd3..b7ca419 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -60,6 +60,17 @@ import java.net.URISyntaxException;
@@ -1551,7 +1551,7 @@ index 896ff4c..7f25f5f 100644
  /**
   * The Settings provider contains global system-level device preferences.
   */
-@@ -2710,6 +2721,32 @@ public final class Settings {
+@@ -2716,6 +2727,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -1584,7 +1584,7 @@ index 896ff4c..7f25f5f 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2823,6 +2860,12 @@ public final class Settings {
+@@ -2829,6 +2866,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -1597,7 +1597,7 @@ index 896ff4c..7f25f5f 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -3682,6 +3725,46 @@ public final class Settings {
+@@ -3688,6 +3731,46 @@ public final class Settings {
                  }
              }
  
@@ -1644,7 +1644,7 @@ index 896ff4c..7f25f5f 100644
              return sNameValueCache.getStringForUser(resolver, name, userHandle);
          }
  
-@@ -3982,7 +4065,71 @@ public final class Settings {
+@@ -3988,7 +4071,71 @@ public final class Settings {
                  int userHandle) {
              return putStringForUser(cr, name, Float.toString(value), userHandle);
          }

@@ -278,7 +278,7 @@ index 4091b13..a8771da 100644
      }
  }
 diff --git a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
-index d2d3e65..5d625ce 100644
+index 653331a..8e3130b 100644
 --- a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
 +++ b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
 @@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;
@@ -289,16 +289,16 @@ index d2d3e65..5d625ce 100644
  import static com.android.internal.util.cm.QSConstants.TILE_QUIETHOURS;
  import static com.android.internal.util.cm.QSConstants.TILE_RINGER;
  import static com.android.internal.util.cm.QSConstants.TILE_SCREENTIMEOUT;
-@@ -115,6 +116,9 @@ public class QuickSettingsUtil {
-         TILES.put(TILE_SETTINGS, new QuickSettingsUtil.TileInfo(
+@@ -125,6 +126,9 @@ public class QuickSettingsUtil {
                  TILE_SETTINGS, R.string.title_tile_settings,
                  "com.android.systemui:drawable/ic_qs_settings"));
-+        TILES.put(TILE_QUICKMEMO, new QuickSettingsUtil.TileInfo(
+         registerTile(new QuickSettingsUtil.TileInfo(
 +                TILE_QUICKMEMO, R.string.title_tile_quickmemo,
 +                "com.android.systemui:drawable/ic_qs_quickmemo"));
-         TILES.put(TILE_RINGER, new QuickSettingsUtil.TileInfo(
++        registerTile(new QuickSettingsUtil.TileInfo(
                  TILE_RINGER, R.string.title_tile_sound,
                  "com.android.systemui:drawable/ic_qs_ring_on"));
+         registerTile(new QuickSettingsUtil.TileInfo(
 diff --git a/src/com/android/settings/cyanogenmod/SystemSettings.java b/src/com/android/settings/cyanogenmod/SystemSettings.java
 index 7be4e03..22709bf 100644
 --- a/src/com/android/settings/cyanogenmod/SystemSettings.java
