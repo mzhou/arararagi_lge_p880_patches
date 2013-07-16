@@ -2936,10 +2936,10 @@ index 544410f..e1a20c1 100644
 +    
  }
 diff --git a/packages/SystemUI/AndroidManifest.xml b/packages/SystemUI/AndroidManifest.xml
-index 57d31a1..8ddc191 100644
+index fcd4c9d..6357c64 100644
 --- a/packages/SystemUI/AndroidManifest.xml
 +++ b/packages/SystemUI/AndroidManifest.xml
-@@ -75,6 +75,9 @@
+@@ -76,6 +76,9 @@
      <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
      <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
  
@@ -2949,7 +2949,7 @@ index 57d31a1..8ddc191 100644
      <application
          android:persistent="true"
          android:allowClearUserData="false"
-@@ -256,5 +259,8 @@
+@@ -257,5 +260,8 @@
                  <category android:name="android.intent.category.DESK_DOCK" />
              </intent-filter>
          </activity>
