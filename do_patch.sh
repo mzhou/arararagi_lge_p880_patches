@@ -7,16 +7,16 @@ git apply --directory='bionic' "$PATCH_DIR/bionic.cached.patch"
 #ce133c000a8eb44f6f1ea1a3006d57c55c1876e5
 git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 
-#6490b2b2290ede5fc04c7e9d9f3f25a5a5436b03
+#7d1516114aac1c158d7f2d4e5db16b7c60008553
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 
-#6490b2b2290ede5fc04c7e9d9f3f25a5a5436b03
+#7d1516114aac1c158d7f2d4e5db16b7c60008553
 git apply --directory='build' "$PATCH_DIR/build.patch"
 
-#d27de8481b776f06ee2d9e233cd470dec9e95c83
+#3971da71c77fa10dc757d18ac103917dfb58fe11
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.cached.patch"
 
-#d27de8481b776f06ee2d9e233cd470dec9e95c83
+#3971da71c77fa10dc757d18ac103917dfb58fe11
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.patch"
 
 #e36e25b6032bb8d194792e77d78f212997b40713
@@ -31,28 +31,28 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#6e84c457264a3d6b90a2bdcee5b188373b2d0291
+#a37ddac8d03e30996b3fbbef5d7adbbe8f9a05d2
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
 git apply --directory='frameworks/rs' "$PATCH_DIR/frameworks-rs.patch"
 
-#6a8675a72d5f9f032c4ad9b9da4158a12306cea6
+#61aa925f47e4d0970739855236d91b2491f76ece
 git apply --directory='frameworks/opt/telephony' "$PATCH_DIR/frameworks-opt-telephony.cached.patch"
 
-#86fc2992b5a91da8840637f90cf4453f75e44bf0
+#c41a16b2333418e0925b9b413fc4406e77954af4
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.cached.patch"
 
-#86fc2992b5a91da8840637f90cf4453f75e44bf0
+#c41a16b2333418e0925b9b413fc4406e77954af4
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.patch"
 
 #35d2187f72e95136574ead9323fb4fb7d4feb4dc
 git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 
-#ccdd9801cc179baf2695192d93b6fd82c7a472f7
+#2757db88a16af8197243025a9393367a6ebba3e1
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#300fa0baaf6a4a3c7a8d7fd47054604d1f1e71da
+#5a29d4365a177b80fc1b912a9100d34d14cbc672
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
 
 #635758d54d1525fb8ac51a1c8853a7bf673f2f5b
@@ -61,6 +61,6 @@ git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patc
 #cd8df62842b81c93022feabfacda8efd257e1754
 git apply --directory='system/security' "$PATCH_DIR/system-security.patch"
 
-#ac8ccace4b5355b108a69ea1ecc4ed54bc1303be
+#83994198b5c0ef66616759249aa1840557008284
 git apply --directory='system/core' "$PATCH_DIR/system-core.patch"
 

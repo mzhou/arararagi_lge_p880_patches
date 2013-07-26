@@ -1530,7 +1530,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index dc06167..1aa5301 100644
+index e1c4361..a07f213 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -60,6 +60,17 @@ import java.net.URISyntaxException;
@@ -2007,10 +2007,10 @@ index 0290857..acfd996 100644
  
  void android_os_Process_readProcLines(JNIEnv* env, jobject clazz, jstring fileStr,
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index e9aa1e4..4ea922c 100644
+index ef66ddd..3a071e1 100644
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
-@@ -1162,6 +1162,8 @@
+@@ -1166,6 +1166,8 @@
    <java-symbol type="style" name="Theme.DeviceDefault.Dialog.NoFrame" />
    <java-symbol type="style" name="Theme.IconMenu" />
    <java-symbol type="style" name="Theme.Panel.Volume" />
@@ -8591,7 +8591,7 @@ index 26b1eb2..faf9fb2 100644
                  updateClock();
              } else {
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index f620c6d..eb670fc 100644
+index 7415a1f..39586e0 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 @@ -914,21 +914,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
@@ -15692,7 +15692,7 @@ index fc4ecda..d4e67bc 100644
          if (! mPendingBroadcastTimeoutMessage) {
              Message msg = mHandler.obtainMessage(BROADCAST_TIMEOUT_MSG, this);
 diff --git a/services/java/com/android/server/location/GpsLocationProvider.java b/services/java/com/android/server/location/GpsLocationProvider.java
-index 22c52f4..7461f67 100644
+index cba2db2..a8ee0df 100644
 --- a/services/java/com/android/server/location/GpsLocationProvider.java
 +++ b/services/java/com/android/server/location/GpsLocationProvider.java
 @@ -892,6 +892,11 @@ public class GpsLocationProvider implements LocationProviderInterface {
