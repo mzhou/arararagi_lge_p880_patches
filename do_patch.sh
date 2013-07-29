@@ -7,6 +7,9 @@ git apply --directory='bionic' "$PATCH_DIR/bionic.cached.patch"
 #ce133c000a8eb44f6f1ea1a3006d57c55c1876e5
 git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 
+#91f2dc252db41593a646402fd33652bf565daa9e
+git apply --directory='bootable/recovery' "$PATCH_DIR/bootable-recovery.patch"
+
 #7d1516114aac1c158d7f2d4e5db16b7c60008553
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 

@@ -1530,7 +1530,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index e1c4361..a07f213 100644
+index e1c4361..3f67f57 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -60,6 +60,17 @@ import java.net.URISyntaxException;
@@ -1717,6 +1717,20 @@ index e1c4361..a07f213 100644
          /**
           * @deprecated Use {@link android.provider.Settings.Global#DEVELOPMENT_SETTINGS_ENABLED}
           * instead
+@@ -4237,6 +4384,13 @@ public final class Settings {
+             "lock_pattern_size";
+ 
+         /**
++        * External GPS source/device
++        * @hide
++        */
++        public static final String EXTERNAL_GPS_BT_DEVICE =
++            "external_gps_bt_device";
++
++        /**
+          * The Logging ID (a unique 64-bit value) as a hex string.
+          * Used as a pseudonymous identifier for logging.
+          * @deprecated This identifier is poorly initialized and has
 diff --git a/core/java/android/speech/srec/MicrophoneInputStream.java b/core/java/android/speech/srec/MicrophoneInputStream.java
 index fab77a9..b0f5f9c 100644
 --- a/core/java/android/speech/srec/MicrophoneInputStream.java
@@ -2056,6 +2070,37 @@ index 4178cc4..e0dfd1f 100644
      <!-- DeviceDefault light theme for panel windows. This removes all extraneous window
      decorations, so you basically have an empty rectangle in which to place your content. It makes
      the window floating, with a transparent background, and turns off dimming behind the window. -->
+diff --git a/location/java/android/location/ILocationManager.aidl b/location/java/android/location/ILocationManager.aidl
+index f663e0a..b32de47 100644
+--- a/location/java/android/location/ILocationManager.aidl
++++ b/location/java/android/location/ILocationManager.aidl
+@@ -89,5 +89,6 @@ interface ILocationManager
+     // for reporting callback completion
+     void locationCallbackFinished(ILocationListener listener);
+ 
+-
++    // add set gps source
++    void setGPSSource(String device);
+ }
+diff --git a/location/java/android/location/LocationManager.java b/location/java/android/location/LocationManager.java
+index 5a2f71b..43cb343 100644
+--- a/location/java/android/location/LocationManager.java
++++ b/location/java/android/location/LocationManager.java
+@@ -291,6 +291,14 @@ public class LocationManager {
+         return new LocationProvider(name, properties);
+     }
+ 
++    public void setGPSSource(String device) {
++        try {
++            mService.setGPSSource(device);
++        } catch (RemoteException e) {
++            Log.e(TAG, e.getMessage());
++        }
++    }
++
+     /**
+      * Returns a list of the names of all known location providers.
+      * <p>All providers are returned, including ones that are not permitted to
 diff --git a/media/java/android/media/AudioRecord.java b/media/java/android/media/AudioRecord.java
 index 59177a7..fcccccc 100644
 --- a/media/java/android/media/AudioRecord.java
@@ -14455,6 +14500,75 @@ index 0000000..005865c
 +		}
 +	}
 +}
+diff --git a/services/java/com/android/server/LocationManagerService.java b/services/java/com/android/server/LocationManagerService.java
+index 86a577c..85e1181 100644
+--- a/services/java/com/android/server/LocationManagerService.java
++++ b/services/java/com/android/server/LocationManagerService.java
+@@ -56,12 +56,14 @@ import android.os.SystemClock;
+ import android.os.UserHandle;
+ import android.os.WorkSource;
+ import android.provider.Settings;
++import android.text.TextUtils;
+ import android.util.Log;
+ import android.util.Slog;
+ 
+ import com.android.internal.content.PackageMonitor;
+ import com.android.internal.location.ProviderProperties;
+ import com.android.internal.location.ProviderRequest;
++import com.android.server.location.BTGpsLocationProvider;
+ import com.android.server.location.GeocoderProxy;
+ import com.android.server.location.GeofenceManager;
+ import com.android.server.location.GpsLocationProvider;
+@@ -327,6 +329,17 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
+         mEnabledProviders.add(passiveProvider.getName());
+         mPassiveProvider = passiveProvider;
+ 
++        // Create a gps location provider based on the setting EXTERNAL_GPS_BT_DEVICE
++        String btDevice = Settings.System.getString(mContext.getContentResolver(),
++                Settings.Secure.EXTERNAL_GPS_BT_DEVICE);
++        if (TextUtils.isEmpty(btDevice)) {
++            // default option
++            btDevice = "0";
++            Settings.System.putString(mContext.getContentResolver(),
++                    Settings.Secure.EXTERNAL_GPS_BT_DEVICE, btDevice);
++        }
++        setGPSSource(btDevice);
++
+         if (GpsLocationProvider.isSupported()) {
+             // Create a gps location provider
+             GpsLocationProvider gpsProvider = new GpsLocationProvider(mContext, this);
+@@ -395,6 +408,31 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
+         }
+     }
+ 
++    public void setGPSSource(String device) {
++        synchronized (mLock) {
++            if (mProvidersByName.containsKey(LocationManager.GPS_PROVIDER)) {
++                LocationProviderInterface mGpsLocationProvider = mProvidersByName.get(LocationManager.GPS_PROVIDER);
++                removeProviderLocked(mGpsLocationProvider);
++                Settings.Secure.setLocationProviderEnabled(mContext.getContentResolver(),
++                        LocationManager.GPS_PROVIDER, false);
++            }
++            Slog.i(TAG, "Setting GPS Source to: " + device);
++            if ("0".equals(device)) {
++                if (!GpsLocationProvider.isSupported())
++                    return;
++                 GpsLocationProvider gpsProvider = new GpsLocationProvider(mContext, this);
++                 mGpsStatusProvider = gpsProvider.getGpsStatusProvider();
++                 mNetInitiatedListener = gpsProvider.getNetInitiatedListener();
++                 addProviderLocked(gpsProvider);
++            } else {
++                 BTGpsLocationProvider gpsProvider = new BTGpsLocationProvider(mContext, this);
++                 mGpsStatusProvider = gpsProvider.getGpsStatusProvider();
++                 mNetInitiatedListener = null;
++                 addProviderLocked(gpsProvider);
++            }
++        }
++    }
++
+     /**
+      * Called when the device's active user changes.
+      * @param userId the new active user's UserId
 diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
 index 4bbf452..02ba1c9 100644
 --- a/services/java/com/android/server/NotificationManagerService.java
@@ -15691,6 +15805,1475 @@ index fc4ecda..d4e67bc 100644
      final void setBroadcastTimeoutLocked(long timeoutTime) {
          if (! mPendingBroadcastTimeoutMessage) {
              Message msg = mHandler.obtainMessage(BROADCAST_TIMEOUT_MSG, this);
+diff --git a/services/java/com/android/server/location/BTGPSService.java b/services/java/com/android/server/location/BTGPSService.java
+new file mode 100644
+index 0000000..c0ead04
+--- /dev/null
++++ b/services/java/com/android/server/location/BTGPSService.java
+@@ -0,0 +1,465 @@
++/*
++ * Copyright (C) 2011 Cuong Bui
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.android.server.location;
++
++import java.io.BufferedReader;
++import java.io.IOException;
++import java.io.InputStream;
++import java.io.InputStreamReader;
++import java.io.OutputStream;
++import java.util.UUID;
++
++import android.bluetooth.BluetoothAdapter;
++import android.bluetooth.BluetoothDevice;
++import android.bluetooth.BluetoothSocket;
++import android.os.Handler;
++import android.os.Message;
++import android.util.Log;
++
++public class BTGPSService {
++    private static final boolean D = true;
++    private static final String TAG = "BTGPSService";
++    private static final UUID BT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
++    private final BluetoothAdapter mAdapter;
++    private final Handler mHandler;
++    private WatchdogThread mWatchdogThread = null;
++    private ConnectThread mConnectThread = null;
++    private ConnectedThread mConnectedThread = null;
++    private final int mMaxNMEABuffer=4096;
++    private final char[] buffer = new char[mMaxNMEABuffer];
++    int bytes;
++    private long refreshRate = 1000;
++    private long lastActivity = 0;
++    // MAX_ACTIVITY_TIMEOUT * refresh time window should have at least one activity.
++    private int MAX_ACTIVITY_TIMEOUT = 5;
++    // Maximum connect retry attempt
++    private int MAX_RECONNECT_RETRIES = 5;
++    // time window for one single connection (ms). socket connect timeout is around 12 sec
++    private int MAX_CONNECT_TIMEOUT = 13000;
++    // last connected device. is used to auto reconnect.
++    private BluetoothDevice lastConnectedDevice=null;
++
++    private int mState = 0;
++    // Constants that indicate the current connection state
++    public static final int STATE_NONE = 0;       // we're doing nothing
++    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
++    public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
++    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
++
++    public synchronized void setRefreshRate(long r) {
++        refreshRate = r;
++    }
++
++    public synchronized long getRefreshRate() {
++        return refreshRate;
++    }
++
++    public BTGPSService(Handler h) {
++        mAdapter = BluetoothAdapter.getDefaultAdapter();
++        mHandler = h;
++    }
++
++    private void sendMessage(int message, int arg, Object obj) {
++        Message m = Message.obtain(mHandler, message);
++        m.arg1 = arg;
++        m.obj = obj;
++        mHandler.sendMessage(m);
++    }
++
++    private void handleFailedConnection() {
++        if (getServiceState() != STATE_NONE) {
++            if (D) Log.d(TAG, "Connection failed with status != 0. try to reconnect");
++            connect(lastConnectedDevice);
++        } else {
++            if (D) Log.d(TAG, "Connection stopped with status = 0.");
++        }
++    }
++
++    /**
++     * Set the current state of the chat connection
++     * @param state  An integer defining the current connection state
++     */
++    private synchronized void setState(int state) {
++        if (D) Log.d(TAG, "setState() " + mState + " -> " + state);
++        mState = state;
++        if (mState == STATE_NONE) {
++            sendMessage(BTGpsLocationProvider.GPS_STATUS_UPDATE, 0, null);
++        } else if (mState == STATE_CONNECTED) {
++            sendMessage(BTGpsLocationProvider.GPS_STATUS_UPDATE, 1, null);
++        }
++    }
++
++    /**
++     * Return the current connection state. */
++    public synchronized int getServiceState() {
++        return mState;
++    }
++
++    /**
++     * Start the chat service. Specifically start AcceptThread to begin a
++     * session in listening (server) mode. Called by the Activity onResume() */
++    public synchronized void start() {
++
++        if (D) Log.d(TAG, "start");
++        if (!mAdapter.isEnabled()) {
++            setState(STATE_NONE);
++            return;
++        }
++        // Cancel any thread attempting to make a connection
++        if (mConnectThread != null) {
++            mConnectThread.cancel();
++            mConnectThread = null;
++        }
++        // Cancel any thread currently running a connection
++        if (mConnectedThread != null) {
++            mConnectedThread.cancel();
++            mConnectedThread = null;
++        }
++        setState(STATE_LISTEN);
++    }
++
++    /**
++     * Start the ConnectThread to initiate a connection to a remote device.
++     * @param device  The BluetoothDevice to connect
++     */
++    public synchronized boolean connect(BluetoothDevice device) {
++        lastConnectedDevice = device;
++        if (D) Log.d(TAG, "connect to: " + device);
++        // Cancel any thread attempting to make a connection
++        if (mConnectThread != null) {
++            mConnectThread.cancel();
++            mConnectThread = null;
++        }
++        if (mWatchdogThread != null) {
++            mWatchdogThread.cancel();
++            mWatchdogThread = null;
++        }
++        // Cancel any thread currently running a connection
++        if (mConnectedThread != null) {
++            mConnectedThread.cancel();
++            mConnectedThread = null;
++        }
++        // Helper thread that monitors and retries to connect after time out
++        mWatchdogThread = new WatchdogThread(device);
++        mWatchdogThread.start();
++        return true;
++    }
++
++    /**
++     * Start the ConnectedThread to begin managing a Bluetooth connection
++     * @param socket  The BluetoothSocket on which the connection was made
++     * @param device  The BluetoothDevice that has been connected
++     */
++    public synchronized void connected(BluetoothSocket socket) {
++        // reset connect thread
++        if (mConnectThread != null) mConnectThread = null;
++
++        // kill watchdog, since we are connected
++        if (mWatchdogThread != null) {
++            mWatchdogThread.cancel();
++            mWatchdogThread = null;
++        }
++        // Cancel any thread currently running a connection
++        if (mConnectedThread != null) {
++            mConnectedThread.cancel();
++            mConnectedThread = null;
++        }
++
++        // Start the thread to manage the connection and perform transmissions
++        mConnectedThread = new ConnectedThread(socket);
++        mConnectedThread.start();
++        setState(STATE_CONNECTED);
++    }
++
++    /**
++     * Stop all threads
++     */
++    public synchronized void stop() {
++        if (D) Log.d(TAG, "Stopping btsvc, Set state to None");
++        setState(STATE_NONE);
++
++        if (mWatchdogThread != null) {
++            if (D) Log.d(TAG, "Cancelling watchdog thread");
++            mWatchdogThread.cancel();
++            mWatchdogThread = null;
++        }
++
++        if (mConnectThread != null) {
++            if (D) Log.d(TAG, "Cancelling connect thread");
++            mConnectThread.cancel();
++            mConnectThread = null;
++        }
++        if (mConnectedThread != null) {
++            if (D) Log.d(TAG, "Cancelling connected thread");
++            mConnectedThread.cancel();
++            mConnectedThread = null;
++        }
++    }
++
++    /**
++     * Write to the ConnectedThread in an unsynchronized manner
++     * @param out The bytes to write
++     * @see ConnectedThread#write(byte[])
++     */
++    public void write(byte[] out) {
++        // Create temporary object
++        ConnectedThread r;
++        // Synchronize a copy of the ConnectedThread
++        synchronized (this) {
++            if (mState != STATE_CONNECTED) return;
++            r = mConnectedThread;
++        }
++        r.write(out);
++    }
++
++    /**
++     * This thread runs while attempting to make an outgoing connection
++     * with a device. It runs straight through; the connection either
++     * succeeds or fails.
++     */
++    private class ConnectThread extends Thread {
++        private BluetoothSocket mmSocket;
++        private final BluetoothDevice mmDevice;
++        private String mSocketType;
++
++        public ConnectThread(BluetoothDevice device) {
++            mmDevice = device;
++        }
++
++        private void closeSocket() {
++            if (D) Log.d(TAG, getId()+":close socket");
++            if (mmSocket == null) {
++                Log.e(TAG, getId()+":Socket not ready. Aborting Close");
++                return;
++            }
++
++            try {
++                mmSocket.close();
++                mmSocket = null;
++            } catch (IOException e) {
++                Log.e(TAG, getId()+":close() of connect " + mSocketType + " socket failed", e);
++            }
++        }
++
++        public void run() {
++            Log.i(TAG, getId() + ":begin mConnectThread");
++            BluetoothSocket tmp = null;
++            // Always cancel discovery because it will slow down a connection
++
++            try {
++                tmp = mmDevice.createRfcommSocketToServiceRecord(BT_UUID);
++            } catch (IOException e) {
++                Log.e(TAG, "Socket create() failed", e);
++                return;
++            }
++            mmSocket = tmp;
++            // Make a connection to the BluetoothSocket
++            if (mAdapter.isEnabled()) mAdapter.cancelDiscovery();
++            try {
++                // This is a blocking call and will only return on a
++                // successful connection or an exception
++                if (D)  Log.d(TAG, getId() + ":Connecting to socket...");
++                mmSocket.connect();
++                if (D) Log.d(TAG, "connected with remote device: "
++                        + mmDevice.getName() + " at address " + mmDevice.getAddress());
++                connected(mmSocket);
++            } catch (IOException e) {
++                Log.w(TAG, getId() + ":connect failed.", e);
++                return;
++            }
++        }
++
++        public synchronized void cancel() {
++            closeSocket();
++        }
++    }
++
++    /**
++     * This thread runs during a connection with a remote device.
++     * It handles all incoming and outgoing transmissions.
++     */
++    private class ConnectedThread extends Thread {
++        private BluetoothSocket mmSocket;
++        private InputStream mmInStream;
++        private OutputStream mmOutStream;
++        private boolean cancelled = false;
++
++        private void closeSocket() {
++            if (D) Log.d(TAG, getId()+":close socket");
++            if (mmSocket == null) {
++                Log.e(TAG, getId()+":Socket not ready. Aborting Close");
++                return;
++            }
++            try {
++                mmSocket.close();
++                mmSocket = null;
++            } catch (IOException e) {
++                Log.e(TAG, getId()+": close() of connect socket failed", e);
++            }
++        }
++
++        public ConnectedThread(BluetoothSocket socket) {
++            Log.d(TAG, getId() + ":begin ConnectedThread");
++            mmSocket = socket;
++            InputStream tmpIn = null;
++            OutputStream tmpOut = null;
++
++            // Get the BluetoothSocket input and output streams
++            try {
++                tmpIn = socket.getInputStream();
++                tmpOut = socket.getOutputStream();
++            } catch (IOException e) {
++                Log.e(TAG, "temp sockets not created", e);
++            }
++            mmInStream = tmpIn;
++            mmOutStream = tmpOut;
++        }
++
++        public void run() {
++            if (mmSocket == null || mmInStream == null) {
++                Log.e(TAG, "Input stream or socket is null. Aborting thread");
++                return;
++            }
++            if (D) Log.d(TAG, getId() + ":BEGIN mConnectedThread");
++            java.util.Arrays.fill(buffer, (char) ' ');
++            // reset refresh rate to 1000
++            refreshRate = 1000;
++            lastActivity = 0;
++            BufferedReader reader = new BufferedReader(new InputStreamReader(mmInStream));
++            // Keep listening to the InputStream while connected
++            while (true) {
++                try {
++                    if (reader.ready()) {
++                        bytes = reader.read(buffer, 0, mMaxNMEABuffer);
++                        Message msg = mHandler.obtainMessage(
++                                BTGpsLocationProvider.GPS_DATA_AVAILABLE,buffer);
++                        lastActivity = System.currentTimeMillis();
++                        msg.arg1 = bytes;
++                        mHandler.sendMessage(msg);
++                    }
++                    if (lastActivity != 0 && (System.currentTimeMillis() - lastActivity)  >
++                            MAX_ACTIVITY_TIMEOUT*refreshRate) {
++                        Log.w(TAG, getId() + ":BT activity timeout.");
++                        closeSocket();
++                        handleFailedConnection();
++                        return;
++                    }
++                    try {
++                        // get default sleep time
++                        Thread.sleep(getRefreshRate());
++                    } catch (InterruptedException e) {
++                        if (cancelled) {
++                            closeSocket();
++                            return;
++                        }
++                    }
++                } catch (IOException e) {
++                    Log.w(TAG, getId() + ":disconnected.", e);
++                    closeSocket();
++                    handleFailedConnection();
++                    return;
++                }
++            }
++        }
++
++        /**
++         * Write to the connected OutStream.
++         * @param buffer  The bytes to write
++         */
++        public void write(byte[] buffer) {
++            try {
++                mmOutStream.write(buffer);
++                mmOutStream.flush();
++            } catch (IOException e) {
++                Log.e(TAG, "Exception during write", e);
++            }
++        }
++
++        public void cancel() {
++            try {
++                if (mmSocket == null) {
++                    Log.e(TAG, "Input stream null. Aborting Cacnel");
++                    return;
++                }
++                mmSocket.close();
++            } catch (IOException e) {
++                Log.e(TAG, "close() of connect socket failed", e);
++            } finally {
++                cancelled = true;
++                interrupt();
++            }
++        }
++    }
++    /*
++     * Thread that starts the connection thread an monitors it.
++     * Thread will be cancelled if timeot occurs
++     */
++    private class WatchdogThread extends Thread {
++        private final BluetoothDevice btdevice;
++        private int retries = 0;
++        private boolean sleep = false;
++        private boolean cancelled = false;
++
++        public WatchdogThread(BluetoothDevice dev) {
++            btdevice = dev;
++        }
++
++        public void run() {
++            while(retries < MAX_RECONNECT_RETRIES) {
++                if (mConnectThread != null) {
++                    mConnectThread.cancel();
++                    mConnectThread = null;
++                }
++                if (mConnectedThread != null) {
++                    mConnectedThread.cancel();
++                    mConnectedThread = null;
++                }
++
++                mConnectThread = new ConnectThread(btdevice);
++                mConnectThread.start();
++                setState(STATE_CONNECTING);
++                // monitor connection and cancel if timeout
++                if (D) Log.d(TAG, getId() + ":Waiting " + MAX_CONNECT_TIMEOUT
++                        + " (ms) for service to connect...");
++                try {
++                    sleep = true;
++                    Thread.sleep(MAX_CONNECT_TIMEOUT);
++                    sleep = false;
++                    if (D) Log.d(TAG, getId() + ":Connecting timeout.");
++                } catch (InterruptedException e) {
++                    if (D) Log.d(TAG, getId() + ":Watchdog interrupted. probably by cancel.");
++                }
++                if (getServiceState() == STATE_CONNECTED) {
++                    if (D) Log.d(TAG, getId() + ":Connected. aborting watchdog");
++                    return;
++                }
++                if (cancelled) {
++                    if (D) Log.d(TAG, getId() + ":Cancelled. aborting watchdog");
++                    return;
++                }
++                retries++;
++            }
++            // max timeout, so stopping service
++            if (D) Log.d(TAG, getId() + ":Max connection retries exceeded. stopping services.");
++            BTGPSService.this.stop();
++        }
++
++        public void cancel() {
++            cancelled = true;
++            if (sleep) interrupt();
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/services/java/com/android/server/location/BTGpsLocationProvider.java b/services/java/com/android/server/location/BTGpsLocationProvider.java
+new file mode 100644
+index 0000000..dddb5fa
+--- /dev/null
++++ b/services/java/com/android/server/location/BTGpsLocationProvider.java
+@@ -0,0 +1,991 @@
++/*
++ * Copyright (C) 2011 Cuong Bui
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.server.location;
++
++import android.bluetooth.BluetoothAdapter;
++import android.bluetooth.BluetoothDevice;
++import android.content.BroadcastReceiver;
++import android.content.Context;
++import android.content.Intent;
++import android.content.IntentFilter;
++import android.location.Criteria;
++import android.location.IGpsStatusListener;
++import android.location.IGpsStatusProvider;
++import android.location.ILocationManager;
++import android.location.INetInitiatedListener;
++import android.location.Location;
++import android.location.LocationManager;
++import android.location.LocationProvider;
++import android.net.NetworkInfo;
++import android.os.Bundle;
++import android.os.Handler;
++import android.os.IBinder;
++import android.os.Looper;
++import android.os.Message;
++import android.os.PowerManager;
++import android.os.RemoteException;
++import android.os.ServiceManager;
++import android.os.SystemClock;
++import android.os.WorkSource;
++import android.provider.Settings;
++import android.text.TextUtils;
++import android.util.Log;
++import android.util.SparseIntArray;
++
++import com.android.internal.app.IBatteryStats;
++import com.android.internal.location.ProviderProperties;
++import com.android.internal.location.ProviderRequest;
++
++import java.io.FileDescriptor;
++import java.io.PrintWriter;
++import java.util.ArrayList;
++import java.util.concurrent.CountDownLatch;
++
++public class BTGpsLocationProvider implements LocationProviderInterface {
++    private static final boolean D = true;
++    private final String PROVIDER = "External Bleutooth Location Provider";
++    private final String TAG = "BTGpsLocationProvider";
++    private final NMEAParser nmeaparser = new NMEAParser(LocationManager.GPS_PROVIDER);
++
++    private final BluetoothAdapter mAdapter = BluetoothAdapter.getDefaultAdapter();
++
++    private static final ProviderProperties PROPERTIES = new ProviderProperties(
++            false, false, false, false, true, true, true,
++            Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
++
++    /** simpler wrapper for ProviderRequest + Worksource */
++    private static class GpsRequest {
++        public ProviderRequest request;
++        public WorkSource source;
++
++        public GpsRequest(ProviderRequest request, WorkSource source) {
++            this.request = request;
++            this.source = source;
++        }
++    }
++
++    // GPS update codes
++    public static final int GPS_DATA_AVAILABLE = 1000;
++    public static final int GPS_STATUS_UPDATE = 1001;
++    public static final int GPS_CUSTOM_COMMAND = 1002;
++
++    // Wakelocks
++    private final static String WAKELOCK_KEY = "GpsLocationProvider";
++    private final PowerManager.WakeLock mWakeLock;
++    // bitfield of pending messages to our Handler
++    // used only for messages that cannot have multiple instances queued
++    private int mPendingMessageBits;
++    // separate counter for ADD_LISTENER and REMOVE_LISTENER messages,
++    // which might have multiple instances queued
++    private int mPendingListenerMessages;
++
++    private final IBatteryStats mBatteryStats;
++    private final SparseIntArray mClientUids = new SparseIntArray();
++
++    // Handler messages
++    private static final int CHECK_LOCATION = 1;
++    private static final int ENABLE = 2;
++    private static final int SET_REQUEST = 3;
++    private static final int UPDATE_NETWORK_STATE = 4;
++    private static final int INJECT_NTP_TIME = 5;
++    private static final int DOWNLOAD_XTRA_DATA = 6;
++    private static final int UPDATE_LOCATION = 7;
++    private static final int ADD_LISTENER = 8;
++    private static final int REMOVE_LISTENER = 9;
++    private static final int INJECT_NTP_TIME_FINISHED = 10;
++    private static final int DOWNLOAD_XTRA_DATA_FINISHED = 11;
++
++    // for calculating time to first fix
++    private long mFixRequestTime = 0;
++    // time to first fix for most recent session
++    private int mTTFF = 0;
++    // time we received our last fix
++    private long mLastFixTime;
++
++    // time for last status update
++    private long mStatusUpdateTime = SystemClock.elapsedRealtime();
++
++    // true if we are enabled
++    private volatile boolean mEnabled;
++
++    // true if GPS is navigating
++    private boolean mNavigating;
++
++    private int mSvCount;
++    // current status
++    private int mStatus = LocationProvider.TEMPORARILY_UNAVAILABLE;
++
++    private Bundle mLocationExtras = new Bundle();
++    private Location mLocation = new Location(LocationManager.GPS_PROVIDER);
++
++    private final Context mContext;
++    private final ILocationManager mLocationManager;
++
++    private final IntentFilter mIntentBTFilter;
++
++    private final Thread mMessageLoopThread = new BTGPSMessageThread();
++    private final CountDownLatch mInitializedLatch = new CountDownLatch(1);
++
++    /**
++     * Listen for BT changes. If BT is turned off, disable GPS services
++     */
++    private final BroadcastReceiver mReceiver;
++
++    /**
++     * Message handler Receives nmea sentences receives connection lost signals
++     * enabling/disabling gps signals adding/removing listeners
++     */
++    private Handler mHandler;
++
++    // BT gps service. This class handles the actual BT connection and data xfer
++    private final BTGPSService btsvc;
++
++    // BT Location provider , uses the same method signature as the org GPS
++    // location provider
++    public BTGpsLocationProvider(Context context, ILocationManager locationManager) {
++
++        mContext = context;
++        mLocationManager = locationManager;
++        // innit message handler
++        mMessageLoopThread.start();
++        // wait for message handler to be ready
++        while (true) {
++            try {
++                mInitializedLatch.await();
++                break;
++            } catch (InterruptedException e) {
++                Thread.currentThread().interrupt();
++            }
++        }
++        // instantiate BTGPSService
++        btsvc = new BTGPSService(mHandler);
++
++        // Create a wake lock.
++        PowerManager powerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
++        mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKELOCK_KEY);
++        mWakeLock.setReferenceCounted(false);
++
++        // Battery statistics service to be notified when GPS turns on or off
++        mBatteryStats = IBatteryStats.Stub.asInterface(ServiceManager.getService("batteryinfo"));
++
++        // receive BT state changes
++        mReceiver = new BroadcastReceiver() {
++            @Override
++            public void onReceive(Context context, Intent intent) {
++                String action = intent.getAction();
++                if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
++                    int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
++                            BluetoothAdapter.ERROR);
++                    switch (state) {
++                        case BluetoothAdapter.STATE_ON:
++                            if (D)
++                                Log.i(TAG, "BT turned on -> notify services?");
++                            break;
++                        case BluetoothAdapter.STATE_TURNING_OFF:
++                            if (btsvc.getServiceState() != BTGPSService.STATE_NONE) {
++                                if (D)
++                                    Log.i(TAG, "BT turned off -> stopping services");
++                                btsvc.stop();
++                            }
++                            break;
++                    }
++                }
++            }
++        };
++        mIntentBTFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
++        mContext.registerReceiver(mReceiver, mIntentBTFilter);
++    }
++
++    private final class BTGPSMessageThread extends Thread {
++
++        public void run() {
++            try {
++                Looper.prepare();
++            } catch (RuntimeException e) {
++                // ignored: Looper already prepared
++            }
++            mHandler = new Handler() {
++                @Override
++                public void handleMessage(Message msg) {
++                    int message = msg.what;
++                    switch (message) {
++                        case GPS_DATA_AVAILABLE:
++                            char[] writeBuf = (char[]) msg.obj;
++                            int bytes = msg.arg1;
++                            if ((writeBuf != null) && (mEnabled && bytes > 0)) {
++                                String writeMessage = new String(writeBuf, 0, bytes);
++                                handleNMEAMessages(writeMessage);
++                                java.util.Arrays.fill(writeBuf, (char) ' ');
++                            }
++                            break;
++                        case GPS_STATUS_UPDATE:
++                            notifyEnableDisableGPS(msg.arg1 == 1);
++                            break;
++                        case GPS_CUSTOM_COMMAND:
++                            if (mEnabled && btsvc.getServiceState() == BTGPSService.STATE_CONNECTED) {
++                                // sends custom commands
++                                byte[] cmds = (byte[]) msg.obj;
++                                btsvc.write(cmds);
++                            }
++                            break;
++                        case ENABLE:
++                            if (msg.arg1 == 1) {
++                                handleEnable();
++                            } else {
++                                handleDisable();
++                            }
++                            break;
++                        // case REQUEST_SINGLE_SHOT:
++                        // case ENABLE_TRACKING:
++                        case UPDATE_NETWORK_STATE:
++                        case INJECT_NTP_TIME:
++                        case DOWNLOAD_XTRA_DATA:
++                            break;
++                        case UPDATE_LOCATION:
++                            handleUpdateLocation((Location) msg.obj);
++                            break;
++                        case ADD_LISTENER:
++                            handleAddListener(msg.arg1);
++                            break;
++                        case REMOVE_LISTENER:
++                            handleRemoveListener(msg.arg1);
++                            break;
++                    }
++                    // release wake lock if no messages are pending
++                    synchronized (mWakeLock) {
++                        mPendingMessageBits &= ~(1 << message);
++                        if (message == ADD_LISTENER || message == REMOVE_LISTENER) {
++                            mPendingListenerMessages--;
++                        }
++                        if (mPendingMessageBits == 0 && mPendingListenerMessages == 0) {
++                            mWakeLock.release();
++                        }
++                    }
++                }
++            };
++            mInitializedLatch.countDown();
++            Looper.loop();
++        }
++    }
++
++    @Override
++    public void enable() {
++        synchronized (mHandler) {
++            sendMessage(ENABLE, 1, null);
++        }
++    }
++
++    /**
++     * Enables BT GPS provider
++     */
++    private synchronized void handleEnable() {
++        if (D)
++            Log.d(TAG, "handleEnable");
++        if (mEnabled)
++            return;
++        // check if BT is enabled
++        if (!mAdapter.isEnabled()) {
++            int state = mAdapter.getState();
++            if (state == BluetoothAdapter.STATE_OFF) {
++                if (D)
++                    Log.d(TAG, "BT not available. Enable and wait for it...");
++                mAdapter.enable();
++            }
++            // wait for adapter to be ready
++            while (true) {
++                try {
++                    state = mAdapter.getState();
++                    if (state == BluetoothAdapter.STATE_ON) {
++                        break;
++                    } else if (state == BluetoothAdapter.STATE_TURNING_ON) {
++                        if (D)
++                            Log.d(TAG, "BT not available yet. waiting for another 400ms");
++                        Thread.sleep(400);
++                    } else {
++                        if (D)
++                            Log.d(TAG, "BT got disabled or interrupted by other source");
++                        return;
++                    }
++
++                } catch (InterruptedException e) {
++                    Log.w(TAG, e.getMessage());
++                }
++            }
++        }
++        if (D)
++            Log.d(TAG, "mEnabled -> true");
++        mEnabled = true;
++        if (D)
++            Log.d(TAG, "mStatus -> temp unavailable");
++        mStatus = LocationProvider.TEMPORARILY_UNAVAILABLE;
++        if (D)
++            Log.d(TAG, "btservice start");
++        btsvc.start();
++        mFixRequestTime = System.currentTimeMillis();
++        mTTFF = 0;
++        String btDevice = Settings.System.getString(mContext.getContentResolver(),
++                Settings.Secure.EXTERNAL_GPS_BT_DEVICE);
++        if (D)
++            Log.d(TAG, "Connecting to saved pref: " + btDevice);
++        if ((btDevice != null) && !"0".equals(btDevice)) {
++            if ((mAdapter != null) && (mAdapter.isEnabled())) {
++                for (BluetoothDevice d : mAdapter.getBondedDevices()) {
++                    if (btDevice.equals(d.getAddress())) {
++                        if (D)
++                            Log.d(TAG, "Connecting...");
++                        btsvc.connect(d);
++                        return;
++                    }
++                }
++            }
++        }
++    }
++
++    /**
++     * Disables this provider.
++     */
++    @Override
++    public void disable() {
++        synchronized (mHandler) {
++            sendMessage(ENABLE, 0, null);
++        }
++    }
++
++    private synchronized void handleDisable() {
++        if (D)
++            Log.d(TAG, "handleDisable");
++        if (!mEnabled)
++            return;
++        if (D)
++            Log.d(TAG, "mEnabled -> false");
++        mEnabled = false;
++        if (D)
++            Log.d(TAG, "reportstatus notify listeners and system");
++        notifyEnableDisableGPS(false);
++        if (D)
++            Log.d(TAG, "update to out of service");
++        updateStatus(LocationProvider.OUT_OF_SERVICE, mSvCount);
++        if (D)
++            Log.d(TAG, "btservice Stop");
++        btsvc.stop();
++    }
++
++    /*
++     * We do not need to implement scheduled tracking. With internal gps
++     * providers it makes sence to hibernate and resume periodically. With BT
++     * GPS providers it doesn't make sense
++     * @see
++     * com.android.server.location.LocationProviderInterface#enableLocationTracking
++     * (boolean)
++     */
++    // @Override
++    public void enableLocationTracking(boolean enable) {
++    }
++
++    // @Override
++    public int getAccuracy() {
++        return Criteria.ACCURACY_FINE;
++    }
++
++    /*
++     * Debug native state used by normal GPS provider only
++     * @see
++     * com.android.server.location.LocationProviderInterface#getInternalState()
++     */
++    // @Override
++    public String getInternalState() {
++        return null;
++    }
++
++    @Override
++    public String getName() {
++        return LocationManager.GPS_PROVIDER;
++    }
++
++    @Override
++    public ProviderProperties getProperties() {
++        return PROPERTIES;
++    }
++
++    @Override
++    public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
++        /*
++         * StringBuilder s = new StringBuilder();
++         * s.append("  mFixInterval=").append(mFixInterval).append("\n");
++         * s.append("  mEngineCapabilities=0x").append(Integer.toHexString(
++         * mEngineCapabilities)).append(" ("); if
++         * (hasCapability(GPS_CAPABILITY_SCHEDULING)) s.append("SCHED "); if
++         * (hasCapability(GPS_CAPABILITY_MSB)) s.append("MSB "); if
++         * (hasCapability(GPS_CAPABILITY_MSA)) s.append("MSA "); if
++         * (hasCapability(GPS_CAPABILITY_SINGLE_SHOT)) s.append("SINGLE_SHOT ");
++         * if (hasCapability(GPS_CAPABILITY_ON_DEMAND_TIME))
++         * s.append("ON_DEMAND_TIME "); s.append(")\n");
++         * s.append(native_get_internal_state());
++         */
++        pw.append("BTGpsLocationProvider");
++    }
++
++    /**
++     * Returns the power requirement for this provider.
++     * 
++     * @return the power requirement for this provider, as one of the constants
++     *         Criteria.POWER_REQUIREMENT_*.
++     */
++    public int getPowerRequirement() {
++        return Criteria.POWER_MEDIUM;
++    }
++
++    /**
++     * Returns true if this provider meets the given criteria, false otherwise.
++     */
++    public boolean meetsCriteria(Criteria criteria) {
++        return (criteria.getPowerRequirement() != Criteria.POWER_LOW);
++    }
++
++    @Override
++    public int getStatus(Bundle extras) {
++        if (extras != null) {
++            extras.putInt("satellites", mSvCount);
++        }
++        return mStatus;
++    }
++
++    @Override
++    public long getStatusUpdateTime() {
++        return mStatusUpdateTime;
++    }
++
++    @Override
++    public void setRequest(ProviderRequest request, WorkSource source) {
++        sendMessage(SET_REQUEST, 0, new GpsRequest(request, source));
++    }
++
++    // =============================================================
++    // NI Client support
++    // =============================================================
++    private final INetInitiatedListener mNetInitiatedListener = new INetInitiatedListener.Stub() {
++        // Sends a response for an NI reqeust to HAL.
++        @Override
++        public boolean sendNiResponse(int notificationId, int userResponse)
++        {
++            // TODO Add Permission check
++
++            if (D)
++                Log.d(TAG, "sendNiResponse, notifId: " + notificationId +
++                        ", response: " + userResponse);
++            native_send_ni_response(notificationId, userResponse);
++            return true;
++        }
++    };
++
++    public INetInitiatedListener getNetInitiatedListener() {
++        return mNetInitiatedListener;
++    }
++
++    // @Override
++    public boolean hasMonetaryCost() {
++        return false;
++    }
++
++    @Override
++    public boolean isEnabled() {
++        return mEnabled;
++    }
++
++    // @Override
++    public boolean requestSingleShotFix() {
++        return false;
++    }
++
++    // @Override
++    public boolean requiresCell() {
++        return false;
++    }
++
++    // @Override
++    public boolean requiresNetwork() {
++        return false;
++    }
++
++    // @Override
++    public boolean requiresSatellite() {
++        return true;
++    }
++
++    @Override
++    public boolean sendExtraCommand(String command, Bundle extras) {
++        if (TextUtils.isEmpty(command))
++            return false;
++        synchronized (mHandler) {
++            String customCommand = command + "\r\n";
++            sendMessage(GPS_CUSTOM_COMMAND, customCommand.length(), customCommand.getBytes());
++        }
++        return true;
++    }
++
++    /*
++     * GPS scheduling stuff, not needed
++     * @see
++     * com.android.server.location.LocationProviderInterface#setMinTime(long,
++     * android.os.WorkSource)
++     */
++    // @Override
++    public void setMinTime(long minTime, WorkSource ws) {
++
++    }
++
++    // @Override
++    public boolean supportsAltitude() {
++        return mLocation.hasAltitude();
++    }
++
++    // @Override
++    public boolean supportsBearing() {
++        return mLocation.hasBearing();
++    }
++
++    // @Override
++    public boolean supportsSpeed() {
++        return mLocation.hasSpeed();
++    }
++
++    @Override
++    public void switchUser(int userId) {
++        // nothing to do here
++    }
++
++    // @Override
++    /**
++     * This is called to inform us when another location provider returns a
++     * location. Someday we might use this for network location injection to aid
++     * the GPS
++     */
++    public void updateLocation(Location location) {
++        sendMessage(UPDATE_LOCATION, 0, location);
++    }
++
++    private void handleUpdateLocation(Location location) {
++        if (location.hasAccuracy()) {
++            // Allow other provider GPS data ? discard for now
++        }
++    }
++
++    /*
++     * unneeded by BT GPS provider
++     * @see
++     * com.android.server.location.LocationProviderInterface#updateNetworkState
++     * (int, android.net.NetworkInfo)
++     */
++    // @Override
++    public void updateNetworkState(int state, NetworkInfo info) {
++        // TODO Auto-generated method stub
++
++    }
++
++    /**
++     * @param loc Location object representing the fix
++     * @param isValid true if fix was valid
++     */
++    private void reportLocation(Location loc, boolean isValid) {
++        if (D)
++            Log.d(TAG,
++                    "Reporting Location (" + loc.isComplete() + "): Lng: " + loc.getLatitude() +
++                            "Lng: " + loc.getLongitude());
++
++        if (!isValid) {
++            if (mStatus == LocationProvider.AVAILABLE && mTTFF > 0) {
++                if (D)
++                    Log.d(TAG, "Invalid sat fix -> sending notification to system");
++                // send an intent to notify that the GPS is no longer receiving
++                // fixes.
++                Intent intent = new Intent(LocationManager.GPS_FIX_CHANGE_ACTION);
++                intent.putExtra(LocationManager.EXTRA_GPS_ENABLED, false);
++                mContext.sendBroadcast(intent);
++                updateStatus(LocationProvider.TEMPORARILY_UNAVAILABLE, mSvCount);
++            }
++            return;
++        }
++
++        synchronized (mLocation) {
++            if (D && !loc.isComplete()) {
++                Log.d(TAG, "Location: hasProvider? '" + loc.getProvider() + "'" +
++                        ", hasAccuracy? '" + loc.hasAccuracy() + "'" +
++                        ", hasTime? '" + loc.getTime() + "'" +
++                        ", mElapsedRealtimeNanos? '" + loc.getElapsedRealtimeNanos() + "'");
++
++            }
++
++            mLocation.set(loc);
++            mLocation.setProvider(this.getName());
++            if (D) {
++                Log.d(TAG,
++                        "reportLocation lat: " + mLocation.getLatitude() +
++                                " long: " + mLocation.getLongitude() + " alt: "
++                                + mLocation.getAltitude() +
++                                " accuracy: " + mLocation.getAccuracy() + " timestamp: "
++                                + mLocation.getTime());
++            }
++            try {
++                mLocationManager.reportLocation(mLocation, false);
++            } catch (RemoteException e) {
++                Log.e(TAG, "RemoteException calling reportLocation");
++            }
++        }
++
++        mLastFixTime = System.currentTimeMillis();
++        // report time to first fix
++        if ((mTTFF == 0) && (isValid)) {
++            mTTFF = (int) (mLastFixTime - mFixRequestTime);
++            if (D)
++                Log.d(TAG, "TTFF: " + mTTFF);
++
++            // notify status listeners
++            synchronized (mListeners) {
++                int size = mListeners.size();
++                for (int i = 0; i < size; i++) {
++                    Listener listener = mListeners.get(i);
++                    try {
++                        listener.mListener.onFirstFix(mTTFF);
++                    } catch (RemoteException e) {
++                        Log.w(TAG, "RemoteException in first fix notification");
++                        mListeners.remove(listener);
++                        // adjust for size of list changing
++                        size--;
++                    }
++                }
++            }
++        }
++
++        if (mStatus != LocationProvider.AVAILABLE) {
++            if (D)
++                Log.d(TAG, "Notify that we're receiving fixes");
++            // send an intent to notify that the GPS is receiving fixes.
++            Intent intent = new Intent(LocationManager.GPS_FIX_CHANGE_ACTION);
++            intent.putExtra(LocationManager.EXTRA_GPS_ENABLED, true);
++            mContext.sendBroadcast(intent);
++            updateStatus(LocationProvider.AVAILABLE, mSvCount);
++        }
++
++    }
++
++    /*
++     * report sats status
++     */
++    private void reportSvStatus(int svCount, int mSvs[], float mSnrs[],
++            float mSvElevations[], float mSvAzimuths[], int mSvMasks[]) {
++
++        if (D)
++            Log.d(TAG, "About to report sat status svcount: " + svCount);
++        synchronized (mListeners) {
++            int size = mListeners.size();
++            for (int i = 0; i < size; i++) {
++                Listener listener = mListeners.get(i);
++                try {
++                    listener.mListener.onSvStatusChanged(svCount, mSvs, mSnrs, mSvElevations,
++                            mSvAzimuths, mSvMasks[NMEAParser.EPHEMERIS_MASK],
++                            mSvMasks[NMEAParser.ALMANAC_MASK],
++                            mSvMasks[NMEAParser.USED_FOR_FIX_MASK]);
++                } catch (RemoteException e) {
++                    Log.w(TAG, "RemoteException in reportSvInfo");
++                    mListeners.remove(listener);
++                    // adjust for size of list changing
++                    size--;
++                }
++            }
++        }
++
++        // return number of sets used in fix instead of total
++        updateStatus(mStatus, Integer.bitCount(mSvMasks[NMEAParser.USED_FOR_FIX_MASK]));
++    }
++
++    /**
++     * Handles GPS status. will also inform listeners when GPS started/stopped
++     * 
++     * @param status new GPS status
++     */
++    private void notifyEnableDisableGPS(boolean status) {
++        if (D)
++            Log.v(TAG, "notifyEnableDisableGPS status: " + status);
++
++        synchronized (mListeners) {
++            mNavigating = status;
++            int size = mListeners.size();
++            for (int i = 0; i < size; i++) {
++                Listener listener = mListeners.get(i);
++                try {
++                    if (status) {
++                        listener.mListener.onGpsStarted();
++                    } else {
++                        listener.mListener.onGpsStopped();
++                    }
++                } catch (RemoteException e) {
++                    Log.w(TAG, "RemoteException in reportStatus");
++                    mListeners.remove(listener);
++                    // adjust for size of list changing
++                    size--;
++                }
++            }
++            try {
++                // update battery stats
++                for (int i = mClientUids.size() - 1; i >= 0; i--) {
++                    int uid = mClientUids.keyAt(i);
++                    if (mNavigating) {
++                        mBatteryStats.noteStartGps(uid);
++                    } else {
++                        mBatteryStats.noteStopGps(uid);
++                    }
++                }
++            } catch (RemoteException e) {
++                Log.w(TAG, "RemoteException in reportStatus");
++            }
++            // send an intent to notify that the GPS has been enabled or
++            // disabled.
++            Intent intent = new Intent(LocationManager.GPS_ENABLED_CHANGE_ACTION);
++            intent.putExtra(LocationManager.EXTRA_GPS_ENABLED, status);
++            mContext.sendBroadcast(intent);
++        }
++        try {
++            if (D)
++                Log.d(TAG, "Setting System GPS status to " + status);
++            Settings.Secure.setLocationProviderEnabled(mContext.getContentResolver(),
++                    LocationManager.GPS_PROVIDER, status);
++        } catch (Exception e) {
++            Log.e(TAG, e.getMessage());
++        }
++    }
++
++    /**
++     * sends nmea sentences to NMEA parsers. Some apps use raw nmea data
++     * 
++     * @param nmeaString nmea string
++     * @param timestamp time stamp
++     */
++    private void reportNmea(String nmeaString, long timestamp) {
++        synchronized (mListeners) {
++            int size = mListeners.size();
++            for (int i = 0; i < size; i++) {
++                Listener listener = mListeners.get(i);
++                try {
++                    listener.mListener.onNmeaReceived(timestamp, nmeaString);
++                } catch (RemoteException e) {
++                    Log.w(TAG, "RemoteException in reportNmea");
++                    mListeners.remove(listener);
++                    // adjust for size of list changing
++                    size--;
++                }
++            }
++        }
++    }
++
++    /**
++     * This methods parses the nmea sentences and sends the location updates and
++     * sats updates to listeners.
++     * 
++     * @param sentences raw nmea sentences received by BT GPS Mouse
++     */
++    private void handleNMEAMessages(String sentences) {
++        Log.d(TAG, "handleNMEAMessages");
++        String sentenceArray[] = sentences.split("\r\n");
++        nmeaparser.reset();
++        for (int i = 0; i < sentenceArray.length; i++) {
++            if (D)
++                Log.d(TAG, "About to parse: " + sentenceArray[i]);
++            if ((sentenceArray[i] != null) && ("".equals(sentenceArray[i])))
++                continue;
++            boolean parsed = nmeaparser.parseNMEALine(sentenceArray[i]);
++            // handle nmea message. Also report messages that we could not parse
++            // as these
++            // might be propriatery messages that other listeners could support.
++            reportNmea(sentenceArray[i], System.currentTimeMillis());
++        }
++        Location loc = nmeaparser.getLocation();
++        // handle location update if valid
++        reportLocation(loc, nmeaparser.isValid());
++        if (nmeaparser.isSatdataReady()) {
++            reportSvStatus(nmeaparser.getmSvCount(), nmeaparser.getmSvs(), nmeaparser.getmSnrs(),
++                    nmeaparser.getmSvElevations(), nmeaparser.getmSvAzimuths(),
++                    nmeaparser.getmSvMasks());
++        }
++
++        // adjust refresh rate based on received timestamp of mouse
++        // min 1hz and max 10 hz
++        long newRate = nmeaparser.getApproximatedRefreshRate();
++        if (btsvc.getRefreshRate() != newRate) {
++            if (D)
++                Log.d(TAG, "Setting refresh rate to: " + newRate
++                        + " was: " + btsvc.getRefreshRate());
++            btsvc.setRefreshRate(newRate);
++        }
++    }
++
++    /*
++     * Stuff below is taken from the android GPS location provider. Does
++     * handling of messages/listeners and so on.
++     */
++
++    private void sendMessage(int message, int arg, Object obj) {
++        // hold a wake lock while messages are pending
++        synchronized (mWakeLock) {
++            mPendingMessageBits |= (1 << message);
++            mWakeLock.acquire();
++            mHandler.removeMessages(message);
++            Message m = Message.obtain(mHandler, message);
++            m.arg1 = arg;
++            m.obj = obj;
++            mHandler.sendMessage(m);
++        }
++    }
++
++    private void updateStatus(int status, int svCount) {
++        if (status != mStatus || svCount != mSvCount) {
++            mStatus = status;
++            mSvCount = svCount;
++            mLocationExtras.putInt("satellites", svCount);
++            mStatusUpdateTime = SystemClock.elapsedRealtime();
++        }
++    }
++
++    private ArrayList<Listener> mListeners = new ArrayList<Listener>();
++
++    private final class Listener implements IBinder.DeathRecipient {
++        final IGpsStatusListener mListener;
++
++        Listener(IGpsStatusListener listener) {
++            mListener = listener;
++        }
++
++        public void binderDied() {
++            if (D)
++                Log.d(TAG, "GPS status listener died");
++
++            synchronized (mListeners) {
++                mListeners.remove(this);
++            }
++            if (mListener != null) {
++                mListener.asBinder().unlinkToDeath(this, 0);
++            }
++        }
++    }
++
++    private final IGpsStatusProvider mGpsStatusProvider = new IGpsStatusProvider.Stub() {
++        public void addGpsStatusListener(IGpsStatusListener listener) throws RemoteException {
++            if (listener == null) {
++                throw new NullPointerException("listener is null in addGpsStatusListener");
++            }
++            synchronized (mListeners) {
++                IBinder binder = listener.asBinder();
++                int size = mListeners.size();
++                for (int i = 0; i < size; i++) {
++                    Listener test = mListeners.get(i);
++                    if (binder.equals(test.mListener.asBinder())) {
++                        // listener already added
++                        return;
++                    }
++                }
++                Listener l = new Listener(listener);
++                binder.linkToDeath(l, 0);
++                mListeners.add(l);
++            }
++        }
++
++        public void removeGpsStatusListener(IGpsStatusListener listener) {
++            if (listener == null) {
++                throw new NullPointerException("listener is null in addGpsStatusListener");
++            }
++
++            synchronized (mListeners) {
++                IBinder binder = listener.asBinder();
++                Listener l = null;
++                int size = mListeners.size();
++                for (int i = 0; i < size && l == null; i++) {
++                    Listener test = mListeners.get(i);
++                    if (binder.equals(test.mListener.asBinder())) {
++                        l = test;
++                    }
++                }
++
++                if (l != null) {
++                    mListeners.remove(l);
++                    binder.unlinkToDeath(l, 0);
++                }
++            }
++        }
++    };
++
++    public IGpsStatusProvider getGpsStatusProvider() {
++        return mGpsStatusProvider;
++    }
++
++    public void addListener(int uid) {
++        synchronized (mWakeLock) {
++            mPendingListenerMessages++;
++            mWakeLock.acquire();
++            Message m = Message.obtain(mHandler, ADD_LISTENER);
++            m.arg1 = uid;
++            mHandler.sendMessage(m);
++        }
++    }
++
++    private void handleAddListener(int uid) {
++        synchronized (mListeners) {
++            if (mClientUids.indexOfKey(uid) >= 0) {
++                // Shouldn't be here -- already have this uid.
++                Log.w(TAG, "Duplicate add listener for uid " + uid);
++                return;
++            }
++            mClientUids.put(uid, 0);
++            if (mNavigating) {
++                try {
++                    mBatteryStats.noteStartGps(uid);
++                } catch (RemoteException e) {
++                    Log.w(TAG, "RemoteException in addListener");
++                }
++            }
++        }
++    }
++
++    public void removeListener(int uid) {
++        synchronized (mWakeLock) {
++            mPendingListenerMessages++;
++            mWakeLock.acquire();
++            Message m = Message.obtain(mHandler, REMOVE_LISTENER);
++            m.arg1 = uid;
++            mHandler.sendMessage(m);
++        }
++    }
++
++    private void handleRemoveListener(int uid) {
++        synchronized (mListeners) {
++            if (mClientUids.indexOfKey(uid) < 0) {
++                // Shouldn't be here -- don't have this uid.
++                Log.w(TAG, "Unneeded remove listener for uid " + uid);
++                return;
++            }
++            mClientUids.delete(uid);
++            if (mNavigating) {
++                try {
++                    mBatteryStats.noteStopGps(uid);
++                } catch (RemoteException e) {
++                    Log.w(TAG, "RemoteException in removeListener");
++                }
++            }
++        }
++    }
++
++    // Network-initiated (NI) Support
++    private native void native_send_ni_response(int notificationId, int userResponse);
++}
 diff --git a/services/java/com/android/server/location/GpsLocationProvider.java b/services/java/com/android/server/location/GpsLocationProvider.java
 index cba2db2..a8ee0df 100644
 --- a/services/java/com/android/server/location/GpsLocationProvider.java
@@ -15707,6 +17290,619 @@ index cba2db2..a8ee0df 100644
  
          long identity = Binder.clearCallingIdentity();
          boolean result = false;
+diff --git a/services/java/com/android/server/location/NMEAParser.java b/services/java/com/android/server/location/NMEAParser.java
+new file mode 100644
+index 0000000..ec50704
+--- /dev/null
++++ b/services/java/com/android/server/location/NMEAParser.java
+@@ -0,0 +1,607 @@
++/*
++ * Copyright (C) 2011 Cuong Bui
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.server.location;
++
++import java.text.ParseException;
++import java.text.SimpleDateFormat;
++import java.util.Calendar;
++import java.util.Date;
++import java.util.GregorianCalendar;
++import java.util.HashMap;
++import java.util.TimeZone;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
++
++import android.location.Location;
++import android.location.LocationManager;
++import android.os.Bundle;
++import android.os.SystemClock;
++import android.text.TextUtils;
++import android.util.Log;
++
++public class NMEAParser {
++    private static final String TAG = "NMEAParser";
++    private static final String DELIM = ",";
++
++    // NMEA sentence pattern
++    private final Pattern sentencePattern = Pattern.compile("\\$([^*$]{5,})(\\*\\w{2})?");
++    private final SimpleDateFormat timeFormatter = new SimpleDateFormat("HHmmss.S");
++    private final TimeZone GPSTimezone = TimeZone.getTimeZone("UTC");
++    private GregorianCalendar GPSCalendar = new GregorianCalendar(GPSTimezone);
++
++    private HashMap<String, ParseInterface> parseMap = new HashMap<String, ParseInterface>();
++    private String provider;
++
++    private static final String BUNDLE_SATS = "satellites";
++    private static final String BUNDLE_ISVALID = "isValid";
++
++    // for GPS SV statistics
++    private static final int MAX_SVS = 32;
++    public static final int EPHEMERIS_MASK = 0;
++    public static final int ALMANAC_MASK = 1;
++    public static final int USED_FOR_FIX_MASK = 2;
++
++    // preallocated arrays, to avoid memory allocation in reportStatus()
++    private int mSvs[] = new int[MAX_SVS];
++    private float mSnrs[] = new float[MAX_SVS];
++    private float mSvElevations[] = new float[MAX_SVS];
++    private float mSvAzimuths[] = new float[MAX_SVS];
++    private int mSvMasks[] = new int[3];
++    private int mSvCount;
++
++    private float PDOP = 0f;
++    private float HDOP = 0f;
++    private float VDOP = 0f;
++
++    private boolean isValid = false;
++    private long mFixDateTimeStamp = 0;
++    private double mFixLongitude = 0.0;
++    private double mFixLatitude = 0.0;
++    private float mFixAltitude = 0f;
++    private float mFixSpeed = 0f;
++    private float mFixBearing = 0f;
++    private float mFixAccuracy = 0f;
++    private int mFixSatsTracked = 0;
++    private int mFixQuality = 0;
++
++    // horizontal estimated position error
++    private float HEPE_FACTOR = 4f;
++
++    // last fix timestamp. Is used to approximate and adjust gps mouse refresh
++    // rate.
++    private long mFixTimestampDelta = 500;
++
++    private boolean mSatsReady = true;
++    private Location loc = new Location(LocationManager.GPS_PROVIDER);
++
++    /**
++     * @param prov Location provider name
++     */
++    public NMEAParser(String prov) {
++        // init parser map with all known parsers
++        parseMap.put("GPRMC", new GPRMCParser());
++        parseMap.put("GPGGA", new GPGGAParser());
++        parseMap.put("GPGSA", new GPGSAParser());
++        parseMap.put("GPGSV", new GPGSVParser());
++        parseMap.put("GPZDA", new GPZDAParser());
++        parseMap.put("GPGLL", new GPGLLParser());
++
++        provider = prov;
++        timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
++
++    }
++
++    private void updateTimeStamp(long in) {
++        if (mFixDateTimeStamp != 0 && in != mFixDateTimeStamp) {
++            mFixTimestampDelta = in - mFixDateTimeStamp;
++            if (mFixTimestampDelta < 100)
++                mFixTimestampDelta = 100;
++            if (mFixTimestampDelta > 1000)
++                mFixTimestampDelta = 1000;
++        }
++        mFixDateTimeStamp = in;
++    }
++
++    public long getApproximatedRefreshRate() {
++        return mFixTimestampDelta;
++    }
++
++    /**
++     * @return if nmea sentence are valid then true
++     */
++    public boolean isValid() {
++        return isValid;
++    }
++
++    /**
++     * resets fix variables
++     */
++    public void reset() {
++        mFixLongitude = 0.0;
++        mFixLatitude = 0.0;
++        mFixAltitude = 0f;
++        mFixSpeed = 0f;
++        mFixAccuracy = 0f;
++        mFixQuality = 0;
++        mFixSatsTracked = 0;
++        isValid = false;
++    }
++
++    private void resetSats() {
++        mSvCount = 0;
++        java.util.Arrays.fill(mSvs, 0);
++        java.util.Arrays.fill(mSnrs, 0f);
++        java.util.Arrays.fill(mSvElevations, 0f);
++        java.util.Arrays.fill(mSvAzimuths, 0f);
++    }
++
++    /**
++     * @return a Location object if valid null otherwise
++     */
++    public Location getLocation() {
++        loc.reset();
++        if (mFixDateTimeStamp != 0)
++            loc.setTime(mFixDateTimeStamp);
++        loc.setProvider(provider);
++        loc.setLatitude(mFixLatitude);
++        loc.setLongitude(mFixLongitude);
++        Bundle extras = new Bundle();
++        extras.putInt(BUNDLE_SATS, mFixSatsTracked);
++        extras.putBoolean(BUNDLE_ISVALID, isValid);
++        loc.setExtras(extras);
++        loc.setAccuracy(mFixAccuracy);
++        loc.setTime(System.currentTimeMillis());
++        loc.setAltitude(mFixAltitude);
++        loc.setSpeed(mFixSpeed);
++        loc.setBearing(mFixBearing);
++
++        // It would be nice to push the elapsed real-time timestamp
++        // further down the stack, but this is still useful
++        loc.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
++
++        Log.d(TAG, "getLocation returning loc: " + loc);
++
++        return loc;
++    }
++
++    /**
++     * @param time UTC time
++     * @return nr seconds since 1970
++     */
++    private long parseTimeToDate(String time) {
++        try {
++            // parse time , We only get timestamp from sentences
++            // use UTC calendar to set the date.
++            Date btTime = timeFormatter.parse(time);
++            Calendar localCalendar = Calendar.getInstance(GPSTimezone);
++            GPSCalendar.setTimeInMillis(btTime.getTime());
++            GPSCalendar.set(localCalendar.get(Calendar.YEAR), localCalendar.get(Calendar.MONTH),
++                    localCalendar.get(Calendar.DAY_OF_MONTH));
++            return GPSCalendar.getTimeInMillis();
++        } catch (ParseException e) {
++            Log.e(TAG, "Could not parse: " + time);
++            return 0;
++        }
++    }
++
++    private int parseStringToInt(String str) {
++        if (TextUtils.isEmpty(str))
++            return 0;
++        int res = 0;
++        try {
++            res = Integer.parseInt(str);
++        } catch (Exception e) {
++            Log.e(TAG, e.getMessage());
++        }
++        return res;
++    }
++
++    private float parseStringToFloat(String str) {
++        if (TextUtils.isEmpty(str))
++            return 0.0f;
++
++        float res = 0.0f;
++        try {
++            res = Float.parseFloat(str);
++        } catch (Exception e) {
++            Log.e(TAG, e.getMessage());
++        }
++        return res;
++    }
++
++    /**
++     * @param in Longitude/Latitude
++     * @param orientation N,W,S,E
++     * @return The double representation of a Longitude/Latitude
++     */
++    private double parseCoordinate(String in, String orientation) {
++        // dec = deg + mins.sec/60
++        double c = Double.parseDouble(in);
++        int deg = (int) (c / 100);
++        double res = deg + (c - deg * 100.0) * 0.016666666666667;
++        if ("S".equalsIgnoreCase(orientation) || "W".equalsIgnoreCase(orientation))
++            return -res;
++        return res;
++    }
++
++    private float parseSpeedInKnots(String str) {
++        float res = 0.0f;
++        res = Float.parseFloat(str) * 0.514444444f;
++        return res;
++    }
++
++    private float parseSpeedInKMH(String str) {
++        float res = 0.0f;
++        res = Float.parseFloat(str) * 0.277777778f;
++        return res;
++    }
++
++    /**
++     * Interface that all sentence parsers have to implement. Every sentence is
++     * implemented as a seperate class. The Nmea parser will select the correct
++     * parser based on the sentence identifier. It will get or instantiate a
++     * parser to do the job.
++     */
++    private interface ParseInterface {
++        public void parse(String sentence);
++    }
++
++    public class GPRMCParser implements ParseInterface {
++        /*
++         * $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
++         * Where: RMC Recommended Minimum sentence C 123519 Fix taken at
++         * 12:35:19 UTC A Status A=active or V=Void. 4807.038,N Latitude 48 deg
++         * 07.038' N 01131.000,E Longitude 11 deg 31.000' E 022.4 Speed over the
++         * ground in knots 084.4 Track angle in degrees True 230394 Date - 23rd
++         * of March 1994 003.1,W Magnetic Variation6A The checksum data, always
++         * begins with *
++         */
++        @Override
++        public void parse(String sentence) {
++            String[] tmp = sentence.split(DELIM);
++            if (tmp.length > 3) {
++                updateTimeStamp(parseTimeToDate(tmp[1]));
++                if (!"A".equals(tmp[2])) {
++                    return;
++                }
++                mFixLatitude = parseCoordinate(tmp[3], tmp[4]);
++                mFixLongitude = parseCoordinate(tmp[5], tmp[6]);
++                mFixSpeed = parseSpeedInKnots(tmp[7]);
++                mFixBearing = parseStringToFloat(tmp[8]);
++            }
++        }
++    }
++
++    public class GPGLLParser implements ParseInterface {
++        /*
++         * $GPGLL,4916.45,N,12311.12,W,225444,A 1 2 3 4 5 6 Where GLL Geographic
++         * Position, Latitude / Longitude and time 1 4916.45 Current latitude 2
++         * N North/South 3 12311.12 Current longitude 4 W East/West 5 225444 Fix
++         * taken at 22:54:44 UTC 6 A Status $GPGLL,5133.81,N,00042.25,W*75 1 2 3
++         * 4 5 Where 1 5133.81 Current latitude 2 N North/South 3 00042.25
++         * Current longitude 4 W East/West 5 *75 checksum
++         */
++        @Override
++        public void parse(String sentence) {
++            String[] tmp = sentence.split(DELIM);
++            if (tmp.length > 4) {
++                // fits example 1
++                updateTimeStamp(parseTimeToDate(tmp[5]));
++                if (!"A".equals(tmp[6])) {
++                    return;
++                }
++                mFixLatitude = parseCoordinate(tmp[1], tmp[2]);
++                mFixLongitude = parseCoordinate(tmp[3], tmp[4]);
++            } else if (tmp.length > 3) {
++                // fits example 2
++                mFixLatitude = parseCoordinate(tmp[1], tmp[2]);
++                mFixLongitude = parseCoordinate(tmp[3], tmp[4]);
++            }
++        }
++    }
++
++    public class GPZDAParser implements ParseInterface {
++        /*
++         * $GPZDA,hhmmss.ss,xx,xx,xxxx,xx,xx 1 2 3 4 5 6 Where ZDA Date & Time 1
++         * hhmmss.ss = UTC 2 xx = Day, 01 to 31 3 xx = Month, 01 to 12 4 xxxx =
++         * Year 5 xx = Local zone description, 00 to +/- 13 hours 6 xx = Local
++         * zone minutes description (same sign as hours)
++         */
++        @Override
++        public void parse(String sentence) {
++            String[] tmp = sentence.split(DELIM);
++            if (tmp.length > 5) {
++                try {
++
++                    Date btTime = timeFormatter.parse(tmp[1]);
++
++                    // Timezone code
++                    /*
++                     * int timeZone = parseStringToInt(tmp[5]); int
++                     * offSetMinutes; if (timeZone < 0) { offSetMinutes =
++                     * timeZone*60 - parseStringToInt(tmp[6]); } else {
++                     * offSetMinutes = timeZone*60 + parseStringToInt(tmp[6]); }
++                     * TimeZone myGPSTimezone = TimeZone.getTimeZone("UTC");
++                     * myGPSTimezone.setRawOffset(offSetMinutes*60*1000);
++                     */
++                    GPSCalendar.setTimeInMillis(btTime.getTime());
++                    GPSCalendar.set(parseStringToInt(tmp[4]), parseStringToInt(tmp[3]),
++                            parseStringToInt(tmp[2]));
++
++                    updateTimeStamp(GPSCalendar.getTimeInMillis());
++                    if (!"A".equals(tmp[6])) {
++                        return;
++                    }
++                } catch (ParseException e) {
++                    Log.e(TAG, "Could not parse: " + tmp[1]);
++                    return;
++                }
++            }
++        }
++    }
++
++    public class GPGGAParser implements ParseInterface {
++        /*
++         * $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
++         * Where: GGA Global Positioning System Fix Data 123519 Fix taken at
++         * 12:35:19 UTC 4807.038,N Latitude 48 deg 07.038' N 01131.000,E
++         * Longitude 11 deg 31.000' E 1 Fix quality: 0 = invalid 1 = GPS fix
++         * (SPS) 2 = DGPS fix 3 = PPS fix 4 = Real Time Kinematic 5 = Float RTK
++         * 6 = estimated (dead reckoning) (2.3 feature) 7 = Manual input mode 8
++         * = Simulation mode 08 Number of satellites being tracked 0.9
++         * Horizontal dilution of position 545.4,M Altitude, Meters, above mean
++         * sea level 46.9,M Height of geoid (mean sea level) above WGS84
++         * ellipsoid (empty field) time in seconds since last DGPS update (empty
++         * field) DGPS station ID number47 the checksum data, always begins with
++         * *
++         */
++        @Override
++        public void parse(String sentence) {
++            String[] tmp = sentence.split(DELIM);
++            if (tmp.length > 7) {
++                // always parse timestamp
++                updateTimeStamp(parseTimeToDate(tmp[1]));
++                mFixQuality = Integer.parseInt(tmp[6]);
++                if (mFixQuality == 0) {
++                    // return invalid location
++                    isValid = false;
++                    return;
++                }
++                mFixLatitude = parseCoordinate(tmp[2], tmp[3]);
++                mFixLongitude = parseCoordinate(tmp[4], tmp[5]);
++                mFixSatsTracked = parseStringToInt(tmp[7]);
++                mFixAccuracy = parseStringToFloat(tmp[8]) * HEPE_FACTOR;
++                mFixAltitude = parseStringToFloat(tmp[9]);
++                isValid = true;
++            }
++        }
++    }
++
++    public class GPGSAParser implements ParseInterface {
++        /*
++         * $GPGSA,A,3,04,05,,09,12,,,24,,,,,2.5,1.3,2.1*39 Where: GSA Satellite
++         * status A Auto selection of 2D or 3D fix (M = manual) 3 3D fix -
++         * values include: 1 = no fix 2 = 2D fix 3 = 3D fix 04,05... PRNs of
++         * satellites used for fix (space for 12) 2.5 PDOP (dilution of
++         * precision) 1.3 Horizontal dilution of precision (HDOP) 2.1 Vertical
++         * dilution of precision (VDOP)39 the checksum data, always begins with
++         * *
++         */
++        @Override
++        public void parse(String sentence) {
++            String[] tmp = sentence.split(DELIM);
++            if (tmp.length >= 16) {
++                if ("1".equals(tmp[2])) {
++                    // return invalid location or invalid sentence
++                    return;
++                }
++                for (int i = 3; i < 15; i++) {
++                    // tag sats used for fix
++                    int sat = parseStringToInt(tmp[i]);
++                    if (sat > 0)
++                        mSvMasks[USED_FOR_FIX_MASK] |= (1 << (sat - 1));
++                }
++                if (tmp.length > 15)
++                    PDOP = parseStringToFloat(tmp[15]);
++                if (tmp.length > 16)
++                    HDOP = parseStringToFloat(tmp[16]);
++                if (tmp.length > 17)
++                    VDOP = parseStringToFloat(tmp[17]);
++            }
++        }
++    }
++
++    /**
++     * Parse sats information. Use same structure as internal GPS provider
++     */
++    public class GPGSVParser implements ParseInterface {
++        /*
++         * $GPGSV,2,1,08,01,40,083,46,02,17,308,41,12,07,344,39,14,22,228,45*75
++         * Where: GSV Satellites in view 2 Number of sentences for full data 1
++         * sentence 1 of 2 08 Number of satellites in view 01 Satellite PRN
++         * number 40 Elevation, degrees 083 Azimuth, degrees 46 SNR - higher is
++         * better for up to 4 satellites per sentence75 the checksum data,
++         * always begins with *
++         */
++        @Override
++        public void parse(String sentence) {
++            String[] tmp = sentence.split(DELIM);
++            if (tmp.length > 4) {
++                mSvCount = parseStringToInt(tmp[3]);
++                if (mSvCount == 0) {
++                    return;
++                }
++                int totalSentences = parseStringToInt(tmp[1]);
++                int currSentence = parseStringToInt(tmp[2]);
++
++                if (mSatsReady) {
++                    resetSats();
++                    mSatsReady = false;
++                } else if ((currSentence == totalSentences) && !mSatsReady) {
++                    // tag data as dirty when we have parsed the last part
++                    mSatsReady = true;
++                }
++                int idx = 0;
++                while ((currSentence <= totalSentences) && (idx < 4)) {
++                    int offset = idx << 2;
++                    int base_offset = (currSentence - 1) << 2;
++                    if (offset + 4 < tmp.length)
++                        mSvs[base_offset + idx] = parseStringToInt(tmp[4 + offset]);
++                    if (offset + 5 < tmp.length)
++                        mSvElevations[base_offset + idx] = parseStringToInt(tmp[5 + offset]);
++                    if (offset + 6 < tmp.length)
++                        mSvAzimuths[base_offset + idx] = parseStringToInt(tmp[6 + offset]);
++                    if (offset + 7 < tmp.length)
++                        mSnrs[base_offset + idx] = parseStringToInt(tmp[7 + offset]);
++                    idx++;
++                }
++            }
++        }
++    }
++
++    /**
++     * Using non static dynamic innerclass instantiation.
++     * 
++     * @param sid sentence identifier
++     * @return parser associated with the sid
++     */
++    private ParseInterface getParser(String sid) {
++        if (parseMap.containsKey(sid)) {
++            return parseMap.get(sid);
++        } else {
++            Log.d(TAG, "Could not instantiate " + sid + "parser");
++        }
++        return null;
++    }
++
++    /**
++     * @param in nmea sentence
++     * @return String representing checksum of the input
++     */
++    private String computeChecksum(String in) {
++        byte result = 0;
++        char[] chars = in.toCharArray();
++        for (int i = 0; i < chars.length; i++)
++            result ^= (byte) chars[i];
++        return String.format("%02X", result);
++    }
++
++    public boolean parseNMEALine(String sentence) {
++        Matcher m = sentencePattern.matcher(sentence);
++        if (m.matches()) {
++            String nmeaSentence = m.group(1);
++            String command = nmeaSentence.substring(0, 5);
++            String checksum = m.group(2);
++            if (checksum != null) {
++                // checksums are optional
++                // strip off *, checksum always have length 3 here. else the
++                // regex will not match
++                checksum = checksum.substring(1, 3).toUpperCase();
++                if (!computeChecksum(nmeaSentence).equals(checksum)) {
++                    Log.w(TAG, "skipping sentence: " + sentence + " due to checksum error "
++                            + checksum + " - " + computeChecksum(nmeaSentence));
++                    return false;
++                }
++            }
++            Log.d(TAG, "Parsing nmeaSentence: " + nmeaSentence);
++            ParseInterface parser = getParser(command);
++            if (parser != null) {
++                try {
++                    parser.parse(nmeaSentence);
++                } catch (Exception e) {
++                    // catch exception thrown by parsers
++                    // mostly bad input causing out of bounds
++                    Log.e(TAG, nmeaSentence, e);
++                    return false;
++                }
++            }
++        }
++        return true;
++    }
++
++    public int getmSvCount() {
++        return mSvCount;
++    }
++
++    public float getPDOP() {
++        return PDOP;
++    }
++
++    public float getHDOP() {
++        return HDOP;
++    }
++
++    public float getVDOP() {
++        return VDOP;
++    }
++
++    public long getmFixDate() {
++        return mFixDateTimeStamp;
++    }
++
++    public double getmFixLongitude() {
++        return mFixLongitude;
++    }
++
++    public double getmFixLatitude() {
++        return mFixLatitude;
++    }
++
++    public float getmFixAltitude() {
++        return mFixAltitude;
++    }
++
++    public float getmFixSpeed() {
++        return mFixSpeed;
++    }
++
++    public float getmFixAccuracy() {
++        return mFixAccuracy;
++    }
++
++    public int getmFixQuality() {
++        return mFixQuality;
++    }
++
++    public int[] getmSvs() {
++        return mSvs;
++    }
++
++    public float[] getmSnrs() {
++        return mSnrs;
++    }
++
++    public float[] getmSvElevations() {
++        return mSvElevations;
++    }
++
++    public float[] getmSvAzimuths() {
++        return mSvAzimuths;
++    }
++
++    public int[] getmSvMasks() {
++        return mSvMasks;
++    }
++
++    public int getmFixSatsTracked() {
++        return mFixSatsTracked;
++    }
++
++    public boolean isSatdataReady() {
++        return mSatsReady;
++    }
++}
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
 index 0d2ba34..2ed8fa0 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java
