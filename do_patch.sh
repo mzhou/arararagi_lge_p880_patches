@@ -7,9 +7,6 @@ git apply --directory='bionic' "$PATCH_DIR/bionic.cached.patch"
 #ce133c000a8eb44f6f1ea1a3006d57c55c1876e5
 git apply --directory='bionic' "$PATCH_DIR/bionic.patch"
 
-#91f2dc252db41593a646402fd33652bf565daa9e
-git apply --directory='bootable/recovery' "$PATCH_DIR/bootable-recovery.patch"
-
 #7d1516114aac1c158d7f2d4e5db16b7c60008553
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 
@@ -34,7 +31,7 @@ git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 #eaf99024ae65895f4d843fbdd46702432d65d821
 git apply --directory='external/v8' "$PATCH_DIR/external-v8.patch"
 
-#a37ddac8d03e30996b3fbbef5d7adbbe8f9a05d2
+#93b24b8b3f3ce6e86ed89215fae69fbae4dd0507
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
 #452bb346368d84742ceed62cb9ecba17c2c1e053
@@ -55,10 +52,10 @@ git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 #2757db88a16af8197243025a9393367a6ebba3e1
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#5a29d4365a177b80fc1b912a9100d34d14cbc672
+#45f91746746bbce85017b533aae61dd52fa60365
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
 
-#635758d54d1525fb8ac51a1c8853a7bf673f2f5b
+#62eaa125be16fab4b7d3eb16b1901781afcdf7ea
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
 #cd8df62842b81c93022feabfacda8efd257e1754
