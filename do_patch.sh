@@ -37,6 +37,9 @@ git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 #2abd45dcb33245879c2b0392c7850c369030c6d6
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
+#051862c950cf5eb4921beb575f5ede6db6e3754f
+git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
+
 #4be14ed52faf6275ad5a712f20018e26a646c03f
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
