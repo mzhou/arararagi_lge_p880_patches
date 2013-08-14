@@ -1,5 +1,5 @@
 diff --git a/Android.mk b/Android.mk
-index d1e7d90..866f730 100644
+index e1663e5..1d58208 100644
 --- a/Android.mk
 +++ b/Android.mk
 @@ -55,6 +55,7 @@ LOCAL_SRC_FILES := $(filter-out \
@@ -10,7 +10,7 @@ index d1e7d90..866f730 100644
  LOCAL_SRC_FILES += \
  	core/java/android/accessibilityservice/IAccessibilityServiceConnection.aidl \
  	core/java/android/accessibilityservice/IAccessibilityServiceClient.aidl \
-@@ -216,6 +217,7 @@ LOCAL_SRC_FILES += \
+@@ -233,6 +234,7 @@ LOCAL_SRC_FILES += \
  	media/java/android/media/IRemoteControlDisplay.aidl \
  	media/java/android/media/IRemoteVolumeObserver.aidl \
  	media/java/android/media/IRingtonePlayer.aidl \
@@ -18,7 +18,7 @@ index d1e7d90..866f730 100644
  	telephony/java/com/android/internal/telephony/IPhoneStateListener.aidl \
  	telephony/java/com/android/internal/telephony/IPhoneSubInfo.aidl \
  	telephony/java/com/android/internal/telephony/ITelephony.aidl \
-@@ -241,6 +243,7 @@ LOCAL_SRC_FILES += \
+@@ -256,6 +258,7 @@ LOCAL_SRC_FILES += \
  	fmradio/java/com/stericsson/hardware/fm/IOnExtraCommandListener.aidl \
  	fmradio/java/com/stericsson/hardware/fm/IOnAutomaticSwitchListener.aidl
  #
@@ -26,7 +26,7 @@ index d1e7d90..866f730 100644
  
  
  # FRAMEWORKS_BASE_JAVA_SRC_DIRS comes from build/core/pathmap.mk
-@@ -280,6 +283,7 @@ framework_built := $(call java-lib-deps,framework)
+@@ -295,6 +298,7 @@ framework_built := $(call java-lib-deps,framework)
  # AIDL files to be preprocessed and included in the SDK,
  # relative to the root of the build tree.
  # ============================================================
@@ -34,7 +34,7 @@ index d1e7d90..866f730 100644
  aidl_files := \
  	frameworks/base/core/java/android/accounts/IAccountManager.aidl \
  	frameworks/base/core/java/android/accounts/IAccountManagerResponse.aidl \
-@@ -331,11 +335,14 @@ aidl_files := \
+@@ -347,11 +351,14 @@ aidl_files := \
  	frameworks/base/location/java/android/location/LocationRequest.aidl \
  	frameworks/base/location/java/com/android/internal/location/ProviderProperties.aidl \
  	frameworks/base/location/java/com/android/internal/location/ProviderRequest.aidl \
@@ -50,10 +50,10 @@ index d1e7d90..866f730 100644
  ALL_SDK_FILES += $(gen)
  $(gen): $(aidl_files) | $(AIDL)
 diff --git a/api/current.txt b/api/current.txt
-index 0ff0fbc..1d90e07 100644
+index 71d6346..46d16c1 100644
 --- a/api/current.txt
 +++ b/api/current.txt
-@@ -20692,6 +20692,7 @@ package android.telephony {
+@@ -21638,6 +21638,7 @@ package android.telephony {
    public final class CellInfoGsm extends android.telephony.CellInfo implements android.os.Parcelable {
      method public android.telephony.CellIdentityGsm getCellIdentity();
      method public android.telephony.CellSignalStrengthGsm getCellSignalStrength();
@@ -62,7 +62,7 @@ index 0ff0fbc..1d90e07 100644
      field public static final android.os.Parcelable.Creator CREATOR;
    }
 diff --git a/core/java/android/app/Activity.java b/core/java/android/app/Activity.java
-index e779746..c94466f 100644
+index 6b5df7f..7522127 100644
 --- a/core/java/android/app/Activity.java
 +++ b/core/java/android/app/Activity.java
 @@ -55,13 +55,17 @@ import android.text.TextUtils;
@@ -83,7 +83,7 @@ index e779746..c94466f 100644
  import android.view.KeyEvent;
  import android.view.LayoutInflater;
  import android.view.Menu;
-@@ -1459,6 +1463,9 @@ public class Activity extends ContextThemeWrapper
+@@ -1473,6 +1477,9 @@ public class Activity extends ContextThemeWrapper
          if (mWindow != null) {
              // Pass the configuration changed event to the window
              mWindow.onConfigurationChanged(newConfig);
@@ -93,7 +93,7 @@ index e779746..c94466f 100644
          }
  
          if (mActionBar != null) {
-@@ -5056,11 +5063,49 @@ public class Activity extends ContextThemeWrapper
+@@ -5085,11 +5092,49 @@ public class Activity extends ContextThemeWrapper
              CharSequence title, Activity parent, String id,
              NonConfigurationInstances lastNonConfigurationInstances,
              Configuration config) {
@@ -145,7 +145,7 @@ index e779746..c94466f 100644
          mWindow.setCallback(this);
          mWindow.getLayoutInflater().setPrivateFactory(this);
          if (info.softInputMode != WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED) {
-@@ -5095,6 +5140,26 @@ public class Activity extends ContextThemeWrapper
+@@ -5124,6 +5169,26 @@ public class Activity extends ContextThemeWrapper
          mCurrentConfig = config;
      }
  
@@ -172,7 +172,7 @@ index e779746..c94466f 100644
      /** @hide */
      public final IBinder getActivityToken() {
          return mParent != null ? mParent.getActivityToken() : mToken;
-@@ -5218,7 +5283,7 @@ public class Activity extends ContextThemeWrapper
+@@ -5247,7 +5312,7 @@ public class Activity extends ContextThemeWrapper
          onUserInteraction();
          onUserLeaveHint();
      }
@@ -181,7 +181,7 @@ index e779746..c94466f 100644
      final void performStop() {
          if (mLoadersStarted) {
              mLoadersStarted = false;
-@@ -5264,6 +5329,14 @@ public class Activity extends ContextThemeWrapper
+@@ -5293,6 +5358,14 @@ public class Activity extends ContextThemeWrapper
              mStopped = true;
          }
          mResumed = false;
@@ -197,10 +197,10 @@ index e779746..c94466f 100644
  
      final void performDestroy() {
 diff --git a/core/java/android/app/ActivityThread.java b/core/java/android/app/ActivityThread.java
-index 6250262..a03e301 100644
+index d254095..cba931d 100644
 --- a/core/java/android/app/ActivityThread.java
 +++ b/core/java/android/app/ActivityThread.java
-@@ -2866,12 +2866,7 @@ public final class ActivityThread {
+@@ -2914,12 +2914,7 @@ public final class ActivityThread {
                  r.stopped = false;
                  r.state = null;
              } catch (Exception e) {
@@ -215,10 +215,10 @@ index 6250262..a03e301 100644
          }
          return r;
 diff --git a/core/java/android/app/ContextImpl.java b/core/java/android/app/ContextImpl.java
-index 21fbc1f..0b3fce0 100644
+index 6cdd43f..8f72bf9 100644
 --- a/core/java/android/app/ContextImpl.java
 +++ b/core/java/android/app/ContextImpl.java
-@@ -65,7 +65,7 @@ import android.location.ILocationManager;
+@@ -63,7 +63,7 @@ import android.location.ILocationManager;
  import android.location.LocationManager;
  import android.media.AudioManager;
  import android.media.MediaRouter;
@@ -227,8 +227,8 @@ index 21fbc1f..0b3fce0 100644
  import android.net.IConnectivityManager;
  import android.net.INetworkPolicyManager;
  import android.net.NetworkPolicyManager;
-@@ -117,6 +117,16 @@ import android.accounts.IAccountManager;
- import android.app.admin.DevicePolicyManager;
+@@ -115,6 +115,16 @@ import android.app.admin.DevicePolicyManager;
+ import com.android.internal.app.IAppOpsService;
  import com.android.internal.os.IDropBoxManagerService;
  
 +// BEGIN privacy-added
@@ -244,7 +244,7 @@ index 21fbc1f..0b3fce0 100644
  import java.io.File;
  import java.io.FileInputStream;
  import java.io.FileNotFoundException;
-@@ -192,6 +202,9 @@ class ContextImpl extends Context {
+@@ -190,6 +200,9 @@ class ContextImpl extends Context {
      private Resources mResources;
      /*package*/ ActivityThread mMainThread;
      private Context mOuterContext;
@@ -254,7 +254,7 @@ index 21fbc1f..0b3fce0 100644
      private IBinder mActivityToken = null;
      private ApplicationContentResolver mContentResolver;
      private int mThemeResource = 0;
-@@ -307,7 +320,11 @@ class ContextImpl extends Context {
+@@ -305,7 +318,11 @@ class ContextImpl extends Context {
                  public Object createService(ContextImpl ctx) {
                      IBinder b = ServiceManager.getService(ACCOUNT_SERVICE);
                      IAccountManager service = IAccountManager.Stub.asInterface(b);
@@ -267,7 +267,7 @@ index 21fbc1f..0b3fce0 100644
                  }});
  
          registerService(ACTIVITY_SERVICE, new ServiceFetcher() {
-@@ -346,7 +363,14 @@ class ContextImpl extends Context {
+@@ -344,7 +361,14 @@ class ContextImpl extends Context {
          registerService(CONNECTIVITY_SERVICE, new StaticServiceFetcher() {
                  public Object createStaticService() {
                      IBinder b = ServiceManager.getService(CONNECTIVITY_SERVICE);
@@ -283,7 +283,7 @@ index 21fbc1f..0b3fce0 100644
                  }});
  
          registerService(COUNTRY_DETECTOR, new StaticServiceFetcher() {
-@@ -412,8 +436,16 @@ class ContextImpl extends Context {
+@@ -410,8 +434,16 @@ class ContextImpl extends Context {
  
          registerService(LOCATION_SERVICE, new ServiceFetcher() {
                  public Object createService(ContextImpl ctx) {
@@ -314,8 +314,8 @@ index 21fbc1f..0b3fce0 100644
 +                    // END privacy-modified
                  }});
  
-         registerService(THROTTLE_SERVICE, new StaticServiceFetcher() {
-@@ -521,7 +557,11 @@ class ContextImpl extends Context {
+         registerService(UI_MODE_SERVICE, new ServiceFetcher() {
+@@ -515,7 +551,11 @@ class ContextImpl extends Context {
                  public Object createService(ContextImpl ctx) {
                      IBinder b = ServiceManager.getService(WIFI_SERVICE);
                      IWifiManager service = IWifiManager.Stub.asInterface(b);
@@ -328,7 +328,7 @@ index 21fbc1f..0b3fce0 100644
                  }});
  
          registerService(WIFI_P2P_SERVICE, new ServiceFetcher() {
-@@ -531,6 +571,16 @@ class ContextImpl extends Context {
+@@ -525,6 +565,16 @@ class ContextImpl extends Context {
                      return new WifiP2pManager(service);
                  }});
  
@@ -345,7 +345,7 @@ index 21fbc1f..0b3fce0 100644
          registerService(WINDOW_SERVICE, new ServiceFetcher() {
                  public Object getService(ContextImpl ctx) {
                      Display display = ctx.mDisplay;
-@@ -1896,7 +1946,10 @@ class ContextImpl extends Context {
+@@ -1930,7 +1980,10 @@ class ContextImpl extends Context {
      }
  
      ContextImpl() {
@@ -357,7 +357,7 @@ index 21fbc1f..0b3fce0 100644
      }
  
      /**
-@@ -1913,7 +1966,12 @@ class ContextImpl extends Context {
+@@ -1947,7 +2000,12 @@ class ContextImpl extends Context {
          mContentResolver = context.mContentResolver;
          mUser = context.mUser;
          mDisplay = context.mDisplay;
@@ -371,7 +371,7 @@ index 21fbc1f..0b3fce0 100644
      }
  
      final void init(LoadedApk packageInfo, IBinder activityToken, ActivityThread mainThread) {
-@@ -1969,13 +2027,21 @@ class ContextImpl extends Context {
+@@ -2003,13 +2061,21 @@ class ContextImpl extends Context {
      }
  
      final void setOuterContext(Context context) {
@@ -395,27 +395,35 @@ index 21fbc1f..0b3fce0 100644
          return mActivityToken;
      }
 diff --git a/core/java/android/app/INotificationManager.aidl b/core/java/android/app/INotificationManager.aidl
-index 62d4962..b94d93a 100644
+index 9f933ca..471087d 100644
 --- a/core/java/android/app/INotificationManager.aidl
 +++ b/core/java/android/app/INotificationManager.aidl
-@@ -34,5 +34,12 @@ interface INotificationManager
+@@ -38,6 +38,13 @@ interface INotificationManager
+     void setNotificationsEnabledForPackage(String pkg, int uid, boolean enabled);
+     boolean areNotificationsEnabledForPackage(String pkg, int uid);
  
-     void setNotificationsEnabledForPackage(String pkg, boolean enabled);
-     boolean areNotificationsEnabledForPackage(String pkg);
-+
 +    void setHaloPolicyBlack(boolean state);
 +    void setHaloStatus(String pkg, boolean status);
 +    void setHaloBlacklistStatus(String pkg, boolean status);
 +    void setHaloWhitelistStatus(String pkg, boolean status);
 +    boolean isHaloPolicyBlack();
 +    boolean isPackageAllowedForHalo(String pkg);
- }
++
+     StatusBarNotification[] getActiveNotifications(String callingPkg);
+     StatusBarNotification[] getHistoricalNotifications(String callingPkg, int count);
  
+@@ -48,4 +55,4 @@ interface INotificationManager
+     void cancelAllNotificationsFromListener(in INotificationListener token);
+ 
+     StatusBarNotification[] getActiveNotificationsFromListener(in INotificationListener token);
+-}
+\ No newline at end of file
++}
 diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
-index e0856ae..432a7bf 100644
+index a307a73..b7b2ab0 100644
 --- a/core/java/android/app/Instrumentation.java
 +++ b/core/java/android/app/Instrumentation.java
-@@ -48,6 +48,13 @@ import java.io.File;
+@@ -49,6 +49,14 @@ import java.io.File;
  import java.util.ArrayList;
  import java.util.List;
  
@@ -426,13 +434,14 @@ index e0856ae..432a7bf 100644
 +import android.telephony.TelephonyManager;
 +///////////////////////////////////////////////////
 +
- 
++
  /**
   * Base class for implementing application instrumentation code.  When running
-@@ -88,6 +95,10 @@ public class Instrumentation {
-     private boolean mAutomaticPerformanceSnapshots = false;
+  * with instrumentation turned on, this class will be instantiated for you
+@@ -91,6 +99,10 @@ public class Instrumentation {
      private PerformanceCollector mPerformanceCollector;
      private Bundle mPerfMetrics = new Bundle();
+     private UiAutomation mUiAutomation;
 +    
 +    //---------------------------------------------------------------------------------------------------------------------------------------------------------
 +    private PrivacySettingsManager mPrvSvc;
@@ -440,7 +449,7 @@ index e0856ae..432a7bf 100644
  
      public Instrumentation() {
      }
-@@ -1391,6 +1402,79 @@ public class Instrumentation {
+@@ -1398,6 +1410,79 @@ public class Instrumentation {
              Context who, IBinder contextThread, IBinder token, Activity target,
              Intent intent, int requestCode, Bundle options) {
          IApplicationThread whoThread = (IApplicationThread) contextThread;
@@ -520,7 +529,7 @@ index e0856ae..432a7bf 100644
          if (mActivityMonitors != null) {
              synchronized (mSync) {
                  final int N = mActivityMonitors.size();
-@@ -1406,6 +1490,16 @@ public class Instrumentation {
+@@ -1413,6 +1498,16 @@ public class Instrumentation {
                  }
              }
          }
@@ -535,9 +544,9 @@ index e0856ae..432a7bf 100644
 +    	// END privacy-added
 +        
          try {
-             intent.setAllowFds(false);
              intent.migrateExtraStreamToClipData();
-@@ -1446,6 +1540,109 @@ public class Instrumentation {
+             intent.prepareToLeaveProcess();
+@@ -1453,6 +1548,109 @@ public class Instrumentation {
              IBinder token, Activity target, Intent[] intents, Bundle options,
              int userId) {
          IApplicationThread whoThread = (IApplicationThread) contextThread;
@@ -647,7 +656,7 @@ index e0856ae..432a7bf 100644
          if (mActivityMonitors != null) {
              synchronized (mSync) {
                  final int N = mActivityMonitors.size();
-@@ -1506,6 +1703,77 @@ public class Instrumentation {
+@@ -1515,6 +1713,77 @@ public class Instrumentation {
          Context who, IBinder contextThread, IBinder token, Fragment target,
          Intent intent, int requestCode, Bundle options) {
          IApplicationThread whoThread = (IApplicationThread) contextThread;
@@ -725,7 +734,7 @@ index e0856ae..432a7bf 100644
          if (mActivityMonitors != null) {
              synchronized (mSync) {
                  final int N = mActivityMonitors.size();
-@@ -1521,6 +1789,16 @@ public class Instrumentation {
+@@ -1530,6 +1799,16 @@ public class Instrumentation {
                  }
              }
          }
@@ -740,9 +749,9 @@ index e0856ae..432a7bf 100644
 +        // END privacy-added
 +        
          try {
-             intent.setAllowFds(false);
              intent.migrateExtraStreamToClipData();
-@@ -1566,6 +1844,78 @@ public class Instrumentation {
+             intent.prepareToLeaveProcess();
+@@ -1575,6 +1854,78 @@ public class Instrumentation {
              Context who, IBinder contextThread, IBinder token, Activity target,
              Intent intent, int requestCode, Bundle options, UserHandle user) {
          IApplicationThread whoThread = (IApplicationThread) contextThread;
@@ -821,7 +830,7 @@ index e0856ae..432a7bf 100644
          if (mActivityMonitors != null) {
              synchronized (mSync) {
                  final int N = mActivityMonitors.size();
-@@ -1581,6 +1931,16 @@ public class Instrumentation {
+@@ -1590,6 +1941,16 @@ public class Instrumentation {
                  }
              }
          }
@@ -836,8 +845,8 @@ index e0856ae..432a7bf 100644
 +        // END privacy-added
 +        
          try {
-             intent.setAllowFds(false);
              intent.migrateExtraStreamToClipData();
+             intent.prepareToLeaveProcess();
 diff --git a/core/java/android/app/LayerActivity.java b/core/java/android/app/LayerActivity.java
 new file mode 100644
 index 0000000..c460f6b
@@ -945,10 +954,10 @@ index 3e0ac7e..f3d07cc 100644
              intents[i] = new Intent(mIntents.get(i));
          }
 diff --git a/core/java/android/content/ContentResolver.java b/core/java/android/content/ContentResolver.java
-index 9e406d4..55c62d9 100644
+index fefd343..71aca4b 100644
 --- a/core/java/android/content/ContentResolver.java
 +++ b/core/java/android/content/ContentResolver.java
-@@ -44,6 +44,10 @@ import android.text.TextUtils;
+@@ -45,6 +45,10 @@ import android.text.TextUtils;
  import android.util.EventLog;
  import android.util.Log;
  
@@ -959,9 +968,9 @@ index 9e406d4..55c62d9 100644
  import java.io.File;
  import java.io.FileInputStream;
  import java.io.FileNotFoundException;
-@@ -371,6 +375,10 @@ public abstract class ContentResolver {
+@@ -413,6 +417,10 @@ public abstract class ContentResolver {
              try {
-                 qCursor = unstableProvider.query(uri, projection,
+                 qCursor = unstableProvider.query(mPackageName, uri, projection,
                          selection, selectionArgs, sortOrder, remoteCancellationSignal);
 +                // BEGIN privacy-added
 +                // Log.d(TAG, "PDroid:ContentResolver:wrapping content resolver in PrivacyContentResolver");
@@ -970,9 +979,9 @@ index 9e406d4..55c62d9 100644
              } catch (DeadObjectException e) {
                  // The remote process has died...  but we only hold an unstable
                  // reference though, so we might recover!!!  Let's try!!!!
-@@ -382,6 +390,11 @@ public abstract class ContentResolver {
+@@ -424,6 +432,11 @@ public abstract class ContentResolver {
                  }
-                 qCursor = stableProvider.query(uri, projection,
+                 qCursor = stableProvider.query(mPackageName, uri, projection,
                          selection, selectionArgs, sortOrder, remoteCancellationSignal);
 +                // BEGIN privacy-added
 +                // Log.d(TAG, "PDroid:ContentResolver:wrapping content resolver in PrivacyContentResolver");
@@ -983,10 +992,10 @@ index 9e406d4..55c62d9 100644
              if (qCursor == null) {
                  return null;
 diff --git a/core/java/android/content/Intent.java b/core/java/android/content/Intent.java
-index da254fd..e8f2a9b 100644
+index 088cdb9..af5a342 100644
 --- a/core/java/android/content/Intent.java
 +++ b/core/java/android/content/Intent.java
-@@ -3145,7 +3145,6 @@ public class Intent implements Parcelable, Cloneable {
+@@ -3316,7 +3316,6 @@ public class Intent implements Parcelable, Cloneable {
       * places where the framework may automatically set the exclude flag).
       */
      public static final int FLAG_INCLUDE_STOPPED_PACKAGES = 0x00000020;
@@ -994,7 +1003,7 @@ index da254fd..e8f2a9b 100644
      /**
       * If set, the new activity is not kept in the history stack.  As soon as
       * the user navigates away from it, the activity is finished.  This may also
-@@ -3362,6 +3361,11 @@ public class Intent implements Parcelable, Cloneable {
+@@ -3533,6 +3532,11 @@ public class Intent implements Parcelable, Cloneable {
       */
      public static final int FLAG_ACTIVITY_TASK_ON_HOME = 0X00004000;
      /**
@@ -1007,10 +1016,10 @@ index da254fd..e8f2a9b 100644
       * called -- no BroadcastReceiver components will be launched.
       */
 diff --git a/core/java/android/hardware/Camera.java b/core/java/android/hardware/Camera.java
-index 50aa0b8..a9e342f 100644
+index 7bf5246..f5a0ed4 100644
 --- a/core/java/android/hardware/Camera.java
 +++ b/core/java/android/hardware/Camera.java
-@@ -42,6 +42,26 @@ import java.util.HashMap;
+@@ -43,6 +43,26 @@ import java.util.HashMap;
  import java.util.List;
  import java.util.concurrent.locks.ReentrantLock;
  
@@ -1037,9 +1046,9 @@ index 50aa0b8..a9e342f 100644
  /**
   * The Camera class is used to set image capture settings, start/stop preview,
   * snap pictures, and retrieve frames for encoding for video.  This class is a
-@@ -162,6 +182,157 @@ public class Camera {
-     private boolean mFaceDetectionRunning = false;
-     private Object mAutoFocusCallbackLock = new Object();
+@@ -171,6 +191,157 @@ public class Camera {
+     private CameraMetaDataCallback mCameraMetaDataCallback;
+     /* ### QC ADD-ONS: END */
  
 +
 +    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1195,9 +1204,9 @@ index 50aa0b8..a9e342f 100644
      /**
       * Broadcast Action:  A new picture is taken by the camera, and the entry of
       * the picture has been added to the media store.
-@@ -328,6 +499,14 @@ public class Camera {
-         mPostviewCallback = null;
-         mZoomListener = null;
+@@ -352,6 +523,14 @@ public class Camera {
+         mCameraMetaDataCallback = null;
+         /* ### QC ADD-ONS: END */
  
 +	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 +        //BEGIN PRIVACY
@@ -1210,7 +1219,7 @@ index 50aa0b8..a9e342f 100644
          Looper looper;
          if ((looper = Looper.myLooper()) != null) {
              mEventHandler = new EventHandler(this, looper);
-@@ -750,6 +929,27 @@ public class Camera {
+@@ -778,6 +957,27 @@ public class Camera {
  
          @Override
          public void handleMessage(Message msg) {
@@ -1238,7 +1247,7 @@ index 50aa0b8..a9e342f 100644
              switch(msg.what) {
              case CAMERA_MSG_SHUTTER:
                  if (mShutterCallback != null) {
-@@ -759,13 +959,19 @@ public class Camera {
+@@ -787,13 +987,19 @@ public class Camera {
  
              case CAMERA_MSG_RAW_IMAGE:
                  if (mRawImageCallback != null) {
@@ -1260,7 +1269,7 @@ index 50aa0b8..a9e342f 100644
                  }
                  return;
  
-@@ -783,13 +989,21 @@ public class Camera {
+@@ -811,13 +1017,21 @@ public class Camera {
                          // Set to oneshot mode again.
                          setHasPreviewCallback(true, false);
                      }
@@ -1284,7 +1293,7 @@ index 50aa0b8..a9e342f 100644
                  }
                  return;
  
-@@ -834,6 +1048,8 @@ public class Camera {
+@@ -878,6 +1092,8 @@ public class Camera {
                  return;
              }
          }
@@ -1293,7 +1302,7 @@ index 50aa0b8..a9e342f 100644
      }
  
      private static void postEventFromNative(Object camera_ref,
-@@ -1083,6 +1299,28 @@ public class Camera {
+@@ -1127,6 +1343,28 @@ public class Camera {
          mPostviewCallback = postview;
          mJpegCallback = jpeg;
  
@@ -1323,10 +1332,10 @@ index 50aa0b8..a9e342f 100644
          int msgType = 0;
          if (mShutterCallback != null) {
 diff --git a/core/java/android/net/NetworkInfo.java b/core/java/android/net/NetworkInfo.java
-index 0b23cb7..2616e6b 100644
+index 689dae5..1f2e627 100644
 --- a/core/java/android/net/NetworkInfo.java
 +++ b/core/java/android/net/NetworkInfo.java
-@@ -165,6 +165,14 @@ public class NetworkInfo implements Parcelable {
+@@ -167,6 +167,14 @@ public class NetworkInfo implements Parcelable {
          }
      }
  
@@ -1530,10 +1539,10 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index e1c4361..3f67f57 100644
+index 86fcbde..3fc9dab 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
-@@ -60,6 +60,17 @@ import java.net.URISyntaxException;
+@@ -59,6 +59,17 @@ import java.net.URISyntaxException;
  import java.util.HashMap;
  import java.util.HashSet;
  
@@ -1551,7 +1560,7 @@ index e1c4361..3f67f57 100644
  /**
   * The Settings provider contains global system-level device preferences.
   */
-@@ -2723,6 +2734,32 @@ public final class Settings {
+@@ -2814,6 +2825,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -1584,7 +1593,7 @@ index e1c4361..3f67f57 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2836,6 +2873,12 @@ public final class Settings {
+@@ -2940,6 +2977,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -1597,7 +1606,7 @@ index e1c4361..3f67f57 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -3696,6 +3739,46 @@ public final class Settings {
+@@ -3799,6 +3842,46 @@ public final class Settings {
                  }
              }
  
@@ -1644,7 +1653,7 @@ index e1c4361..3f67f57 100644
              return sNameValueCache.getStringForUser(resolver, name, userHandle);
          }
  
-@@ -3996,7 +4079,71 @@ public final class Settings {
+@@ -4099,7 +4182,71 @@ public final class Settings {
                  int userHandle) {
              return putStringForUser(cr, name, Float.toString(value), userHandle);
          }
@@ -1717,7 +1726,7 @@ index e1c4361..3f67f57 100644
          /**
           * @deprecated Use {@link android.provider.Settings.Global#DEVELOPMENT_SETTINGS_ENABLED}
           * instead
-@@ -4237,6 +4384,13 @@ public final class Settings {
+@@ -4344,6 +4491,13 @@ public final class Settings {
              "lock_pattern_size";
  
          /**
@@ -1949,18 +1958,12 @@ index 044d5f9..bc440b4 100644
          public static final String TILE_GPS = "toggleGPS";
          public static final String TILE_BLUETOOTH = "toggleBluetooth";
 diff --git a/core/java/com/android/internal/widget/ActionBarView.java b/core/java/com/android/internal/widget/ActionBarView.java
-index 0f964b9..856a8ee 100644
+index dda1a10..aa2902e 100644
 --- a/core/java/com/android/internal/widget/ActionBarView.java
 +++ b/core/java/com/android/internal/widget/ActionBarView.java
-@@ -903,19 +903,8 @@ public class ActionBarView extends AbsActionBarView {
-         mIsCollapsed = false;
+@@ -956,13 +956,7 @@ public class ActionBarView extends AbsActionBarView {
+         }
  
-         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
--        if (widthMode != MeasureSpec.EXACTLY) {
--            throw new IllegalStateException(getClass().getSimpleName() + " can only be used " +
--                    "with android:layout_width=\"match_parent\" (or fill_parent)");
--        }
--        
          int heightMode = MeasureSpec.getMode(heightMeasureSpec);
 -        if (heightMode != MeasureSpec.AT_MOST) {
 -            throw new IllegalStateException(getClass().getSimpleName() + " can only be used " +
@@ -1971,12 +1974,12 @@ index 0f964b9..856a8ee 100644
 -
          int maxHeight = mContentHeight >= 0 ?
                  mContentHeight : MeasureSpec.getSize(heightMeasureSpec);
-         
+ 
 diff --git a/core/jni/android_util_Process.cpp b/core/jni/android_util_Process.cpp
-index 0290857..acfd996 100644
+index 5d32328..cd9aeda 100644
 --- a/core/jni/android_util_Process.cpp
 +++ b/core/jni/android_util_Process.cpp
-@@ -402,7 +402,8 @@ static int pid_compare(const void* v1, const void* v2)
+@@ -411,7 +411,8 @@ static int pid_compare(const void* v1, const void* v2)
      return *((const jint*)v1) - *((const jint*)v2);
  }
  
@@ -1986,7 +1989,7 @@ index 0290857..acfd996 100644
  {
      int fd = open("/proc/meminfo", O_RDONLY);
  
-@@ -438,7 +439,7 @@ static jlong getFreeMemoryImpl(const char* const sums[], const int sumsLen[], in
+@@ -447,7 +448,7 @@ static jlong getFreeMemoryImpl(const char* const sums[], const int sumsLen[], in
                      p++;
                      if (*p == 0) p--;
                  }
@@ -1995,7 +1998,7 @@ index 0290857..acfd996 100644
                  numFound++;
                  break;
              }
-@@ -452,16 +453,18 @@ static jlong getFreeMemoryImpl(const char* const sums[], const int sumsLen[], in
+@@ -461,16 +462,18 @@ static jlong getFreeMemoryImpl(const char* const sums[], const int sumsLen[], in
  
  static jlong android_os_Process_getFreeMemory(JNIEnv* env, jobject clazz)
  {
@@ -2021,10 +2024,10 @@ index 0290857..acfd996 100644
  
  void android_os_Process_readProcLines(JNIEnv* env, jobject clazz, jstring fileStr,
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index ef66ddd..3a071e1 100644
+index 3f8c8ed..9adc52c 100644
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
-@@ -1166,6 +1166,8 @@
+@@ -1195,6 +1195,8 @@
    <java-symbol type="style" name="Theme.DeviceDefault.Dialog.NoFrame" />
    <java-symbol type="style" name="Theme.IconMenu" />
    <java-symbol type="style" name="Theme.Panel.Volume" />
@@ -2034,10 +2037,10 @@ index ef66ddd..3a071e1 100644
    <java-symbol type="attr" name="mediaRouteButtonStyle" />
    <java-symbol type="attr" name="externalRouteEnabledDrawable" />
 diff --git a/core/res/res/values/themes_device_defaults.xml b/core/res/res/values/themes_device_defaults.xml
-index 4178cc4..e0dfd1f 100644
+index 87b1c9d..99808cc 100644
 --- a/core/res/res/values/themes_device_defaults.xml
 +++ b/core/res/res/values/themes_device_defaults.xml
-@@ -485,8 +485,32 @@ easier.
+@@ -499,8 +499,32 @@ easier.
      decorations, so you basically have an empty rectangle in which to place your content. It makes
      the window floating, with a transparent background, and turns off dimming behind the window. -->
      <style name="Theme.DeviceDefault.Panel" parent="Theme.Holo.Panel" >
@@ -2071,7 +2074,7 @@ index 4178cc4..e0dfd1f 100644
      decorations, so you basically have an empty rectangle in which to place your content. It makes
      the window floating, with a transparent background, and turns off dimming behind the window. -->
 diff --git a/location/java/android/location/ILocationManager.aidl b/location/java/android/location/ILocationManager.aidl
-index f663e0a..b32de47 100644
+index c353ec6..e5bac32 100644
 --- a/location/java/android/location/ILocationManager.aidl
 +++ b/location/java/android/location/ILocationManager.aidl
 @@ -89,5 +89,6 @@ interface ILocationManager
@@ -2083,7 +2086,7 @@ index f663e0a..b32de47 100644
 +    void setGPSSource(String device);
  }
 diff --git a/location/java/android/location/LocationManager.java b/location/java/android/location/LocationManager.java
-index 5a2f71b..43cb343 100644
+index 989178a..c8a1f0e 100644
 --- a/location/java/android/location/LocationManager.java
 +++ b/location/java/android/location/LocationManager.java
 @@ -291,6 +291,14 @@ public class LocationManager {
@@ -2102,10 +2105,10 @@ index 5a2f71b..43cb343 100644
       * Returns a list of the names of all known location providers.
       * <p>All providers are returned, including ones that are not permitted to
 diff --git a/media/java/android/media/AudioRecord.java b/media/java/android/media/AudioRecord.java
-index 59177a7..fcccccc 100644
+index c50e8eb..a1d3cf8 100644
 --- a/media/java/android/media/AudioRecord.java
 +++ b/media/java/android/media/AudioRecord.java
-@@ -29,6 +29,22 @@ import android.os.Looper;
+@@ -26,6 +26,22 @@ import android.os.Looper;
  import android.os.Message;
  import android.util.Log;
  
@@ -2128,7 +2131,7 @@ index 59177a7..fcccccc 100644
  /**
   * The AudioRecord class manages the audio resources for Java applications
   * to record audio from the audio input hardware of the platform. This is
-@@ -190,6 +206,28 @@ public class AudioRecord
+@@ -187,6 +203,28 @@ public class AudioRecord
       */
      private int mSessionId = 0;
  
@@ -2157,7 +2160,7 @@ index 59177a7..fcccccc 100644
      //---------------------------------------------------------
      // Constructor, Finalize
      //--------------------
-@@ -242,12 +280,125 @@ public class AudioRecord
+@@ -239,12 +277,125 @@ public class AudioRecord
              return; // with mState == STATE_UNINITIALIZED
          }
  
@@ -2283,7 +2286,7 @@ index 59177a7..fcccccc 100644
      // Convenience method for the constructor's parameter checks.
      // This is where constructor IllegalArgumentException-s are thrown
      // postconditions:
-@@ -528,10 +679,27 @@ public class AudioRecord
+@@ -530,10 +681,27 @@ public class AudioRecord
       */
      public void startRecording()
      throws IllegalStateException {
@@ -2315,10 +2318,10 @@ index 59177a7..fcccccc 100644
          // start recording
          synchronized(mRecordingStateLock) {
 diff --git a/media/java/android/media/MediaRecorder.java b/media/java/android/media/MediaRecorder.java
-index 544410f..e1a20c1 100644
+index 0d78fe8..c4495b1 100644
 --- a/media/java/android/media/MediaRecorder.java
 +++ b/media/java/android/media/MediaRecorder.java
-@@ -22,12 +22,27 @@ import android.os.Looper;
+@@ -23,12 +23,27 @@ import android.os.Looper;
  import android.os.Message;
  import android.util.Log;
  import android.view.Surface;
@@ -2347,7 +2350,7 @@ index 544410f..e1a20c1 100644
  /**
   * Used to record audio and video. The recording control is based on a
   * simple state machine (see below).
-@@ -91,6 +106,68 @@ public class MediaRecorder
+@@ -92,6 +107,68 @@ public class MediaRecorder
      private OnErrorListener mOnErrorListener;
      private OnInfoListener mOnInfoListener;
  
@@ -2416,10 +2419,10 @@ index 544410f..e1a20c1 100644
      /**
       * Default constructor.
       */
-@@ -105,6 +182,16 @@ public class MediaRecorder
-             mEventHandler = null;
+@@ -107,6 +184,16 @@ public class MediaRecorder
          }
  
+         String packageName = ActivityThread.currentPackageName();
 +
 +        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 +        //BEGIN PRIVACY
@@ -2433,7 +2436,7 @@ index 544410f..e1a20c1 100644
          /* Native setup requires a weak reference to our object.
           * It's easier to create it here than in C++.
           */
-@@ -135,9 +222,300 @@ public class MediaRecorder
+@@ -137,9 +224,300 @@ public class MediaRecorder
       * @see android.hardware.Camera#setPreviewDisplay(android.view.SurfaceHolder)
       */
      public void setPreviewDisplay(Surface sv) {
@@ -2734,7 +2737,7 @@ index 544410f..e1a20c1 100644
      /**
       * Defines the audio source. These constants are used with
       * {@link MediaRecorder#setAudioSource(int)}.
-@@ -340,6 +718,13 @@ public class MediaRecorder
+@@ -333,6 +711,13 @@ public class MediaRecorder
       * @see android.media.CamcorderProfile
       */
      public void setProfile(CamcorderProfile profile) {
@@ -2748,7 +2751,7 @@ index 544410f..e1a20c1 100644
          setOutputFormat(profile.fileFormat);
          setVideoFrameRate(profile.videoFrameRate);
          setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
-@@ -374,6 +759,13 @@ public class MediaRecorder
+@@ -367,6 +752,13 @@ public class MediaRecorder
       * possible.
       */
      public void setCaptureRate(double fps) {
@@ -2762,7 +2765,7 @@ index 544410f..e1a20c1 100644
          // Make sure that time lapse is enabled when this method is called.
          setParameter("time-lapse-enable=1");
  
-@@ -601,6 +993,13 @@ public class MediaRecorder
+@@ -594,6 +986,13 @@ public class MediaRecorder
       * @param bitRate the video encoding bit rate in bits per second.
       */
      public void setVideoEncodingBitRate(int bitRate) {
@@ -2776,7 +2779,7 @@ index 544410f..e1a20c1 100644
          if (bitRate <= 0) {
              throw new IllegalArgumentException("Video encoding bit rate is not positive");
          }
-@@ -641,6 +1040,7 @@ public class MediaRecorder
+@@ -634,6 +1033,7 @@ public class MediaRecorder
      {
          mPath = null;
          mFd = fd;
@@ -2784,7 +2787,7 @@ index 544410f..e1a20c1 100644
      }
  
      /**
-@@ -655,6 +1055,7 @@ public class MediaRecorder
+@@ -648,6 +1048,7 @@ public class MediaRecorder
      {
          mFd = null;
          mPath = path;
@@ -2792,7 +2795,7 @@ index 544410f..e1a20c1 100644
      }
  
      // native implementation
-@@ -673,6 +1074,78 @@ public class MediaRecorder
+@@ -666,6 +1067,78 @@ public class MediaRecorder
       */
      public void prepare() throws IllegalStateException, IOException
      {
@@ -2871,7 +2874,7 @@ index 544410f..e1a20c1 100644
          if (mPath != null) {
              FileOutputStream fos = new FileOutputStream(mPath);
              try {
-@@ -725,7 +1198,24 @@ public class MediaRecorder
+@@ -718,7 +1191,24 @@ public class MediaRecorder
       */
      public void reset() {
          native_reset();
@@ -2897,7 +2900,7 @@ index 544410f..e1a20c1 100644
          // make sure none of the listeners get called anymore
          mEventHandler.removeCallbacksAndMessages(null);
      }
-@@ -1006,5 +1496,81 @@ public class MediaRecorder
+@@ -1000,5 +1490,81 @@ public class MediaRecorder
      private native void setParameter(String nameValuePair);
  
      @Override
@@ -2981,10 +2984,10 @@ index 544410f..e1a20c1 100644
 +    
  }
 diff --git a/packages/SystemUI/AndroidManifest.xml b/packages/SystemUI/AndroidManifest.xml
-index fcd4c9d..6357c64 100644
+index 2cfdac2..e885c17 100644
 --- a/packages/SystemUI/AndroidManifest.xml
 +++ b/packages/SystemUI/AndroidManifest.xml
-@@ -76,6 +76,9 @@
+@@ -78,6 +78,9 @@
      <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
      <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
  
@@ -2994,7 +2997,7 @@ index fcd4c9d..6357c64 100644
      <application
          android:persistent="true"
          android:allowClearUserData="false"
-@@ -257,5 +260,8 @@
+@@ -260,5 +263,8 @@
                  <category android:name="android.intent.category.DESK_DOCK" />
              </intent-filter>
          </activity>
@@ -6216,7 +6219,7 @@ index 0000000..bf61913
 +    android:drawableTop="@drawable/ic_qs_quickmemo"
 +    />
 diff --git a/packages/SystemUI/res/layout/status_bar_expanded_header.xml b/packages/SystemUI/res/layout/status_bar_expanded_header.xml
-index e8ceeed..64f8d47 100644
+index 1d26558..fb8d2e3 100644
 --- a/packages/SystemUI/res/layout/status_bar_expanded_header.xml
 +++ b/packages/SystemUI/res/layout/status_bar_expanded_header.xml
 @@ -74,9 +74,19 @@
@@ -6235,7 +6238,7 @@ index e8ceeed..64f8d47 100644
      <ImageView android:id="@+id/clear_all_button"
          android:layout_width="50dp"
          android:layout_height="50dp"
-+        android:layout_marginLeft="5dp"
++        android:layout_marginStart="5dp"
          android:scaleType="center"
          android:src="@drawable/ic_notify_clear"
          android:contentDescription="@string/accessibility_clear_all"
@@ -6243,8 +6246,8 @@ index e8ceeed..64f8d47 100644
      <FrameLayout android:id="@+id/settings_button_holder"
          android:layout_width="50dp"
          android:layout_height="50dp"
--        android:layout_marginLeft="12dp"
-+        android:layout_marginLeft="5dp"
+-        android:layout_marginStart="12dp"
++        android:layout_marginStart="5dp"
          >
          <ImageView android:id="@+id/settings_button"
              android:layout_width="50dp"
@@ -6259,7 +6262,7 @@ index eecfb9a..b992707 100644
 +    <item android:id="@+id/recent_launch_floating" android:title="@string/status_bar_recent_floating_item_title" />
  </menu>
 diff --git a/packages/SystemUI/res/values-es/strings.xml b/packages/SystemUI/res/values-es/strings.xml
-index 892016f..7cb3048 100644
+index 6e5be0a..53b5f27 100644
 --- a/packages/SystemUI/res/values-es/strings.xml
 +++ b/packages/SystemUI/res/values-es/strings.xml
 @@ -25,6 +25,7 @@
@@ -6284,10 +6287,10 @@ index ab71371..3d42a3a 100644
 +    <dimen name="halo_content_max_width">350dp</dimen>
  </resources>
 diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
-index 158c355..114827f 100644
+index 77d0452..e9e4d12 100644
 --- a/packages/SystemUI/res/values/dimens.xml
 +++ b/packages/SystemUI/res/values/dimens.xml
-@@ -237,4 +237,7 @@
+@@ -244,4 +244,7 @@
  
      <dimen name="pie_sysinfo_radius">165dp</dimen>
      <dimen name="pie_sysinfo_height">85sp</dimen>
@@ -6296,7 +6299,7 @@ index 158c355..114827f 100644
 +
  </resources>
 diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
-index f3db062..2787539 100644
+index 5767e63..0aa3336 100644
 --- a/packages/SystemUI/res/values/strings.xml
 +++ b/packages/SystemUI/res/values/strings.xml
 @@ -41,6 +41,9 @@
@@ -6309,7 +6312,7 @@ index f3db062..2787539 100644
      <!-- Message shown in the middle of the screen after clicking on the recent apps button
           when there are no recent apps to show. Also used for accessibility. [CHAR LIMIT=45]-->
      <string name="status_bar_no_recent_apps">No recent apps</string>
-@@ -426,6 +429,9 @@
+@@ -429,6 +432,9 @@
      <!-- Notification text: when GPS has found a fix [CHAR LIMIT=50] -->
      <string name="gps_notification_found_text">Location set by GPS</string>
  
@@ -6319,7 +6322,7 @@ index f3db062..2787539 100644
      <!-- Content description of the clear button in the notification panel for accessibility (not shown on the screen). [CHAR LIMIT=NONE] -->
      <string name="accessibility_clear_all">Clear all notifications.</string>
  
-@@ -485,6 +491,8 @@
+@@ -488,6 +494,8 @@
      <string name="quick_settings_location_label">Location in use</string>
      <!-- QuickSettings: Media device [CHAR LIMIT=NONE] -->
      <string name="quick_settings_media_device_label">Media device</string>
@@ -6405,10 +6408,10 @@ index 0000000..a905e7a
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java b/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
-index 3b4155c..73f5389 100644
+index d212787..5512ee3 100644
 --- a/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
 +++ b/packages/SystemUI/src/com/android/systemui/recent/RecentsPanelView.java
-@@ -774,6 +774,16 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
+@@ -805,6 +805,16 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
                      } else {
                          throw new IllegalStateException("Oops, no tag on view " + selectedView);
                      }
@@ -6426,10 +6429,10 @@ index 3b4155c..73f5389 100644
                      return false;
                  }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
-index 9f57e72..557d4dd 100644
+index 856b3d5..cba1f0c 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/BaseStatusBar.java
-@@ -50,7 +50,12 @@ import android.content.res.Configuration;
+@@ -50,7 +50,12 @@ import android.content.pm.PackageManager.NameNotFoundException;
  import android.content.res.Resources;
  import android.database.ContentObserver;
  import android.graphics.Bitmap;
@@ -6454,9 +6457,9 @@ index 9f57e72..557d4dd 100644
 +import com.android.systemui.statusbar.policy.NetworkController;
 +
  import java.util.ArrayList;
+ import java.util.Locale;
  
- public abstract class BaseStatusBar extends SystemUI implements
-@@ -156,6 +168,26 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -168,6 +180,26 @@ public abstract class BaseStatusBar extends SystemUI implements
      private ArrayList<NavigationBarCallback> mNavigationCallbacks =
              new ArrayList<NavigationBarCallback>();
  
@@ -6483,9 +6486,9 @@ index 9f57e72..557d4dd 100644
      // Pie Control
      protected PieController mPieController;
  
-@@ -173,6 +205,36 @@ public abstract class BaseStatusBar extends SystemUI implements
- 
+@@ -191,6 +223,36 @@ public abstract class BaseStatusBar extends SystemUI implements
      private boolean mDeviceProvisioned = false;
+     private int mAutoCollapseBehaviour;
  
 +    private boolean mShowNotificationCounts;
 +
@@ -6520,7 +6523,7 @@ index 9f57e72..557d4dd 100644
      public IStatusBarService getStatusBarService() {
          return mBarService;
      }
-@@ -255,6 +317,9 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -305,6 +367,9 @@ public abstract class BaseStatusBar extends SystemUI implements
              // If the system process isn't there we're doomed anyway.
          }
  
@@ -6530,11 +6533,15 @@ index 9f57e72..557d4dd 100644
          createAndAddWindows();
  
          disable(switches[0]);
-@@ -319,8 +384,55 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -369,10 +434,57 @@ public abstract class BaseStatusBar extends SystemUI implements
                          mPieController.userSwitched(mCurrentUserId);
                      }
                  }
+-            }
+-        }, filter);
 +            }}, filter);
+ 
+         mLocale = mContext.getResources().getConfiguration().locale;
 +
 +        // Listen for HALO state
 +        mContext.getContentResolver().registerContentObserver(
@@ -6575,8 +6582,7 @@ index 9f57e72..557d4dd 100644
 +                WindowManager.LayoutParams params = mHalo.getWMParams();
 +                mWindowManager.addView(mHalo,params);
 +                mHalo.setStatusBar(this);
-             }
--        }, filter);
++            }
 +        } else {
 +            if (mHalo != null) {
 +                mHalo.cleanUp();
@@ -6587,7 +6593,7 @@ index 9f57e72..557d4dd 100644
      }
  
      public void userSwitched(int newUserId) {
-@@ -841,11 +953,12 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -907,11 +1019,12 @@ public abstract class BaseStatusBar extends SystemUI implements
          return new NotificationClicker(intent, pkg, tag, id);
      }
  
@@ -6605,7 +6611,7 @@ index 9f57e72..557d4dd 100644
  
          NotificationClicker(PendingIntent intent, String pkg, String tag, int id) {
              mIntent = intent;
-@@ -854,6 +967,10 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -920,6 +1033,10 @@ public abstract class BaseStatusBar extends SystemUI implements
              mId = id;
          }
  
@@ -6616,7 +6622,7 @@ index 9f57e72..557d4dd 100644
          public void onClick(View v) {
              try {
                  // The intent we are sending is for the application, which
-@@ -868,9 +985,17 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -934,9 +1051,17 @@ public abstract class BaseStatusBar extends SystemUI implements
              }
  
              if (mIntent != null) {
@@ -6634,8 +6640,8 @@ index 9f57e72..557d4dd 100644
                  overlay.setSourceBounds(
                          new Rect(pos[0], pos[1], pos[0]+v.getWidth(), pos[1]+v.getHeight()));
                  try {
-@@ -953,6 +1078,41 @@ public abstract class BaseStatusBar extends SystemUI implements
-         return entry.notification;
+@@ -1034,6 +1159,41 @@ public abstract class BaseStatusBar extends SystemUI implements
+         }
      }
  
 +    private Bitmap createRoundIcon(StatusBarNotification notification) {
@@ -6647,22 +6653,22 @@ index 9f57e72..557d4dd 100644
 +        Canvas canvas = new Canvas(roundIcon);
 +        canvas.drawARGB(0, 0, 0, 0);
 +
-+        if (notification.notification.largeIcon != null) {           
++        if (notification.getNotification().largeIcon != null) {           
 +            Paint smoothingPaint = new Paint();
 +            smoothingPaint.setAntiAlias(true);
 +            smoothingPaint.setFilterBitmap(true);
 +            smoothingPaint.setDither(true);
 +            canvas.drawCircle(iconSize / 2, iconSize / 2, iconSize / 2.3f, smoothingPaint);
 +            smoothingPaint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
-+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(notification.notification.largeIcon, iconSize, iconSize, true);
++            Bitmap scaledBitmap = Bitmap.createScaledBitmap(notification.getNotification().largeIcon, iconSize, iconSize, true);
 +            canvas.drawBitmap(scaledBitmap, null, new Rect(0, 0,
 +                    iconSize, iconSize), smoothingPaint);
 +        } else {
 +            try {
 +                Drawable icon = StatusBarIconView.getIcon(mContext,
-+                    new StatusBarIcon(notification.pkg, notification.user, notification.notification.icon,
-+                    notification.notification.iconLevel, 0, notification.notification.tickerText)); 
-+                if (icon == null) icon = mContext.getPackageManager().getApplicationIcon(notification.pkg);
++                    new StatusBarIcon(notification.getPackageName(), notification.getUser(), notification.getNotification().icon,
++                    notification.getNotification().iconLevel, 0, notification.getNotification().tickerText)); 
++                if (icon == null) icon = mContext.getPackageManager().getApplicationIcon(notification.getPackageName());
 +                int margin = (iconSize - smallIconSize) / 2;
 +                icon.setBounds(margin, margin, iconSize - margin, iconSize - margin);
 +                icon.draw(canvas);
@@ -6676,19 +6682,19 @@ index 9f57e72..557d4dd 100644
      protected StatusBarIconView addNotificationViews(IBinder key,
              StatusBarNotification notification) {
          if (DEBUG) {
-@@ -974,8 +1134,19 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -1055,8 +1215,19 @@ public abstract class BaseStatusBar extends SystemUI implements
              handleNotificationError(key, notification, "Couldn't create icon: " + ic);
              return null;
          }
 +
 +        NotificationData.Entry entry = new NotificationData.Entry(key, notification, iconView,
 +                createRoundIcon(notification));
-+        entry.hide = entry.notification.pkg.equals("com.paranoid.halo");
++        entry.hide = entry.notification.getPackageName().equals("com.paranoid.halo");
 +
-+        final PendingIntent contentIntent = notification.notification.contentIntent;
++        final PendingIntent contentIntent = notification.getNotification().contentIntent;
 +        if (contentIntent != null) {
 +            entry.floatingIntent = makeClicker(contentIntent,
-+                    notification.pkg, notification.tag, notification.id);
++                    notification.getPackageName(), notification.getTag(), notification.getId());
 +            entry.floatingIntent.makeFloating(true);
 +        }
 +
@@ -6697,7 +6703,7 @@ index 9f57e72..557d4dd 100644
          if (!inflateViews(entry, mPile)) {
              handleNotificationError(key, notification, "Couldn't expand RemoteViews for: "
                      + notification);
-@@ -1005,6 +1176,7 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -1087,6 +1258,7 @@ public abstract class BaseStatusBar extends SystemUI implements
              lp.height = rowHeight;
          }
          entry.row.setLayoutParams(lp);
@@ -6705,33 +6711,31 @@ index 9f57e72..557d4dd 100644
          return expand;
      }
  
-@@ -1093,10 +1265,10 @@ public abstract class BaseStatusBar extends SystemUI implements
-         boolean orderUnchanged = notification.notification.when==oldNotification.notification.when
-                 && notification.score == oldNotification.score;
+@@ -1177,9 +1349,9 @@ public abstract class BaseStatusBar extends SystemUI implements
+                 && notification.getScore() == oldNotification.getScore();
                  // score now encompasses/supersedes isOngoing()
--
--        boolean updateTicker = notification.notification.tickerText != null
-+        
-+        boolean updateTicker = (notification.notification.tickerText != null
-                 && !TextUtils.equals(notification.notification.tickerText,
--                        oldEntry.notification.notification.tickerText);
-+                        oldEntry.notification.notification.tickerText)) || mHaloActive;
+ 
+-        boolean updateTicker = notification.getNotification().tickerText != null
++        boolean updateTicker = (notification.getNotification().tickerText != null
+                 && !TextUtils.equals(notification.getNotification().tickerText,
+-                        oldEntry.notification.getNotification().tickerText);
++                        oldEntry.notification.getNotification().tickerText)) || mHaloActive;
          boolean isTopAnyway = isTopNotification(rowParent, oldEntry);
          if (contentsUnchanged && bigContentsUnchanged && (orderUnchanged || isTopAnyway)) {
              if (DEBUG) Slog.d(TAG, "reusing notification for key: " + key);
-@@ -1107,15 +1279,22 @@ public abstract class BaseStatusBar extends SystemUI implements
+@@ -1190,15 +1362,22 @@ public abstract class BaseStatusBar extends SystemUI implements
                  if (bigContentView != null && oldEntry.getLargeView() != null) {
                      bigContentView.reapply(mContext, oldEntry.getLargeView(), mOnClickHandler);
                  }
 -                // update the contentIntent
 +                // update contentIntent and floatingIntent
-                 final PendingIntent contentIntent = notification.notification.contentIntent;
+                 final PendingIntent contentIntent = notification.getNotification().contentIntent;
                  if (contentIntent != null) {
                      final View.OnClickListener listener = makeClicker(contentIntent,
-                             notification.pkg, notification.tag, notification.id);
+                             notification.getPackageName(), notification.getTag(), notification.getId());
                      oldEntry.content.setOnClickListener(listener);
 +                    oldEntry.floatingIntent = makeClicker(contentIntent,
-+                            notification.pkg, notification.tag, notification.id);
++                            notification.getPackageName(), notification.getTag(), notification.getId());
 +                    oldEntry.floatingIntent.makeFloating(true);
                  } else {
                      oldEntry.content.setOnClickListener(null);
@@ -6741,61 +6745,158 @@ index 9f57e72..557d4dd 100644
 +                oldEntry.roundIcon = createRoundIcon(notification);
 +
                  // Update the icon.
-                 final StatusBarIcon ic = new StatusBarIcon(notification.pkg,
-                         notification.user,
+                 final StatusBarIcon ic = new StatusBarIcon(notification.getPackageName(),
+                         notification.getUser(),
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java b/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java
-index 7222c08..8de7b08 100644
+index a6c3526..3903f53 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/NotificationData.java
-@@ -17,10 +17,12 @@
+@@ -17,10 +17,13 @@
  package com.android.systemui.statusbar;
  
- import android.app.Notification;
+ import android.service.notification.StatusBarNotification;
++import android.app.Notification;
 +import android.graphics.Bitmap;
  import android.os.IBinder;
  import android.view.View;
  import android.widget.ImageView;
  
 +import com.android.systemui.statusbar.BaseStatusBar.NotificationClicker;
- import com.android.internal.statusbar.StatusBarNotification;
  import com.android.systemui.R;
  
-@@ -39,13 +41,22 @@ public class NotificationData {
-         public View content; // takes the click events and sends the PendingIntent
+ import java.util.Comparator;
+@@ -35,53 +38,83 @@ public class NotificationData {
+         public StatusBarNotification notification;
+         public StatusBarIconView icon;
+         public View row; // the outer expanded view
+-        public View content; // takes the click events and sends the PendingIntent
++        public View content; // takes the click events and sends the
++                             // PendingIntent
          public View expanded; // the inflated RemoteViews
          public ImageView largeIcon;
 +        protected boolean hide = false;
 +        protected Bitmap roundIcon;
          protected View expandedLarge;
+-        public Entry() {}
 +        protected NotificationClicker floatingIntent;
-         public Entry() {}
++
++        public Entry() {
++        }
++
          public Entry(IBinder key, StatusBarNotification n, StatusBarIconView ic) {
              this.key = key;
              this.notification = n;
              this.icon = ic;
          }
++
 +        public Entry(IBinder key, StatusBarNotification n, StatusBarIconView ic, Bitmap ri) {
 +            this.key = key;
 +            this.notification = n;
 +            this.icon = ic;
 +            this.roundIcon = ri;
 +        }
++
          public void setLargeView(View expandedLarge) {
              this.expandedLarge = expandedLarge;
              writeBooleanTag(row, R.id.expandable_tag, expandedLarge != null);
-@@ -53,6 +64,12 @@ public class NotificationData {
+         }
++
          public View getLargeView() {
              return expandedLarge;
          }
++
 +        public NotificationClicker getFloatingIntent() {
 +            return floatingIntent;
 +        }
++
 +        public Bitmap getRoundIcon() {
 +            return roundIcon;
 +        }
++
          /**
           * Return whether the entry can be expanded.
           */
+         public boolean expandable() {
+             return NotificationData.getIsExpandable(row);
+         }
++
+         /**
+          * Return whether the entry has been manually expanded by the user.
+          */
+         public boolean userExpanded() {
+             return NotificationData.getUserExpanded(row);
+         }
++
+         /**
+          * Return whether the entry has been manually dismissed by the user.
+          */
+         public boolean userDismissed() {
+             return NotificationData.getUserDismissed(row);
+         }
++
+         /**
+          * Set the flag indicating that this was manually expanded by the user.
+          */
+         public boolean setUserExpanded(boolean userExpanded) {
+             return NotificationData.setUserExpanded(row, userExpanded);
+         }
++
+         /**
+          * Return whether the entry is being touched by the user.
+          */
+         public boolean userLocked() {
+             return NotificationData.getUserLocked(row);
+         }
++
+         /**
+          * Set the flag indicating that this is being touched by the user.
+          */
+@@ -89,6 +122,7 @@ public class NotificationData {
+             return NotificationData.setUserLocked(row, userLocked);
+         }
+     }
++
+     private final ArrayList<Entry> mEntries = new ArrayList<Entry>();
+     private final Comparator<Entry> mEntryCmp = new Comparator<Entry>() {
+         // sort first by score, then by when
+@@ -97,8 +131,8 @@ public class NotificationData {
+             final StatusBarNotification nb = b.notification;
+             int d = na.getScore() - nb.getScore();
+             return (d != 0)
+-                ? d
+-                : (int)(na.getNotification().when - nb.getNotification().when);
++                    ? d
++                    : (int) (na.getNotification().when - nb.getNotification().when);
+         }
+     };
+ 
+@@ -122,7 +156,7 @@ public class NotificationData {
+     public int add(Entry entry) {
+         int i;
+         int N = mEntries.size();
+-        for (i=0; i<N; i++) {
++        for (i = 0; i < N; i++) {
+             if (mEntryCmp.compare(mEntries.get(i), entry) > 0) {
+                 break;
+             }
+@@ -182,7 +216,7 @@ public class NotificationData {
+         return false;
+     }
+ 
+-    protected static boolean readBooleanTag(View view, int id)  {
++    protected static boolean readBooleanTag(View view, int id) {
+         if (view != null) {
+             Object value = view.getTag(id);
+             return value != null && value instanceof Boolean && ((Boolean) value).booleanValue();
+@@ -190,7 +224,7 @@ public class NotificationData {
+         return false;
+     }
+ 
+-    protected static boolean writeBooleanTag(View view, int id, boolean value)  {
++    protected static boolean writeBooleanTag(View view, int id, boolean value) {
+         if (view != null) {
+             view.setTag(id, Boolean.valueOf(value));
+             return value;
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/halo/CustomObjectAnimator.java b/packages/SystemUI/src/com/android/systemui/statusbar/halo/CustomObjectAnimator.java
 new file mode 100644
 index 0000000..89323bb
@@ -6894,7 +6995,7 @@ index 0000000..89323bb
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/halo/Halo.java b/packages/SystemUI/src/com/android/systemui/statusbar/halo/Halo.java
 new file mode 100644
-index 0000000..5f2db7c
+index 0000000..57e538d
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/halo/Halo.java
 @@ -0,0 +1,1078 @@
@@ -6991,10 +7092,10 @@ index 0000000..5f2db7c
 +import android.widget.LinearLayout;
 +import android.widget.RelativeLayout;
 +import android.widget.ScrollView;
++import android.service.notification.StatusBarNotification;
 +
 +import com.android.systemui.R;
 +import com.android.systemui.statusbar.BaseStatusBar.NotificationClicker;
-+import com.android.internal.statusbar.StatusBarNotification;
 +import com.android.internal.statusbar.StatusBarIcon;
 +import com.android.systemui.statusbar.StatusBarIconView;
 +import com.android.systemui.statusbar.NotificationData;
@@ -7204,11 +7305,11 @@ index 0000000..5f2db7c
 +            if (!includeCurrentDismissable) {
 +                if (mNotificationData.size() > 1 && mLastNotificationEntry != null &&
 +                        mLastNotificationEntry.notification == mCurrentNotficationEntry.notification) {
-+                    boolean cancel = (mLastNotificationEntry.notification.notification.flags &
++                    boolean cancel = (mLastNotificationEntry.notification.getNotification().flags &
 +                            Notification.FLAG_AUTO_CANCEL) == Notification.FLAG_AUTO_CANCEL;
 +                    if (cancel) mLastNotificationEntry = mNotificationData.get(mNotificationData.size() - 2);
 +                } else if (mNotificationData.size() == 1) {
-+                    boolean cancel = (mLastNotificationEntry.notification.notification.flags &
++                    boolean cancel = (mLastNotificationEntry.notification.getNotification().flags &
 +                            Notification.FLAG_AUTO_CANCEL) == Notification.FLAG_AUTO_CANCEL;
 +                    if (cancel) {
 +                        // We have one notification left and it is dismissable, clear it...
@@ -7219,9 +7320,9 @@ index 0000000..5f2db7c
 +            }
 +
 +            if (mLastNotificationEntry.notification != null
-+                    && mLastNotificationEntry.notification.notification != null
-+                    && mLastNotificationEntry.notification.notification.tickerText != null) {
-+                mNotificationText = mLastNotificationEntry.notification.notification.tickerText.toString();
++                    && mLastNotificationEntry.notification.getNotification() != null
++                    && mLastNotificationEntry.notification.getNotification().tickerText != null) {
++                mNotificationText = mLastNotificationEntry.notification.getNotification().tickerText.toString();
 +            }
 +
 +            tick(mLastNotificationEntry, "", 0, 0);
@@ -7389,7 +7490,7 @@ index 0000000..5f2db7c
 +                                    && mCurrentNotficationEntry.notification == item.notification) {
 +                                continue;
 +                            }
-+                            boolean cancel = (item.notification.notification.flags &
++                            boolean cancel = (item.notification.getNotification().flags &
 +                                    Notification.FLAG_AUTO_CANCEL) == Notification.FLAG_AUTO_CANCEL;
 +                            if (cancel) {
 +                                entry = item;
@@ -7562,8 +7663,8 @@ index 0000000..5f2db7c
 +
 +                            NotificationData.Entry entry = mNotificationData.get(mMarkerIndex);
 +                            String text = "";
-+                            if (entry.notification.notification.tickerText != null) {
-+                                text = entry.notification.notification.tickerText.toString();
++                            if (entry.notification.getNotification().tickerText != null) {
++                                text = entry.notification.getNotification().tickerText.toString();
 +                            }
 +                            tick(entry, text, 0, 250);
 +                            mTaskIntent = entry.getFloatingIntent();
@@ -7906,7 +8007,7 @@ index 0000000..5f2db7c
 +        }
 +
 +        StatusBarNotification notification = entry.notification;
-+        Notification n = notification.notification;
++        Notification n = notification.getNotification();
 +
 +        // Deal with the intent
 +        mContentIntent = entry.getFloatingIntent();
@@ -7935,7 +8036,7 @@ index 0000000..5f2db7c
 +
 +        boolean allowed = false; // default off
 +        try {
-+            allowed = mNotificationManager.isPackageAllowedForHalo(notification.pkg);
++            allowed = mNotificationManager.isPackageAllowedForHalo(notification.getPackageName());
 +        } catch (android.os.RemoteException ex) {
 +            // System is dead
 +        }
@@ -7946,7 +8047,7 @@ index 0000000..5f2db7c
 +            if (entry.notification == notification) {
 +
 +                // No intent, no tick ...
-+                if (entry.notification.notification.contentIntent == null) return;
++                if (entry.notification.getNotification().contentIntent == null) return;
 +
 +                mIsNotificationNew = true;
 +                if (mLastNotificationEntry != null && notification == mLastNotificationEntry.notification) {
@@ -8147,10 +8248,10 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 82b6538..5a3714a 100644
+index 1a090cc..700607c 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-@@ -265,7 +265,6 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -269,7 +269,6 @@ public class PhoneStatusBar extends BaseStatusBar {
      PowerWidget mPowerWidget;
  
      // ticker
@@ -8158,7 +8259,7 @@ index 82b6538..5a3714a 100644
      private View mTickerView;
      private boolean mTicking;
  
-@@ -386,6 +385,10 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -392,6 +391,10 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mSettingsButton != null && mHasFlipSettings) {
                  mSettingsButton.setVisibility(userSetup ? View.VISIBLE : View.INVISIBLE);
              }
@@ -8169,7 +8270,7 @@ index 82b6538..5a3714a 100644
              if (mSettingsPanel != null) {
                  mSettingsPanel.setEnabled(userSetup);
              }
-@@ -527,7 +530,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -534,7 +537,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mClearButton = mStatusBarWindow.findViewById(R.id.clear_all_button);
          mClearButton.setOnClickListener(mClearButtonListener);
          mClearButton.setAlpha(0f);
@@ -8178,7 +8279,7 @@ index 82b6538..5a3714a 100644
          mClearButton.setEnabled(false);
          mDateView = (DateView)mStatusBarWindow.findViewById(R.id.date);
  
-@@ -562,6 +565,14 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -569,6 +572,14 @@ public class PhoneStatusBar extends BaseStatusBar {
                  mSettingsButton.setImageResource(R.drawable.ic_notify_settings);
              }
          }
@@ -8193,7 +8294,7 @@ index 82b6538..5a3714a 100644
          if (mHasFlipSettings) {
              mNotificationButton = (ImageView) mStatusBarWindow.findViewById(R.id.notification_button);
              if (mNotificationButton != null) {
-@@ -600,6 +611,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -607,6 +618,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mTicker = new MyTicker(context, mStatusBarView);
          TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
          tickerView.mTicker = mTicker;
@@ -8201,7 +8302,7 @@ index 82b6538..5a3714a 100644
  
          mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
  
-@@ -1162,6 +1174,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1215,6 +1227,9 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mSettingsButton != null) {
              mSettingsButton.setEnabled(isDeviceProvisioned());
          }
@@ -8211,16 +8312,16 @@ index 82b6538..5a3714a 100644
      }
  
      @Override
-@@ -1186,7 +1201,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1239,7 +1254,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          for (int i=0; i<N; i++) {
              Entry ent = mNotificationData.get(N-i-1);
-             if (!((provisioned && ent.notification.score >= HIDE_ICONS_BELOW_SCORE)
+             if (!((provisioned && ent.notification.getScore() >= HIDE_ICONS_BELOW_SCORE)
 -                    || showNotificationEvenIfUnprovisioned(ent.notification))) continue;
 +                    || showNotificationEvenIfUnprovisioned(ent.notification) || mHaloTaskerActive)) continue;
              if (!notificationIsForCurrentUser(ent.notification)) continue;
              toShow.add(ent.icon);
          }
-@@ -1269,7 +1284,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1322,7 +1337,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                  && mFlipSettingsView.getVisibility() == View.VISIBLE
                  && mScrollView.getVisibility() != View.VISIBLE) {
              // the flip settings panel is unequivocally showing; we should not be shown
@@ -8229,7 +8330,7 @@ index 82b6538..5a3714a 100644
          } else if (mClearButton.isShown()) {
              if (clearable != (mClearButton.getAlpha() == 1.0f)) {
                  ObjectAnimator clearAnimation = ObjectAnimator.ofFloat(
-@@ -1278,7 +1293,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1331,7 +1346,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                      @Override
                      public void onAnimationEnd(Animator animation) {
                          if (mClearButton.getAlpha() <= 0.0f) {
@@ -8238,7 +8339,7 @@ index 82b6538..5a3714a 100644
                          }
                      }
  
-@@ -1293,7 +1308,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1346,7 +1361,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              }
          } else {
              mClearButton.setAlpha(clearable ? 1.0f : 0.0f);
@@ -8247,7 +8348,7 @@ index 82b6538..5a3714a 100644
          }
          mClearButton.setEnabled(clearable);
  
-@@ -1595,7 +1610,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1644,7 +1659,7 @@ public class PhoneStatusBar extends BaseStatusBar {
      final int FLIP_DURATION = (FLIP_DURATION_IN + FLIP_DURATION_OUT);
  
      Animator mScrollViewAnim, mFlipSettingsViewAnim, mNotificationButtonAnim,
@@ -8256,7 +8357,7 @@ index 82b6538..5a3714a 100644
  
      @Override
      public void animateExpandNotificationsPanel() {
-@@ -1621,6 +1636,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1670,6 +1685,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8264,7 +8365,7 @@ index 82b6538..5a3714a 100644
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1658,6 +1674,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1707,6 +1723,11 @@ public class PhoneStatusBar extends BaseStatusBar {
          mSettingsButtonAnim = start(
              ObjectAnimator.ofFloat(mSettingsButton, View.ALPHA, 1f)
                  .setDuration(FLIP_DURATION));
@@ -8276,7 +8377,7 @@ index 82b6538..5a3714a 100644
          mClearButton.setVisibility(View.VISIBLE);
          mClearButton.setAlpha(0f);
          setAreThereNotifications(); // this will show/hide the button as necessary
-@@ -1703,6 +1724,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1752,6 +1773,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          mFlipSettingsView.setScaleX(1f);
          mFlipSettingsView.setVisibility(View.VISIBLE);
          mSettingsButton.setVisibility(View.GONE);
@@ -8285,7 +8386,7 @@ index 82b6538..5a3714a 100644
          mScrollView.setVisibility(View.GONE);
          mScrollView.setScaleX(0f);
          mPowerWidget.setVisibility(View.GONE);
-@@ -1762,6 +1785,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1811,6 +1834,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8293,7 +8394,7 @@ index 82b6538..5a3714a 100644
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1793,6 +1817,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1842,6 +1866,11 @@ public class PhoneStatusBar extends BaseStatusBar {
                      .setDuration(FLIP_DURATION),
                      mScrollView, View.INVISIBLE));
          mPowerWidget.setVisibility(View.GONE);
@@ -8305,7 +8406,7 @@ index 82b6538..5a3714a 100644
          mNotificationButton.setVisibility(View.VISIBLE);
          mNotificationButtonAnim = start(
              ObjectAnimator.ofFloat(mNotificationButton, View.ALPHA, 1f)
-@@ -1845,6 +1874,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1894,6 +1923,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
              if (mScrollViewAnim != null) mScrollViewAnim.cancel();
              if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8313,7 +8414,7 @@ index 82b6538..5a3714a 100644
              if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
              if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1853,6 +1883,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1902,6 +1932,9 @@ public class PhoneStatusBar extends BaseStatusBar {
              mPowerWidget.updateVisibility();
              mSettingsButton.setAlpha(1f);
              mSettingsButton.setVisibility(View.VISIBLE);
@@ -8323,7 +8424,7 @@ index 82b6538..5a3714a 100644
              mNotificationPanel.setVisibility(View.GONE);
              mFlipSettingsView.setVisibility(View.GONE);
              mNotificationButton.setVisibility(View.GONE);
-@@ -2277,8 +2310,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2329,8 +2362,8 @@ public class PhoneStatusBar extends BaseStatusBar {
  
      @Override
      protected void tick(IBinder key, StatusBarNotification n, boolean firstTime) {
@@ -8334,17 +8435,17 @@ index 82b6538..5a3714a 100644
  
          // no ticking in Setup
          if (!isDeviceProvisioned()) return;
-@@ -2290,7 +2323,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2342,7 +2375,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          // until status bar window is attached to the window manager,
          // because...  well, what's the point otherwise?  And trying to
          // run a ticker without being attached will crash!
--        if (n.notification.tickerText != null && mStatusBarContainer.getWindowToken() != null) {
-+        if (n.notification.tickerText != null && mStatusBarContainer.getWindowToken() != null
+-        if (n.getNotification().tickerText != null && mStatusBarContainer.getWindowToken() != null) {
++        if (n.getNotification().tickerText != null && mStatusBarContainer.getWindowToken() != null
 +                && !mHaloActive) {
              if (0 == (mDisabled & (StatusBarManager.DISABLE_NOTIFICATION_ICONS
                              | StatusBarManager.DISABLE_NOTIFICATION_TICKER))) {
                  mTicker.addEntry(n);
-@@ -2306,27 +2340,33 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2358,27 +2392,33 @@ public class PhoneStatusBar extends BaseStatusBar {
          @Override
          public void tickerStarting() {
              mTicking = true;
@@ -8391,7 +8492,7 @@ index 82b6538..5a3714a 100644
          }
      }
  
-@@ -2620,6 +2660,18 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2659,6 +2699,18 @@ public class PhoneStatusBar extends BaseStatusBar {
          }
      };
  
@@ -8411,11 +8512,11 @@ index 82b6538..5a3714a 100644
          @Override
          public void onClick(View v) {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
-index 9e22567..39b513d 100644
+index ce58f2a..40985e1 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
-@@ -394,6 +394,27 @@ class QuickSettings {
-         });
+@@ -373,6 +373,27 @@ class QuickSettings {
+                 new QuickSettingsModel.BasicRefreshCallback(settingsTile));
          parent.addView(settingsTile);
          mDynamicSpannedTiles.add(settingsTile);
 +
@@ -8443,7 +8544,7 @@ index 9e22567..39b513d 100644
  
      private void addSystemTiles(ViewGroup parent, LayoutInflater inflater) {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
-index 568d73d..a48237a 100644
+index cc4f187..325ca3a 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
 @@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;
@@ -8472,10 +8573,10 @@ index 568d73d..a48237a 100644
                  qs = new WiFiTile(mContext, this, mStatusBarService.mNetworkController);
              } else if (tile.equals(TILE_GPS)) {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java
-index 5bb5f5f..0aaac91 100644
+index 348dc8d..6a51e42 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsModel.java
-@@ -235,6 +235,10 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
+@@ -260,6 +260,10 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
      private RefreshCallback mSettingsCallback;
      private State mSettingsState = new State();
  
@@ -8486,7 +8587,7 @@ index 5bb5f5f..0aaac91 100644
      public QuickSettingsModel(Context context) {
          mContext = context;
          mHandler = new Handler();
-@@ -282,6 +286,18 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
+@@ -309,6 +313,18 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
          mSettingsCallback.refreshView(mSettingsTile, mSettingsState);
      }
  
@@ -8506,10 +8607,10 @@ index 5bb5f5f..0aaac91 100644
      void addUserTile(QuickSettingsTileView view, RefreshCallback cb) {
          mUserTile = view;
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
-index ecc70d6..1e1b014 100644
+index f3f6a80..0615ca8 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/Ticker.java
-@@ -52,6 +52,16 @@ public abstract class Ticker {
+@@ -49,6 +49,16 @@ public abstract class Ticker {
      private ImageSwitcher mIconSwitcher;
      private TextSwitcher mTextSwitcher;
      private float mIconScale;
@@ -8526,7 +8627,7 @@ index ecc70d6..1e1b014 100644
  
      public static boolean isGraphicOrEmoji(char c) {
          int gc = Character.getType(c);
-@@ -63,21 +73,21 @@ public abstract class Ticker {
+@@ -60,21 +70,21 @@ public abstract class Ticker {
                  && gc != Character.SPACE_SEPARATOR;
      }
  
@@ -8557,7 +8658,7 @@ index ecc70d6..1e1b014 100644
              while (end > start && !isGraphicOrEmoji(substr.charAt(end-1))) {
                  end--;
              }
-@@ -88,7 +98,7 @@ public abstract class Ticker {
+@@ -85,7 +95,7 @@ public abstract class Ticker {
          }
  
          /** returns null if there is no more text */
@@ -8566,7 +8667,7 @@ index ecc70d6..1e1b014 100644
              if (this.current > this.text.length()) {
                  return null;
              }
-@@ -107,7 +117,7 @@ public abstract class Ticker {
+@@ -104,7 +114,7 @@ public abstract class Ticker {
          }
  
          /** returns null if there is no more text */
@@ -8575,7 +8676,7 @@ index ecc70d6..1e1b014 100644
              this.first = false;
              int index = this.next;
              final int len = this.text.length();
-@@ -140,7 +150,7 @@ public abstract class Ticker {
+@@ -137,7 +147,7 @@ public abstract class Ticker {
              return null;
          }
  
@@ -8584,7 +8685,7 @@ index ecc70d6..1e1b014 100644
              this.notification = n;
              this.icon = icon;
              this.text = text;
-@@ -217,19 +227,24 @@ public abstract class Ticker {
+@@ -214,19 +224,24 @@ public abstract class Ticker {
          }
  
          mSegments.add(newSegment);
@@ -8613,33 +8714,11 @@ index ecc70d6..1e1b014 100644
              tickerStarting();
              scheduleAdvance();
          }
-diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java b/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java
-index 26b1eb2..faf9fb2 100644
---- a/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java
-+++ b/packages/SystemUI/src/com/android/systemui/statusbar/policy/DateView.java
-@@ -54,7 +54,8 @@ public class DateView extends TextView implements OnClickListener, OnLongClickLi
-             final String action = intent.getAction();
-             if (Intent.ACTION_TIME_TICK.equals(action)
-                     || Intent.ACTION_TIME_CHANGED.equals(action)
--                    || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
-+                    || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
-+                    || Intent.ACTION_LOCALE_CHANGED.equals(action)) {
-                 updateClock();
-             }
-         }
-@@ -145,6 +146,7 @@ public class DateView extends TextView implements OnClickListener, OnLongClickLi
-                 filter.addAction(Intent.ACTION_TIME_TICK);
-                 filter.addAction(Intent.ACTION_TIME_CHANGED);
-                 filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
-+                filter.addAction(Intent.ACTION_LOCALE_CHANGED);
-                 mContext.registerReceiver(mIntentReceiver, filter, null, null);
-                 updateClock();
-             } else {
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index 7415a1f..39586e0 100644
+index 9a2245c..7c179a8 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-@@ -914,21 +914,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -887,21 +887,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
  
      private final Runnable mRingerChordLongPress = new Runnable() {
          public void run() {
@@ -8662,7 +8741,7 @@ index 7415a1f..39586e0 100644
          }
      };
  
-@@ -2185,8 +2171,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -2279,8 +2265,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
  
          if (DEBUG_INPUT) {
              Log.d(TAG, "interceptKeyTi keyCode=" + keyCode + " down=" + down + " repeatCount="
@@ -8672,7 +8751,7 @@ index 7415a1f..39586e0 100644
          }
  
          // If we think we might have a volume down & power/volume-up key chord on the way
-@@ -5402,7 +5387,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -5727,7 +5712,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                  pw.println(mForceStatusBarFromKeyguard);
          pw.print(prefix); pw.print("mDismissKeyguard="); pw.print(mDismissKeyguard);
                  pw.print(" mWinDismissingKeyguard="); pw.print(mWinDismissingKeyguard);
@@ -8757,7 +8836,7 @@ index e5b4b73..8ef6451 100644
          super.onFinishInflate();
  
 diff --git a/preloaded-classes b/preloaded-classes
-index 10c5c9e..90a767d 100644
+index 8e426c5..e77dd2e 100644
 --- a/preloaded-classes
 +++ b/preloaded-classes
 @@ -2,6 +2,19 @@
@@ -14277,10 +14356,10 @@ index 0000000..5beefe4
 +}
 diff --git a/privacy/java/android/privacy/surrogate/PrivacyWifiManager.java b/privacy/java/android/privacy/surrogate/PrivacyWifiManager.java
 new file mode 100644
-index 0000000..005865c
+index 0000000..39d1d0f
 --- /dev/null
 +++ b/privacy/java/android/privacy/surrogate/PrivacyWifiManager.java
-@@ -0,0 +1,219 @@
+@@ -0,0 +1,207 @@
 +/**
 +* Copyright (C) 2012 CollegeDev
 +* This program is free software; you can redistribute it and/or modify it under
@@ -14447,18 +14526,6 @@ index 0000000..005865c
 +	
 +	
 +	@Override
-+	public boolean startScanActive(){
-+		PrivacySettings settings = pSetMan.getSettings(context.getPackageName(), Binder.getCallingUid());
-+		if(pSetMan != null && settings != null && settings.getWifiInfoSetting() != PrivacySettings.REAL){
-+			pSetMan.notification(context.getPackageName(),-1, PrivacySettings.EMPTY, PrivacySettings.DATA_WIFI_INFO, null, null);  
-+			return false;
-+		} else{
-+			pSetMan.notification(context.getPackageName(),-1, PrivacySettings.REAL, PrivacySettings.DATA_WIFI_INFO, null, null); 
-+			return super.startScanActive();
-+		}
-+	}
-+	
-+	@Override
 +	public boolean setWifiEnabled(boolean enabled){
 +		PrivacySettings settings = pSetMan.getSettings(context.getPackageName(), Binder.getCallingUid());
 +		if(pSetMan != null && settings != null && settings.getSwitchWifiStateSetting() != PrivacySettings.REAL){
@@ -14501,27 +14568,26 @@ index 0000000..005865c
 +	}
 +}
 diff --git a/services/java/com/android/server/LocationManagerService.java b/services/java/com/android/server/LocationManagerService.java
-index 86a577c..85e1181 100644
+index 3fb5b96..e8d0364 100644
 --- a/services/java/com/android/server/LocationManagerService.java
 +++ b/services/java/com/android/server/LocationManagerService.java
-@@ -56,12 +56,14 @@ import android.os.SystemClock;
+@@ -59,11 +59,13 @@ import android.os.SystemClock;
  import android.os.UserHandle;
  import android.os.WorkSource;
  import android.provider.Settings;
 +import android.text.TextUtils;
  import android.util.Log;
  import android.util.Slog;
- 
  import com.android.internal.content.PackageMonitor;
  import com.android.internal.location.ProviderProperties;
  import com.android.internal.location.ProviderRequest;
 +import com.android.server.location.BTGpsLocationProvider;
  import com.android.server.location.GeocoderProxy;
+ import com.android.server.location.GeofenceProxy;
  import com.android.server.location.GeofenceManager;
- import com.android.server.location.GpsLocationProvider;
-@@ -327,6 +329,17 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
-         mEnabledProviders.add(passiveProvider.getName());
-         mPassiveProvider = passiveProvider;
+@@ -349,6 +351,17 @@ public class LocationManagerService extends ILocationManager.Stub {
+         GpsLocationProvider gpsProvider = new GpsLocationProvider(mContext, this,
+                 mLocationHandler.getLooper());
  
 +        // Create a gps location provider based on the setting EXTERNAL_GPS_BT_DEVICE
 +        String btDevice = Settings.System.getString(mContext.getContentResolver(),
@@ -14535,10 +14601,10 @@ index 86a577c..85e1181 100644
 +        setGPSSource(btDevice);
 +
          if (GpsLocationProvider.isSupported()) {
-             // Create a gps location provider
-             GpsLocationProvider gpsProvider = new GpsLocationProvider(mContext, this);
-@@ -395,6 +408,31 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
-         }
+             mGpsStatusProvider = gpsProvider.getGpsStatusProvider();
+             mNetInitiatedListener = gpsProvider.getNetInitiatedListener();
+@@ -447,6 +460,31 @@ public class LocationManagerService extends ILocationManager.Stub {
+ 
      }
  
 +    public void setGPSSource(String device) {
@@ -14553,12 +14619,12 @@ index 86a577c..85e1181 100644
 +            if ("0".equals(device)) {
 +                if (!GpsLocationProvider.isSupported())
 +                    return;
-+                 GpsLocationProvider gpsProvider = new GpsLocationProvider(mContext, this);
++                 GpsLocationProvider gpsProvider = new GpsLocationProvider(mContext, this, mLocationHandler.getLooper());
 +                 mGpsStatusProvider = gpsProvider.getGpsStatusProvider();
 +                 mNetInitiatedListener = gpsProvider.getNetInitiatedListener();
 +                 addProviderLocked(gpsProvider);
 +            } else {
-+                 BTGpsLocationProvider gpsProvider = new BTGpsLocationProvider(mContext, this);
++                 BTGpsLocationProvider gpsProvider = new BTGpsLocationProvider(mContext, this, mLocationHandler.getLooper());
 +                 mGpsStatusProvider = gpsProvider.getGpsStatusProvider();
 +                 mNetInitiatedListener = null;
 +                 addProviderLocked(gpsProvider);
@@ -14570,11 +14636,28 @@ index 86a577c..85e1181 100644
       * Called when the device's active user changes.
       * @param userId the new active user's UserId
 diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
-index 4bbf452..02ba1c9 100644
+index c0335ab..9facb48 100644
 --- a/services/java/com/android/server/NotificationManagerService.java
 +++ b/services/java/com/android/server/NotificationManagerService.java
-@@ -177,67 +177,87 @@ public class NotificationManagerService extends INotificationManager.Stub
-     private boolean mQuietHoursDim = true;
+@@ -77,12 +77,16 @@ import android.view.accessibility.AccessibilityEvent;
+ import android.view.accessibility.AccessibilityManager;
+ import android.widget.Toast;
+ 
++import com.android.internal.util.FastXmlSerializer;
++
+ import org.xmlpull.v1.XmlPullParser;
+ import org.xmlpull.v1.XmlPullParserException;
++import org.xmlpull.v1.XmlSerializer;
+ 
+ import java.io.File;
+ import java.io.FileDescriptor;
+ import java.io.FileInputStream;
++import java.io.FileOutputStream;
+ import java.io.FileNotFoundException;
+ import java.io.IOException;
+ import java.io.PrintWriter;
+@@ -208,14 +212,19 @@ public class NotificationManagerService extends INotificationManager.Stub
+     private HashSet<String> mEnabledListenerPackageNames = new HashSet<String>();
  
      // Notification control database. For now just contains disabled packages.
 -    private AtomicFile mPolicyFile;
@@ -14594,11 +14677,41 @@ index 4bbf452..02ba1c9 100644
      private static final String TAG_BLOCKED_PKGS = "blocked-packages";
      private static final String TAG_PACKAGE = "package";
      private static final String ATTR_NAME = "name";
+@@ -402,45 +411,181 @@ public class NotificationManagerService extends INotificationManager.Stub
+                 mPolicyFile = new AtomicFile(new File(dir, "notification_policy.xml"));
  
+                 mBlockedPackages.clear();
++                readPolicy(mPolicyFile, TAG_BLOCKED_PKGS, mBlockedPackages);
++            }
++        }
++    }
+ 
+-                FileInputStream infile = null;
+-                try {
+-                    infile = mPolicyFile.openRead();
+-                    final XmlPullParser parser = Xml.newPullParser();
+-                    parser.setInput(infile, null);
 +    private int readPolicy(AtomicFile file, String lookUpTag, HashSet<String> db) {
 +        return readPolicy(file, lookUpTag, db, null, 0);
 +    }
-+
+ 
+-                    int type;
+-                    String tag;
+-                    int version = DB_VERSION;
+-                    while ((type = parser.next()) != END_DOCUMENT) {
+-                        tag = parser.getName();
+-                        if (type == START_TAG) {
+-                            if (TAG_BODY.equals(tag)) {
+-                                version = Integer.parseInt(parser.getAttributeValue(null, ATTR_VERSION));
+-                            } else if (TAG_BLOCKED_PKGS.equals(tag)) {
+-                                while ((type = parser.next()) != END_DOCUMENT) {
+-                                    tag = parser.getName();
+-                                    if (TAG_PACKAGE.equals(tag)) {
+-                                        mBlockedPackages.add(parser.getAttributeValue(null, ATTR_NAME));
+-                                    } else if (TAG_BLOCKED_PKGS.equals(tag) && type == END_TAG) {
+-                                        break;
+-                                    }
+-                                }
 +    private int readPolicy(AtomicFile file, String lookUpTag, HashSet<String> db, String resultTag, int defaultResult) {
 +        int result = defaultResult;
 +        FileInputStream infile = null;
@@ -14626,54 +14739,9 @@ index 4bbf452..02ba1c9 100644
 +                                db.add(parser.getAttributeValue(null, ATTR_NAME));
 +                            } else if (lookUpTag.equals(tag) && type == END_TAG) {
 +                                break;
-+                            }
-+                        }
-+                    }
-+                }
-+            }
-+        } catch (Exception e) {
-+            // Unable to read
-+        } finally {
-+            IoUtils.closeQuietly(infile);
-+        }
-+        return result;
-+    }
-+
-     private void loadBlockDb() {
-         synchronized(mBlockedPackages) {
-             if (mPolicyFile == null) {
--                File dir = new File("/data/system");
--                mPolicyFile = new AtomicFile(new File(dir, "notification_policy.xml"));
--
-+                mPolicyFile = new AtomicFile(new File("/data/system", "notification_policy.xml"));
-                 mBlockedPackages.clear();
--
--                FileInputStream infile = null;
--                try {
--                    infile = mPolicyFile.openRead();
--                    final XmlPullParser parser = Xml.newPullParser();
--                    parser.setInput(infile, null);
--
--                    int type;
--                    String tag;
--                    int version = DB_VERSION;
--                    while ((type = parser.next()) != END_DOCUMENT) {
--                        tag = parser.getName();
--                        if (type == START_TAG) {
--                            if (TAG_BODY.equals(tag)) {
--                                version = Integer.parseInt(parser.getAttributeValue(null, ATTR_VERSION));
--                            } else if (TAG_BLOCKED_PKGS.equals(tag)) {
--                                while ((type = parser.next()) != END_DOCUMENT) {
--                                    tag = parser.getName();
--                                    if (TAG_PACKAGE.equals(tag)) {
--                                        mBlockedPackages.add(parser.getAttributeValue(null, ATTR_NAME));
--                                    } else if (TAG_BLOCKED_PKGS.equals(tag) && type == END_TAG) {
--                                        break;
--                                    }
--                                }
--                            }
--                        }
--                    }
+                             }
+                         }
+                     }
 -                } catch (FileNotFoundException e) {
 -                    // No data yet
 -                } catch (IOException e) {
@@ -14684,12 +14752,16 @@ index 4bbf452..02ba1c9 100644
 -                    Log.wtf(TAG, "Unable to parse blocked notifications database", e);
 -                } finally {
 -                    IoUtils.closeQuietly(infile);
--                }
-+                readPolicy(mPolicyFile, TAG_BLOCKED_PKGS, mBlockedPackages);
+                 }
              }
-         }
-     }
- 
++        } catch (Exception e) {
++            // Unable to read
++        } finally {
++            IoUtils.closeQuietly(infile);
++        }
++        return result;
++    }
++
 +    private synchronized void loadHaloBlockDb() {
 +        if (mHaloPolicyFile == null) {
 +            mHaloPolicyFile = new AtomicFile(new File("/data/system", "halo_policy.xml"));
@@ -14700,13 +14772,40 @@ index 4bbf452..02ba1c9 100644
 +        }
 +    }
 +
-     private void writeBlockDb() {
-         synchronized(mBlockedPackages) {
-             FileOutputStream outfile = null;
-@@ -272,6 +292,91 @@ public class NotificationManagerService extends INotificationManager.Stub
-         }
-     }
- 
++    private void writeBlockDb() {
++        synchronized(mBlockedPackages) {
++            FileOutputStream outfile = null;
++            try {
++                outfile = mPolicyFile.startWrite();
++
++                XmlSerializer out = new FastXmlSerializer();
++                out.setOutput(outfile, "utf-8");
++
++                out.startDocument(null, true);
++
++                out.startTag(null, TAG_BODY); {
++                    out.attribute(null, ATTR_VERSION, String.valueOf(DB_VERSION));
++                    out.startTag(null, TAG_BLOCKED_PKGS); {
++                        // write all known network policies
++                        for (String pkg : mBlockedPackages) {
++                            out.startTag(null, TAG_PACKAGE); {
++                                out.attribute(null, ATTR_NAME, pkg);
++                            } out.endTag(null, TAG_PACKAGE);
++                        }
++                    } out.endTag(null, TAG_BLOCKED_PKGS);
++                } out.endTag(null, TAG_BODY);
++
++                out.endDocument();
++
++                mPolicyFile.finishWrite(outfile);
++            } catch (IOException e) {
++                if (outfile != null) {
++                    mPolicyFile.failWrite(outfile);
++                }
++            }
++        }
++    }
++
 +    private synchronized void writeHaloBlockDb() {
 +        FileOutputStream outfile = null;
 +        try {
@@ -14789,23 +14888,21 @@ index 4bbf452..02ba1c9 100644
 +            return !mHaloBlacklist.contains(pkg);
 +        } else {
 +            return mHaloWhitelist.contains(pkg);
-+        }
-+    }
-+
-     public boolean areNotificationsEnabledForPackage(String pkg) {
-         checkCallerIsSystem();
-         return areNotificationsEnabledForPackageInt(pkg);
-@@ -742,6 +847,7 @@ public class NotificationManagerService extends INotificationManager.Stub
-         mHandler = new WorkerHandler();
+         }
+     }
  
-         loadBlockDb();
+@@ -1399,6 +1544,8 @@ public class NotificationManagerService extends INotificationManager.Stub
+         mAppOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
+ 
+         importOldBlockDb();
++        loadBlockDb();
 +        loadHaloBlockDb();
  
          mStatusBar = statusBar;
          statusBar.setNotificationCallbacks(mNotificationCallbacks);
 diff --git a/services/java/com/android/server/PrivacyTelephonyRegistry.java b/services/java/com/android/server/PrivacyTelephonyRegistry.java
 new file mode 100644
-index 0000000..36f2d9e
+index 0000000..7e7d457
 --- /dev/null
 +++ b/services/java/com/android/server/PrivacyTelephonyRegistry.java
 @@ -0,0 +1,402 @@
@@ -15139,7 +15236,7 @@ index 0000000..36f2d9e
 +                    	if(!isPackageAllowed(PERMISSION_CELL_INFO,r.pkgForDebug)){
 +                    		//for testings only at first
 +                            CellInfoGsm fakeCellInfo = new CellInfoGsm(); 
-+                            CellIdentityGsm fakeCellIdentity = new CellIdentityGsm(11,11,549,525,2);
++                            CellIdentityGsm fakeCellIdentity = new CellIdentityGsm(11,11,549,525);
 +                            fakeCellInfo.setCellIdentity(fakeCellIdentity);
 +                    		//r.callback.onCellInfoChanged(new CellInfoGsm(CellInfo.TIMESTAMP_TYPE_UNKNOWN,System.currentTimeMillis(),System.currentTimeMillis(),true,new SignalStrength(),new CellIdentityGsm(11,11,549,545,2,"unknown")));
 +                    		r.callback.onCellInfoChanged(new ArrayList<CellInfo>(Arrays.asList(fakeCellInfo)));
@@ -15212,10 +15309,10 @@ index 0000000..36f2d9e
 +    }
 +}
 diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
-index 1b2b65d..629c8e9 100644
+index 32031cb..a63cfe3 100644
 --- a/services/java/com/android/server/SystemServer.java
 +++ b/services/java/com/android/server/SystemServer.java
-@@ -77,6 +77,12 @@ import dalvik.system.Zygote;
+@@ -79,6 +79,12 @@ import dalvik.system.Zygote;
  import java.io.File;
  import java.util.Timer;
  import java.util.TimerTask;
@@ -15228,7 +15325,7 @@ index 1b2b65d..629c8e9 100644
  import com.stericsson.hardware.fm.FmReceiverService;
  import com.stericsson.hardware.fm.FmTransmitterService;
  
-@@ -245,7 +251,10 @@ class ServerThread extends Thread {
+@@ -243,7 +249,10 @@ class ServerThread extends Thread {
              ServiceManager.addService(Context.DISPLAY_SERVICE, display, true);
  
              Slog.i(TAG, "Telephony Registry");
@@ -15443,7 +15540,7 @@ index 17260d5..2b2177d 100644
              for (IBinder b: mRemoveList) {
                  remove(b);
 diff --git a/services/java/com/android/server/am/ActivityRecord.java b/services/java/com/android/server/am/ActivityRecord.java
-index de0f9ca..32aa93f 100644
+index aa82be3..d5e0b4b 100644
 --- a/services/java/com/android/server/am/ActivityRecord.java
 +++ b/services/java/com/android/server/am/ActivityRecord.java
 @@ -23,6 +23,7 @@ import com.android.server.am.ActivityStack.ActivityState;
@@ -15462,9 +15559,9 @@ index de0f9ca..32aa93f 100644
  import android.view.IApplicationToken;
  import android.view.WindowManager;
  
-@@ -124,6 +126,10 @@ final class ActivityRecord {
-     boolean immersive;      // immersive mode (don't interrupt if possible)
-     boolean forceNewConfig; // force re-create with new config next time
+@@ -127,6 +129,10 @@ final class ActivityRecord {
+     int launchCount;        // count of launches since last state
+     long lastLaunchTime;    // time of last lauch of this activity
  
 +    boolean topIntent;
 +    boolean newTask;
@@ -15473,7 +15570,7 @@ index de0f9ca..32aa93f 100644
      String stringName;      // for caching of toString().
      
      private boolean inHistory;  // are we in the history stack?
-@@ -380,6 +386,7 @@ final class ActivityRecord {
+@@ -390,6 +396,7 @@ final class ActivityRecord {
                  labelRes = app.labelRes;
              }
              icon = aInfo.getIconResource();
@@ -15481,7 +15578,7 @@ index de0f9ca..32aa93f 100644
              theme = aInfo.getThemeResource();
              realTheme = theme;
              if (realTheme == 0) {
-@@ -388,6 +395,51 @@ final class ActivityRecord {
+@@ -398,6 +405,51 @@ final class ActivityRecord {
                          ? android.R.style.Theme
                          : android.R.style.Theme_Holo;
              }
@@ -15533,20 +15630,23 @@ index de0f9ca..32aa93f 100644
              if ((aInfo.flags&ActivityInfo.FLAG_HARDWARE_ACCELERATED) != 0) {
                  windowFlags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
              }
-@@ -406,7 +458,7 @@ final class ActivityRecord {
+@@ -416,9 +468,10 @@ final class ActivityRecord {
              
              packageName = aInfo.applicationInfo.packageName;
              launchMode = aInfo.launchMode;
 -            
 +
-             AttributeCache.Entry ent = AttributeCache.instance().get(userId, packageName,
-                     realTheme, com.android.internal.R.styleable.Window);
+             AttributeCache.Entry ent = AttributeCache.instance().get(packageName,
+                     realTheme, com.android.internal.R.styleable.Window, userId);
++
              fullscreen = ent != null && !ent.array.getBoolean(
+                     com.android.internal.R.styleable.Window_windowIsFloating, false)
+                     && !ent.array.getBoolean(
 diff --git a/services/java/com/android/server/am/ActivityStack.java b/services/java/com/android/server/am/ActivityStack.java
-index 6f6bf4d..74679fa 100644
+index e94f584..cc15fb7 100644
 --- a/services/java/com/android/server/am/ActivityStack.java
 +++ b/services/java/com/android/server/am/ActivityStack.java
-@@ -58,6 +58,7 @@ import android.os.ServiceManager;
+@@ -62,10 +62,12 @@ import android.os.ServiceManager;
  import android.os.SystemClock;
  import android.os.SystemProperties;
  import android.os.UserHandle;
@@ -15554,7 +15654,12 @@ index 6f6bf4d..74679fa 100644
  import android.util.EventLog;
  import android.util.Log;
  import android.util.Slog;
-@@ -1537,7 +1538,7 @@ final class ActivityStack {
+ import android.view.Display;
++import android.view.WindowManagerPolicy;
+ import com.android.internal.app.ActivityTrigger;
+ 
+ import java.io.IOException;
+@@ -1566,7 +1568,7 @@ final class ActivityStack {
          
          // We need to start pausing the current activity so the top one
          // can be resumed...
@@ -15563,16 +15668,16 @@ index 6f6bf4d..74679fa 100644
              if (DEBUG_SWITCH) Slog.v(TAG, "Skip resume: need to start pausing");
              // At this point we want to put the upcoming activity's process
              // at the top of the LRU list, since we know we will be needing it
-@@ -1616,7 +1617,7 @@ final class ActivityStack {
+@@ -1645,7 +1647,7 @@ final class ActivityStack {
              if (prev.finishing) {
                  if (DEBUG_TRANSITION) Slog.v(TAG,
                          "Prepare close transition: prev=" + prev);
 -                if (mNoAnimActivities.contains(prev)) {
 +                if (mNoAnimActivities.contains(prev) || next.floatingWindow) {
                      mService.mWindowManager.prepareAppTransition(
-                             WindowManagerPolicy.TRANSIT_NONE, false);
+                             AppTransition.TRANSIT_NONE, false);
                  } else {
-@@ -1629,7 +1630,7 @@ final class ActivityStack {
+@@ -1658,7 +1660,7 @@ final class ActivityStack {
              } else {
                  if (DEBUG_TRANSITION) Slog.v(TAG,
                          "Prepare open transition: prev=" + prev);
@@ -15580,8 +15685,8 @@ index 6f6bf4d..74679fa 100644
 +                if (mNoAnimActivities.contains(next) || next.floatingWindow) {
                      noAnim = true;
                      mService.mWindowManager.prepareAppTransition(
-                             WindowManagerPolicy.TRANSIT_NONE, false);
-@@ -1761,7 +1762,7 @@ final class ActivityStack {
+                             AppTransition.TRANSIT_NONE, false);
+@@ -1790,7 +1792,7 @@ final class ActivityStack {
                  if (!next.hasBeenLaunched) {
                      next.hasBeenLaunched = true;
                  } else {
@@ -15590,7 +15695,7 @@ index 6f6bf4d..74679fa 100644
                          mService.mWindowManager.setAppStartingWindow(
                                  next.appToken, next.packageName, next.theme,
                                  mService.compatibilityInfoForPackageLocked(
-@@ -1795,7 +1796,7 @@ final class ActivityStack {
+@@ -1824,7 +1826,7 @@ final class ActivityStack {
              if (!next.hasBeenLaunched) {
                  next.hasBeenLaunched = true;
              } else {
@@ -15599,7 +15704,7 @@ index 6f6bf4d..74679fa 100644
                      mService.mWindowManager.setAppStartingWindow(
                              next.appToken, next.packageName, next.theme,
                              mService.compatibilityInfoForPackageLocked(
-@@ -1922,12 +1923,13 @@ final class ActivityStack {
+@@ -1951,12 +1953,13 @@ final class ActivityStack {
              }
              if (DEBUG_TRANSITION) Slog.v(TAG,
                      "Prepare open transition: starting " + r);
@@ -15607,15 +15712,15 @@ index 6f6bf4d..74679fa 100644
 +
 +            if (((r.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) || (r.floatingWindow && !r.topIntent)) {
                  mService.mWindowManager.prepareAppTransition(
-                         WindowManagerPolicy.TRANSIT_NONE, keepCurTransition);
+                         AppTransition.TRANSIT_NONE, keepCurTransition);
                  mNoAnimActivities.add(r);
              } else {
 -                mService.mWindowManager.prepareAppTransition(newTask
 +                mService.mWindowManager.prepareAppTransition(newTask && !r.floatingWindow
-                         ? WindowManagerPolicy.TRANSIT_TASK_OPEN
-                         : WindowManagerPolicy.TRANSIT_ACTIVITY_OPEN, keepCurTransition);
+                         ? AppTransition.TRANSIT_TASK_OPEN
+                         : AppTransition.TRANSIT_ACTIVITY_OPEN, keepCurTransition);
                  mNoAnimActivities.remove(r);
-@@ -1949,7 +1951,7 @@ final class ActivityStack {
+@@ -1978,7 +1981,7 @@ final class ActivityStack {
                      doShow = topRunningNonDelayedActivityLocked(null) == r;
                  }
              }
@@ -15624,7 +15729,7 @@ index 6f6bf4d..74679fa 100644
                  // Figure out if we are transitioning from another activity that is
                  // "has the same starting icon" as the next one.  This allows the
                  // window manager to keep the previous window it had previously
-@@ -3316,6 +3318,11 @@ final class ActivityStack {
+@@ -3348,6 +3351,11 @@ final class ActivityStack {
          try {
              synchronized (mService) {
  
@@ -15636,7 +15741,7 @@ index 6f6bf4d..74679fa 100644
                  for (int i=0; i<intents.length; i++) {
                      Intent intent = intents[i];
                      if (intent == null) {
-@@ -3344,6 +3351,10 @@ final class ActivityStack {
+@@ -3376,6 +3384,10 @@ final class ActivityStack {
                                  "FLAG_CANT_SAVE_STATE not supported here");
                      }
  
@@ -15647,16 +15752,16 @@ index 6f6bf4d..74679fa 100644
                      Bundle theseOptions;
                      if (options != null && i == intents.length-1) {
                          theseOptions = options;
-@@ -3850,7 +3861,7 @@ final class ActivityStack {
+@@ -3884,7 +3896,7 @@ final class ActivityStack {
                      || (mHistory.get(index-1)).task != r.task;
              if (DEBUG_TRANSITION) Slog.v(TAG,
                      "Prepare close transition: finishing " + r);
 -            mService.mWindowManager.prepareAppTransition(endTask
 +            mService.mWindowManager.prepareAppTransition(endTask && !r.floatingWindow
-                     ? WindowManagerPolicy.TRANSIT_TASK_CLOSE
-                     : WindowManagerPolicy.TRANSIT_ACTIVITY_CLOSE, false);
+                     ? AppTransition.TRANSIT_TASK_CLOSE
+                     : AppTransition.TRANSIT_ACTIVITY_CLOSE, false);
      
-@@ -4336,7 +4347,7 @@ final class ActivityStack {
+@@ -4390,7 +4402,7 @@ final class ActivityStack {
          if (top < 0 || (mHistory.get(top)).task.taskId == task) {
              // nothing to do!
              if (reason != null &&
@@ -15664,26 +15769,26 @@ index 6f6bf4d..74679fa 100644
 +                    ((reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0 || reason.floatingWindow)) {
                  ActivityOptions.abort(options);
              } else {
-                 updateTransitLocked(WindowManagerPolicy.TRANSIT_TASK_TO_FRONT, options);
-@@ -4375,7 +4386,7 @@ final class ActivityStack {
+                 updateTransitLocked(AppTransition.TRANSIT_TASK_TO_FRONT, options);
+@@ -4429,7 +4441,7 @@ final class ActivityStack {
          if (DEBUG_TRANSITION) Slog.v(TAG,
                  "Prepare to front transition: task=" + tr);
          if (reason != null &&
 -                (reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
 +                ((reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0 || reason.floatingWindow)) {
              mService.mWindowManager.prepareAppTransition(
-                     WindowManagerPolicy.TRANSIT_NONE, false);
+                     AppTransition.TRANSIT_NONE, false);
              ActivityRecord r = topRunningActivityLocked(null);
-@@ -4468,7 +4479,7 @@ final class ActivityStack {
+@@ -4522,7 +4534,7 @@ final class ActivityStack {
          }
  
          if (reason != null &&
 -                (reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
 +                ((reason.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0 || reason.floatingWindow)) {
              mService.mWindowManager.prepareAppTransition(
-                     WindowManagerPolicy.TRANSIT_NONE, false);
+                     AppTransition.TRANSIT_NONE, false);
              ActivityRecord r = topRunningActivityLocked(null);
-@@ -4788,7 +4799,13 @@ final class ActivityStack {
+@@ -4844,7 +4856,13 @@ final class ActivityStack {
  
          return true;
      }
@@ -15699,7 +15804,7 @@ index 6f6bf4d..74679fa 100644
          mDismissKeyguardOnNextActivity = true;
      }
 diff --git a/services/java/com/android/server/am/BroadcastQueue.java b/services/java/com/android/server/am/BroadcastQueue.java
-index fc4ecda..d4e67bc 100644
+index d9a6c22..75c8035 100644
 --- a/services/java/com/android/server/am/BroadcastQueue.java
 +++ b/services/java/com/android/server/am/BroadcastQueue.java
 @@ -42,6 +42,8 @@ import android.util.EventLog;
@@ -15711,7 +15816,7 @@ index fc4ecda..d4e67bc 100644
  /**
   * BROADCASTS
   *
-@@ -648,6 +650,29 @@ public class BroadcastQueue {
+@@ -674,6 +676,29 @@ public class BroadcastQueue {
              }
  
              Object nextReceiver = r.receivers.get(recIdx);
@@ -15741,7 +15846,7 @@ index fc4ecda..d4e67bc 100644
              if (nextReceiver instanceof BroadcastFilter) {
                  // Simple case: this is a registered receiver who gets
                  // a direct call.
-@@ -656,7 +681,15 @@ public class BroadcastQueue {
+@@ -682,7 +707,15 @@ public class BroadcastQueue {
                          "Delivering ordered ["
                          + mQueueName + "] to registered "
                          + filter + ": " + r);
@@ -15758,7 +15863,7 @@ index fc4ecda..d4e67bc 100644
                  if (r.receiver == null || !r.ordered) {
                      // The receiver has already finished, so schedule to
                      // process the next one.
-@@ -748,6 +781,12 @@ public class BroadcastQueue {
+@@ -785,6 +818,12 @@ public class BroadcastQueue {
                  skip = true;
              }
  
@@ -15771,7 +15876,7 @@ index fc4ecda..d4e67bc 100644
              if (skip) {
                  if (DEBUG_BROADCAST)  Slog.v(TAG,
                          "Skipping delivery of ordered ["
-@@ -843,6 +882,33 @@ public class BroadcastQueue {
+@@ -880,6 +919,33 @@ public class BroadcastQueue {
          }
      }
  
@@ -16279,10 +16384,10 @@ index 0000000..c0ead04
 \ No newline at end of file
 diff --git a/services/java/com/android/server/location/BTGpsLocationProvider.java b/services/java/com/android/server/location/BTGpsLocationProvider.java
 new file mode 100644
-index 0000000..dddb5fa
+index 0000000..4a63da3
 --- /dev/null
 +++ b/services/java/com/android/server/location/BTGpsLocationProvider.java
-@@ -0,0 +1,991 @@
+@@ -0,0 +1,989 @@
 +/*
 + * Copyright (C) 2011 Cuong Bui
 + *
@@ -16441,7 +16546,8 @@ index 0000000..dddb5fa
 +
 +    // BT Location provider , uses the same method signature as the org GPS
 +    // location provider
-+    public BTGpsLocationProvider(Context context, ILocationManager locationManager) {
++    public BTGpsLocationProvider(Context context, ILocationManager locationManager,
++            Looper looper) {
 +
 +        mContext = context;
 +        mLocationManager = locationManager;
@@ -16493,6 +16599,8 @@ index 0000000..dddb5fa
 +        };
 +        mIntentBTFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 +        mContext.registerReceiver(mReceiver, mIntentBTFilter);
++
++        // TODO: Something with looper?
 +    }
 +
 +    private final class BTGPSMessageThread extends Thread {
@@ -16846,11 +16954,6 @@ index 0000000..dddb5fa
 +    // @Override
 +    public boolean supportsSpeed() {
 +        return mLocation.hasSpeed();
-+    }
-+
-+    @Override
-+    public void switchUser(int userId) {
-+        // nothing to do here
 +    }
 +
 +    // @Override
@@ -17275,10 +17378,10 @@ index 0000000..dddb5fa
 +    private native void native_send_ni_response(int notificationId, int userResponse);
 +}
 diff --git a/services/java/com/android/server/location/GpsLocationProvider.java b/services/java/com/android/server/location/GpsLocationProvider.java
-index cba2db2..a8ee0df 100644
+index ee01c7d..661f9e1 100644
 --- a/services/java/com/android/server/location/GpsLocationProvider.java
 +++ b/services/java/com/android/server/location/GpsLocationProvider.java
-@@ -892,6 +892,11 @@ public class GpsLocationProvider implements LocationProviderInterface {
+@@ -921,6 +921,11 @@ public class GpsLocationProvider implements LocationProviderInterface {
  
      @Override
      public boolean sendExtraCommand(String command, Bundle extras) {
@@ -17904,10 +18007,10 @@ index 0000000..ec50704
 +    }
 +}
 diff --git a/services/java/com/android/server/power/PowerManagerService.java b/services/java/com/android/server/power/PowerManagerService.java
-index 0d2ba34..2ed8fa0 100644
+index 779722d..f40a776 100644
 --- a/services/java/com/android/server/power/PowerManagerService.java
 +++ b/services/java/com/android/server/power/PowerManagerService.java
-@@ -352,6 +352,14 @@ public final class PowerManagerService extends IPowerManager.Stub
+@@ -364,6 +364,14 @@ public final class PowerManagerService extends IPowerManager.Stub
      // Use -1 to disable.
      private int mButtonBrightnessOverrideFromWindowManager = -1;
  
@@ -17922,7 +18025,7 @@ index 0d2ba34..2ed8fa0 100644
      // The user activity timeout override from the window manager
      // to allow the current foreground activity to override the user activity timeout.
      // Use -1 to disable.
-@@ -515,6 +523,9 @@ public final class PowerManagerService extends IPowerManager.Stub
+@@ -532,6 +540,9 @@ public final class PowerManagerService extends IPowerManager.Stub
              resolver.registerContentObserver(Settings.System.getUriFor(
                      Settings.System.AUTO_BRIGHTNESS_RESPONSIVENESS),
                      false, mSettingsObserver, UserHandle.USER_ALL);
@@ -17932,7 +18035,7 @@ index 0d2ba34..2ed8fa0 100644
  
              // Go.
              readConfigurationLocked();
-@@ -592,6 +603,10 @@ public final class PowerManagerService extends IPowerManager.Stub
+@@ -612,6 +623,10 @@ public final class PowerManagerService extends IPowerManager.Stub
          mAutoBrightnessResponsitivityFactor =
                  Math.min(Math.max(newAutoBrightnessResponsitivityFactor, 0.2f), 3.0f);
  
@@ -17943,7 +18046,7 @@ index 0d2ba34..2ed8fa0 100644
          mDirty |= DIRTY_SETTINGS;
      }
  
-@@ -1376,14 +1391,27 @@ public final class PowerManagerService extends IPowerManager.Stub
+@@ -1411,14 +1426,27 @@ public final class PowerManagerService extends IPowerManager.Stub
                      nextTimeout = mLastUserActivityTime
                              + screenOffTimeout - screenDimDuration;
                      if (now < nextTimeout) {
@@ -17977,7 +18080,7 @@ index 0d2ba34..2ed8fa0 100644
                                  nextTimeout = now + BUTTON_ON_DURATION;
                              }
 diff --git a/telephony/java/android/telephony/CellInfoGsm.java b/telephony/java/android/telephony/CellInfoGsm.java
-index bd14d45..dd4145d 100644
+index 1bedddb..0a91fda 100644
 --- a/telephony/java/android/telephony/CellInfoGsm.java
 +++ b/telephony/java/android/telephony/CellInfoGsm.java
 @@ -48,7 +48,7 @@ public final class CellInfoGsm extends CellInfo implements Parcelable {
@@ -17990,7 +18093,7 @@ index bd14d45..dd4145d 100644
          mCellIdentityGsm = cid;
      }
 diff --git a/telephony/java/android/telephony/PhoneStateListener.java b/telephony/java/android/telephony/PhoneStateListener.java
-index f3ccae6..9d77147 100644
+index ff77fc0..f31f990 100644
 --- a/telephony/java/android/telephony/PhoneStateListener.java
 +++ b/telephony/java/android/telephony/PhoneStateListener.java
 @@ -16,16 +16,23 @@
@@ -18014,8 +18117,7 @@ index f3ccae6..9d77147 100644
 +//import android.telephony.SignalStrength;
 +//import android.telephony.CellLocation;
  import android.telephony.CellInfo;
--import android.util.Log;
-+//import android.util.Log;
+ import android.telephony.Rlog;
  
 -import com.android.internal.telephony.IPhoneStateListener;
 +//import com.android.internal.telephony.IPhoneStateListener;
@@ -18107,10 +18209,10 @@ index f3ccae6..9d77147 100644
  
          public void onDataConnectionStateChanged(int state, int networkType) {
 diff --git a/telephony/java/android/telephony/ServiceState.java b/telephony/java/android/telephony/ServiceState.java
-index 6e834db..9a671a7 100644
+index bcb3b02..b34f741 100644
 --- a/telephony/java/android/telephony/ServiceState.java
 +++ b/telephony/java/android/telephony/ServiceState.java
-@@ -489,7 +489,10 @@ public class ServiceState implements Parcelable {
+@@ -566,7 +566,10 @@ public class ServiceState implements Parcelable {
                  + " EmergOnly=" + mIsEmergencyOnly);
      }
  
@@ -18119,11 +18221,11 @@ index 6e834db..9a671a7 100644
 +   // Was originally private
 +   void setNullState(int state) {
 +   // END privacy-modified
-         mState = state;
-         mRoaming = false;
-         mOperatorAlphaLong = null;
+         if (DBG) Rlog.d(LOG_TAG, "[ServiceState] setNullState=" + state);
+         mVoiceRegState = state;
+         mDataRegState = state;
 diff --git a/wifi/java/android/net/wifi/WifiInfo.java b/wifi/java/android/net/wifi/WifiInfo.java
-index 05db571..2bdb2f5 100644
+index 502d1ab..6d7b5f8 100644
 --- a/wifi/java/android/net/wifi/WifiInfo.java
 +++ b/wifi/java/android/net/wifi/WifiInfo.java
 @@ -78,6 +78,24 @@ public class WifiInfo implements Parcelable {

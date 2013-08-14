@@ -1,8 +1,8 @@
 diff --git a/core/combo/TARGET_linux-arm.mk b/core/combo/TARGET_linux-arm.mk
-index b36111f..e080a69 100644
+index 5cfa738..b278521 100644
 --- a/core/combo/TARGET_linux-arm.mk
 +++ b/core/combo/TARGET_linux-arm.mk
-@@ -66,7 +66,7 @@ endif
+@@ -68,7 +68,7 @@ endif
  
  TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
  
@@ -25,7 +25,7 @@ index e485d00..517b8d4 100644
  $(combo_target)GLOBAL_ARFLAGS := crsP
  
 diff --git a/core/pathmap.mk b/core/pathmap.mk
-index 3f38a6b..f4f9671 100644
+index 7998039..ae8c0a8 100644
 --- a/core/pathmap.mk
 +++ b/core/pathmap.mk
 @@ -81,6 +81,7 @@ JNI_H_INCLUDE := $(call include-path-for,libnativehelper)/nativehelper
@@ -36,7 +36,7 @@ index 3f38a6b..f4f9671 100644
  FRAMEWORKS_BASE_SUBDIRS := \
  	$(addsuffix /java, \
  	    core \
-@@ -92,6 +93,7 @@ FRAMEWORKS_BASE_SUBDIRS := \
+@@ -92,12 +93,14 @@ FRAMEWORKS_BASE_SUBDIRS := \
  	    media/mca/filterpacks \
  	    drm \
  	    opengl \
@@ -44,8 +44,7 @@ index 3f38a6b..f4f9671 100644
  	    sax \
  	    telephony \
  	    wifi \
-@@ -100,6 +102,7 @@ FRAMEWORKS_BASE_SUBDIRS := \
- 	    voip \
+ 	    keystore \
  	    fmradio \
  	 )
 +# END privacy-added: privacy
@@ -53,30 +52,14 @@ index 3f38a6b..f4f9671 100644
  #
  # A version of FRAMEWORKS_BASE_SUBDIRS that is expanded to full paths from
 diff --git a/target/product/core.mk b/target/product/core.mk
-index f6bb48c..8527423 100644
+index 437290f..7aca4ad 100644
 --- a/target/product/core.mk
 +++ b/target/product/core.mk
-@@ -18,6 +18,7 @@ PRODUCT_BRAND := generic
- PRODUCT_DEVICE := generic
- PRODUCT_NAME := core
- 
-+# BEGIN privacy-added: PDroid
- PRODUCT_PACKAGES += \
-     ApplicationsProvider \
-     BackupRestoreConfirmation \
-@@ -32,6 +33,7 @@ PRODUCT_PACKAGES += \
+@@ -27,6 +27,7 @@ PRODUCT_PACKAGES += \
+     DefaultContainerService \
      Home \
      KeyChain \
-     MediaProvider \
 +    PDroid \
-     PackageInstaller \
      PicoTts \
-     SettingsProvider \
-@@ -129,6 +131,7 @@ PRODUCT_PACKAGES += \
-     zoneinfo.dat \
-     zoneinfo.idx \
-     zoneinfo.version
-+# END privacy-added: PDroid
- 
- PRODUCT_COPY_FILES += \
-     system/core/rootdir/init.usb.rc:root/init.usb.rc \
+     SharedStorageBackup \
+     TelephonyProvider \

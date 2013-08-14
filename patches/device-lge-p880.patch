@@ -1,8 +1,8 @@
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index 1b118f2..85df3a8 100644
+index e8033bd..cdb24b3 100644
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
-@@ -16,6 +16,7 @@ TARGET_CPU_SMP := true
+@@ -17,6 +17,7 @@ TARGET_CPU_SMP := true
  ARCH_ARM_HAVE_TLS_REGISTER := true
  ARCH_ARM_USE_NON_NEON_MEMCPY := true
  TARGET_ARCH := arm
@@ -10,143 +10,22 @@ index 1b118f2..85df3a8 100644
  
  BOARD_KERNEL_CMDLINE := 
  BOARD_KERNEL_BASE := 0x10000000
-@@ -91,3 +92,4 @@ BOARD_SEPOLICY_UNION := \
- 
+@@ -94,3 +95,5 @@ BOARD_SEPOLICY_UNION := \
  endif
  
+ BOARD_HARDWARE_CLASS := device/lge/p880/cmhw/
++
 +WITH_DEXPREOPT := true
 diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
-index 3f1ae1e..81fb896 100755
+index 795efe8..727eef3 100755
 --- a/overlay/frameworks/base/core/res/res/values/config.xml
 +++ b/overlay/frameworks/base/core/res/res/values/config.xml
-@@ -177,4 +177,7 @@
-         <item>255</item>
+@@ -176,4 +176,8 @@
      </integer-array>
  
+     <integer name="config_deviceHardwareKeys">7</integer>
++
 +    <bool name="config_intrusiveNotificationLed">true</bool>
 +    <bool name="config_intrusiveBatteryLed">true</bool>
 +
  </resources>
-diff --git a/overlay/packages/apps/Settings/res/values/config.xml b/overlay/packages/apps/Settings/res/values/config.xml
-index 00acd18..a23be27 100644
---- a/overlay/packages/apps/Settings/res/values/config.xml
-+++ b/overlay/packages/apps/Settings/res/values/config.xml
-@@ -1,3 +1,5 @@
- <resources>
-     <bool name="has_led_flash">true</bool>
-+    <bool name="config_show_volumeRockerWake">true</bool>
-+    <bool name="config_show_expandedDesktop">true</bool>
- </resources>
-diff --git a/overlay/packages/apps/Torch/res/values/config.xml b/overlay/packages/apps/Torch/res/values/config.xml
-index ceedb9b..62950b9 100644
---- a/overlay/packages/apps/Torch/res/values/config.xml
-+++ b/overlay/packages/apps/Torch/res/values/config.xml
-@@ -20,11 +20,23 @@
- <!-- These resources are around just to allow their values to be customized
-      for different hardware and product builds. -->
- <resources>
-+    <!-- If there is no sysfs-based control mechanism, enable this -->
-+    <bool name="useCameraInterface">false</bool>
-+
-     <!-- Full path to the sysfs toggle -->
-     <string name="flashDevice">/sys/devices/platform/tegra-i2c.2/i2c-2/2-0053/torch</string>
-+    <!-- Full path to the sysfs luminosity -->
-+    <string name="flashDeviceLuminosity"></string>
- 
--    <!-- Lowest setting -->
--    <integer name="valueOn">1</integer>
-+    <!-- Off setting -->
-+    <integer name="valueOff">0</integer>
-+    <!-- On setting -->
-+    <integer name="valueOn">10</integer>
-+
-+    <!-- Low setting -->
-+    <integer name="valueLow">10</integer>
-     <!-- Middle setting -->
--    <integer name="valueHigh">2</integer>
-+    <integer name="valueHigh">30</integer>
-+    <!-- Highest setting, leave -1 if it doesn't exist -->
-+    <integer name="valueDeathRay">36</integer>
- </resources>
-diff --git a/p880.mk b/p880.mk
-index 7ba086e..f3642fe 100644
---- a/p880.mk
-+++ b/p880.mk
-@@ -1,8 +1,5 @@
- $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
- 
--# The gps config appropriate for this device
--$(call inherit-product, device/common/gps/gps_us_supl.mk)
--
- $(call inherit-product-if-exists, vendor/lge/p880/p880-vendor.mk)
- 
- DEVICE_PACKAGE_OVERLAYS += device/lge/p880/overlay
-@@ -43,6 +40,8 @@ PRODUCT_COPY_FILES += \
- ## GPS
- PRODUCT_COPY_FILES += \
-     $(LOCAL_PATH)/configs/lge.cer:system/etc/cert/lge.cer \
-+    $(LOCAL_PATH)/configs/gps.conf:system/etc/gps.conf \
-+    $(LOCAL_PATH)/configs/SuplRootCert:system/etc/SuplRootCert \
-     $(LOCAL_PATH)/configs/hmconfig.txt:system/etc/hmconfig.txt
- 
- ## Input
-@@ -52,6 +51,29 @@ PRODUCT_COPY_FILES += \
-     $(LOCAL_PATH)/configs/touch_dev.kl:system/usr/keylayout/touch_dev.kl \
-     $(LOCAL_PATH)/configs/touch_dev.idc:system/usr/idc/touch_dev.idc
- 
-+# QuickMemo
-+PRODUCT_COPY_FILES += \
-+    $(LOCAL_PATH)/pulled/com.lge.app.floating.xml:system/etc/permissions/com.lge.app.floating.xml \
-+    $(LOCAL_PATH)/pulled/com.lge.app.floating.res.apk:system/framework/com.lge.app.floating.res.apk \
-+    $(LOCAL_PATH)/pulled/QMemobin.apk:system/app/QMemobin.apk
-+
-+# Hidden Menu
-+PRODUCT_COPY_FILES += \
-+    $(LOCAL_PATH)/pulled/com.lge.core.jar:system/framework/com.lge.core.jar \
-+    $(LOCAL_PATH)/pulled/com.lge.core.xml:system/etc/permissions/com.lge.core.xml \
-+    $(LOCAL_PATH)/pulled/com.lge.fota.jar:system/framework/com.lge.fota.jar \
-+    $(LOCAL_PATH)/pulled/com.lge.fota.xml:system/etc/permissions/com.lge.fota.xml \
-+    $(LOCAL_PATH)/pulled/com.lge.nfcaddon.jar:system/framework/com.lge.nfcaddon.jar \
-+    $(LOCAL_PATH)/pulled/com.lge.nfcaddon.xml:system/etc/permissions/com.lge.nfcaddon.xml \
-+    $(LOCAL_PATH)/pulled/com.lge.systemservice.core.jar:system/framework/com.lge.systemservice.core.jar \
-+    $(LOCAL_PATH)/pulled/com.lge.systemservice.core.xml:system/etc/permissions/com.lge.systemservice.core.xml \
-+    $(LOCAL_PATH)/pulled/GnssPosTs.apk:system/app/GnssPosTs.apk \
-+    $(LOCAL_PATH)/pulled/HiddenMenu.apk:system/app/HiddenMenu.apk
-+
-+# Modified RIL from rmcc
-+PRODUCT_COPY_FILES += \
-+    $(LOCAL_PATH)/pulled/lge-ril.so:system/lib/lge-ril.so
-+
- ## ALSA Config
- PRODUCT_COPY_FILES += \
-     $(LOCAL_PATH)/configs/audio_policy.conf:system/etc/audio_policy.conf \
-@@ -101,6 +123,9 @@ PRODUCT_PACKAGES += \
-     charger_res_images
- 
- PRODUCT_PACKAGES += \
-+    lights.x3
-+
-+PRODUCT_PACKAGES += \
-     audio.a2dp.default \
-     com.android.future.usb.accessory
- 
-diff --git a/proprietary-files.txt b/proprietary-files.txt
-index ddaf513..bac3dc8 100644
---- a/proprietary-files.txt
-+++ b/proprietary-files.txt
-@@ -6,7 +6,6 @@ bin/rild
- bin/tf_daemon
- lib/hw/camera.tegra.so
- lib/hw/gps.tegra.so
--lib/hw/lights.x3.so
- lib/hw/sensors.tegra.so
- lib/hw/audio_policy.tegra.so
- lib/hw/audio.primary.tegra.so
-@@ -46,7 +45,6 @@ lib/libnvos.so
- lib/libnvrm_graphics.so
- lib/libnvrm.so
- lib/libnvwsi.so
--lib/lge-ril.so
- lib/libini.so
- lib/libril.so
- lib/libnvomx.so

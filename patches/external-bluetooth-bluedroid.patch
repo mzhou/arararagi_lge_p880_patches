@@ -12,10 +12,10 @@ index 0ece25b..ed9f904 100644
  ifeq ($(BOARD_HAVE_BLUETOOTH_BCM),true)
  LOCAL_CFLAGS += \
 diff --git a/main/Android.mk b/main/Android.mk
-index 23a9783..f1283bc 100644
+index 78e11ee..f9448c7 100644
 --- a/main/Android.mk
 +++ b/main/Android.mk
-@@ -98,7 +98,7 @@ LOCAL_C_INCLUDES+= . \
+@@ -104,7 +104,7 @@ LOCAL_C_INCLUDES+= . \
  	$(bdroid_C_INCLUDES) \
  	external/tinyxml2
  
@@ -25,7 +25,7 @@ index 23a9783..f1283bc 100644
  ifeq ($(TARGET_PRODUCT), full_crespo)
       LOCAL_CFLAGS += -DTARGET_CRESPO
 diff --git a/utils/Android.mk b/utils/Android.mk
-index 4e66705..12dd63d 100644
+index c74cd2d..7e9c8a3 100644
 --- a/utils/Android.mk
 +++ b/utils/Android.mk
 @@ -6,7 +6,7 @@ LOCAL_C_INCLUDES:= $(LOCAL_PATH)/include \

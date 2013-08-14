@@ -1,5 +1,5 @@
 diff --git a/keystore/Android.mk b/keystore/Android.mk
-index d4fbe06..bd30ced 100644
+index f495f34..58e12c5 100644
 --- a/keystore/Android.mk
 +++ b/keystore/Android.mk
 @@ -17,7 +17,7 @@
@@ -10,13 +10,13 @@ index d4fbe06..bd30ced 100644
 +LOCAL_CFLAGS := -Wall -Wextra -Werror -Wno-error=narrowing
  LOCAL_SRC_FILES := keystore.cpp keyblob_utils.cpp
  LOCAL_C_INCLUDES := external/openssl/include
- LOCAL_SHARED_LIBRARIES := libcutils libcrypto libhardware
-@@ -36,7 +36,7 @@ include $(BUILD_EXECUTABLE)
+ LOCAL_SHARED_LIBRARIES := libcutils libcrypto libhardware libkeystore_binder libutils liblog libbinder
+@@ -38,7 +38,7 @@ include $(BUILD_EXECUTABLE)
  
  # Library for keystore clients
  include $(CLEAR_VARS)
 -LOCAL_CFLAGS := -Wall -Wextra -Werror
 +LOCAL_CFLAGS := -Wall -Wextra -Werror -Wno-error=narrowing
- LOCAL_SRC_FILES := keystore_client.cpp keyblob_utils.cpp
- LOCAL_SHARED_LIBRARIES := libcutils
- LOCAL_MODULE := libkeystore_client
+ LOCAL_SRC_FILES := IKeystoreService.cpp keystore_get.cpp keyblob_utils.cpp
+ LOCAL_SHARED_LIBRARIES := libbinder libutils liblog
+ LOCAL_MODULE := libkeystore_binder

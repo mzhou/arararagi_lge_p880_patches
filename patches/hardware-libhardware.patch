@@ -1,8 +1,8 @@
 diff --git a/modules/Android.mk b/modules/Android.mk
-index faa8bb3..3bc7636 100644
+index 486b42d..a8c52d3 100644
 --- a/modules/Android.mk
 +++ b/modules/Android.mk
 @@ -1,2 +1,2 @@
--hardware_modules := gralloc hwcomposer audio nfc nfc-nci local_time power usbaudio audio_remote_submix
-+hardware_modules := gralloc hwcomposer audio nfc nfc-nci local_time power usbaudio audio_remote_submix lights.x3
+-hardware_modules := gralloc hwcomposer audio nfc nfc-nci local_time power usbaudio audio_remote_submix camera
++hardware_modules := gralloc hwcomposer audio nfc nfc-nci local_time power usbaudio audio_remote_submix camera lights.x3
  include $(call all-named-subdir-makefiles,$(hardware_modules))
