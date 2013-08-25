@@ -72,10 +72,10 @@ index 1a11ebb..1adff83 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 35c98e8..0aed6cb 100644
+index 2bc1375..9b87212 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -695,6 +695,7 @@
+@@ -700,6 +700,7 @@
      <string name="title_tile_profile">Profile</string>
      <string name="title_tile_autorotate">Orientation</string>
      <string name="title_tile_settings">Settings</string>
@@ -83,7 +83,7 @@ index 35c98e8..0aed6cb 100644
      <string name="title_tile_sound">Sound</string>
      <string name="title_tile_sync">Sync</string>
      <string name="title_tile_wifiap">Wi-Fi AP</string>
-@@ -844,6 +845,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -849,6 +850,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
@@ -94,7 +94,7 @@ index 35c98e8..0aed6cb 100644
      <string name="advanced_reboot_title">Advanced reboot</string>
      <string name="advanced_reboot_summary">When unlocked, include options in the power menu for rebooting into recovery or bootloader</string>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 5a2ccd3..99c3b05 100644
+index 335fd5b..0f3eab8 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -2379,6 +2379,14 @@
@@ -112,7 +112,7 @@ index 5a2ccd3..99c3b05 100644
      <!-- About --> <skip />
      <!-- Main settings screen, setting title for the user to go into the About phone screen -->
      <string name="about_settings" product="tablet">About tablet</string>
-@@ -4442,6 +4450,9 @@
+@@ -4443,6 +4451,9 @@
  
      <!-- Label for are-notifications-enabled checkbox in app details [CHAR LIMIT=20] -->
      <string name="app_notifications_switch_label">Show notifications</string>
@@ -122,7 +122,7 @@ index 5a2ccd3..99c3b05 100644
  
      <!--  Help URLs for some screens. Not specified here. Specified in product overlays --><skip/>
      <!-- Help menu label [CHAR LIMIT=20] -->
-@@ -4533,4 +4544,17 @@
+@@ -4534,4 +4545,17 @@
  
      <!-- Text to display in regulatory info screen (from device overlay). -->
      <string name="regulatory_info_text"></string>
@@ -414,7 +414,7 @@ index 07d8ad3..929a2e2 100644
      }
  }
 diff --git a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
-index 653331a..8e3130b 100644
+index 5c9a155..e6302ae 100644
 --- a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
 +++ b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
 @@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;

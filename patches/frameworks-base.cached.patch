@@ -1539,7 +1539,7 @@ index a9584d0..60e3757 100644
      }
  
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 86fcbde..3fc9dab 100644
+index b13f2eb..6a3d74b 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
 @@ -59,6 +59,17 @@ import java.net.URISyntaxException;
@@ -1606,7 +1606,7 @@ index 86fcbde..3fc9dab 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -3799,6 +3842,46 @@ public final class Settings {
+@@ -3806,6 +3849,46 @@ public final class Settings {
                  }
              }
  
@@ -1653,7 +1653,7 @@ index 86fcbde..3fc9dab 100644
              return sNameValueCache.getStringForUser(resolver, name, userHandle);
          }
  
-@@ -4099,7 +4182,71 @@ public final class Settings {
+@@ -4106,7 +4189,71 @@ public final class Settings {
                  int userHandle) {
              return putStringForUser(cr, name, Float.toString(value), userHandle);
          }
@@ -1726,7 +1726,7 @@ index 86fcbde..3fc9dab 100644
          /**
           * @deprecated Use {@link android.provider.Settings.Global#DEVELOPMENT_SETTINGS_ENABLED}
           * instead
-@@ -4344,6 +4491,13 @@ public final class Settings {
+@@ -4351,6 +4498,13 @@ public final class Settings {
              "lock_pattern_size";
  
          /**
@@ -2024,10 +2024,10 @@ index 5d32328..cd9aeda 100644
  
  void android_os_Process_readProcLines(JNIEnv* env, jobject clazz, jstring fileStr,
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index 3f8c8ed..9adc52c 100644
+index 95c25eb..4f4ab1f 100644
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
-@@ -1195,6 +1195,8 @@
+@@ -1196,6 +1196,8 @@
    <java-symbol type="style" name="Theme.DeviceDefault.Dialog.NoFrame" />
    <java-symbol type="style" name="Theme.IconMenu" />
    <java-symbol type="style" name="Theme.Panel.Volume" />
@@ -6219,7 +6219,7 @@ index 0000000..bf61913
 +    android:drawableTop="@drawable/ic_qs_quickmemo"
 +    />
 diff --git a/packages/SystemUI/res/layout/status_bar_expanded_header.xml b/packages/SystemUI/res/layout/status_bar_expanded_header.xml
-index 1d26558..fb8d2e3 100644
+index 1d19b9e..418284e6 100644
 --- a/packages/SystemUI/res/layout/status_bar_expanded_header.xml
 +++ b/packages/SystemUI/res/layout/status_bar_expanded_header.xml
 @@ -74,9 +74,19 @@
@@ -8248,10 +8248,10 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 1a090cc..700607c 100644
+index 82db479..157e5ea 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-@@ -269,7 +269,6 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -265,7 +265,6 @@ public class PhoneStatusBar extends BaseStatusBar {
      PowerWidget mPowerWidget;
  
      // ticker
@@ -8259,7 +8259,7 @@ index 1a090cc..700607c 100644
      private View mTickerView;
      private boolean mTicking;
  
-@@ -392,6 +391,10 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -388,6 +387,10 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mSettingsButton != null && mHasFlipSettings) {
                  mSettingsButton.setVisibility(userSetup ? View.VISIBLE : View.INVISIBLE);
              }
@@ -8270,16 +8270,16 @@ index 1a090cc..700607c 100644
              if (mSettingsPanel != null) {
                  mSettingsPanel.setEnabled(userSetup);
              }
-@@ -534,7 +537,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -530,7 +533,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mClearButton = mStatusBarWindow.findViewById(R.id.clear_all_button);
          mClearButton.setOnClickListener(mClearButtonListener);
          mClearButton.setAlpha(0f);
 -        mClearButton.setVisibility(View.INVISIBLE);
 +        mClearButton.setVisibility(View.GONE);
          mClearButton.setEnabled(false);
-         mDateView = (DateView)mStatusBarWindow.findViewById(R.id.date);
  
-@@ -569,6 +572,14 @@ public class PhoneStatusBar extends BaseStatusBar {
+         mHasSettingsPanel = res.getBoolean(R.bool.config_hasSettingsPanel);
+@@ -558,6 +561,14 @@ public class PhoneStatusBar extends BaseStatusBar {
                  mSettingsButton.setImageResource(R.drawable.ic_notify_settings);
              }
          }
@@ -8294,7 +8294,7 @@ index 1a090cc..700607c 100644
          if (mHasFlipSettings) {
              mNotificationButton = (ImageView) mStatusBarWindow.findViewById(R.id.notification_button);
              if (mNotificationButton != null) {
-@@ -607,6 +618,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -596,6 +607,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mTicker = new MyTicker(context, mStatusBarView);
          TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
          tickerView.mTicker = mTicker;
@@ -8302,7 +8302,7 @@ index 1a090cc..700607c 100644
  
          mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
  
-@@ -1215,6 +1227,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1204,6 +1216,9 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mSettingsButton != null) {
              mSettingsButton.setEnabled(isDeviceProvisioned());
          }
@@ -8312,7 +8312,7 @@ index 1a090cc..700607c 100644
      }
  
      @Override
-@@ -1239,7 +1254,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1228,7 +1243,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          for (int i=0; i<N; i++) {
              Entry ent = mNotificationData.get(N-i-1);
              if (!((provisioned && ent.notification.getScore() >= HIDE_ICONS_BELOW_SCORE)
@@ -8321,7 +8321,7 @@ index 1a090cc..700607c 100644
              if (!notificationIsForCurrentUser(ent.notification)) continue;
              toShow.add(ent.icon);
          }
-@@ -1322,7 +1337,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1311,7 +1326,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                  && mFlipSettingsView.getVisibility() == View.VISIBLE
                  && mScrollView.getVisibility() != View.VISIBLE) {
              // the flip settings panel is unequivocally showing; we should not be shown
@@ -8330,7 +8330,7 @@ index 1a090cc..700607c 100644
          } else if (mClearButton.isShown()) {
              if (clearable != (mClearButton.getAlpha() == 1.0f)) {
                  ObjectAnimator clearAnimation = ObjectAnimator.ofFloat(
-@@ -1331,7 +1346,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1320,7 +1335,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                      @Override
                      public void onAnimationEnd(Animator animation) {
                          if (mClearButton.getAlpha() <= 0.0f) {
@@ -8339,7 +8339,7 @@ index 1a090cc..700607c 100644
                          }
                      }
  
-@@ -1346,7 +1361,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1335,7 +1350,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              }
          } else {
              mClearButton.setAlpha(clearable ? 1.0f : 0.0f);
@@ -8348,7 +8348,7 @@ index 1a090cc..700607c 100644
          }
          mClearButton.setEnabled(clearable);
  
-@@ -1644,7 +1659,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1633,7 +1648,7 @@ public class PhoneStatusBar extends BaseStatusBar {
      final int FLIP_DURATION = (FLIP_DURATION_IN + FLIP_DURATION_OUT);
  
      Animator mScrollViewAnim, mFlipSettingsViewAnim, mNotificationButtonAnim,
@@ -8357,7 +8357,7 @@ index 1a090cc..700607c 100644
  
      @Override
      public void animateExpandNotificationsPanel() {
-@@ -1670,6 +1685,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1659,6 +1674,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8365,7 +8365,7 @@ index 1a090cc..700607c 100644
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1707,6 +1723,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1696,6 +1712,11 @@ public class PhoneStatusBar extends BaseStatusBar {
          mSettingsButtonAnim = start(
              ObjectAnimator.ofFloat(mSettingsButton, View.ALPHA, 1f)
                  .setDuration(FLIP_DURATION));
@@ -8377,7 +8377,7 @@ index 1a090cc..700607c 100644
          mClearButton.setVisibility(View.VISIBLE);
          mClearButton.setAlpha(0f);
          setAreThereNotifications(); // this will show/hide the button as necessary
-@@ -1752,6 +1773,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1741,6 +1762,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          mFlipSettingsView.setScaleX(1f);
          mFlipSettingsView.setVisibility(View.VISIBLE);
          mSettingsButton.setVisibility(View.GONE);
@@ -8386,7 +8386,7 @@ index 1a090cc..700607c 100644
          mScrollView.setVisibility(View.GONE);
          mScrollView.setScaleX(0f);
          mPowerWidget.setVisibility(View.GONE);
-@@ -1811,6 +1834,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1800,6 +1823,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8394,7 +8394,7 @@ index 1a090cc..700607c 100644
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1842,6 +1866,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1831,6 +1855,11 @@ public class PhoneStatusBar extends BaseStatusBar {
                      .setDuration(FLIP_DURATION),
                      mScrollView, View.INVISIBLE));
          mPowerWidget.setVisibility(View.GONE);
@@ -8406,7 +8406,7 @@ index 1a090cc..700607c 100644
          mNotificationButton.setVisibility(View.VISIBLE);
          mNotificationButtonAnim = start(
              ObjectAnimator.ofFloat(mNotificationButton, View.ALPHA, 1f)
-@@ -1894,6 +1923,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1883,6 +1912,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
              if (mScrollViewAnim != null) mScrollViewAnim.cancel();
              if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
@@ -8414,7 +8414,7 @@ index 1a090cc..700607c 100644
              if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
              if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1902,6 +1932,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1891,6 +1921,9 @@ public class PhoneStatusBar extends BaseStatusBar {
              mPowerWidget.updateVisibility();
              mSettingsButton.setAlpha(1f);
              mSettingsButton.setVisibility(View.VISIBLE);
@@ -8424,7 +8424,7 @@ index 1a090cc..700607c 100644
              mNotificationPanel.setVisibility(View.GONE);
              mFlipSettingsView.setVisibility(View.GONE);
              mNotificationButton.setVisibility(View.GONE);
-@@ -2329,8 +2362,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2318,8 +2351,8 @@ public class PhoneStatusBar extends BaseStatusBar {
  
      @Override
      protected void tick(IBinder key, StatusBarNotification n, boolean firstTime) {
@@ -8435,7 +8435,7 @@ index 1a090cc..700607c 100644
  
          // no ticking in Setup
          if (!isDeviceProvisioned()) return;
-@@ -2342,7 +2375,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2331,7 +2364,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          // until status bar window is attached to the window manager,
          // because...  well, what's the point otherwise?  And trying to
          // run a ticker without being attached will crash!
@@ -8445,7 +8445,7 @@ index 1a090cc..700607c 100644
              if (0 == (mDisabled & (StatusBarManager.DISABLE_NOTIFICATION_ICONS
                              | StatusBarManager.DISABLE_NOTIFICATION_TICKER))) {
                  mTicker.addEntry(n);
-@@ -2358,27 +2392,33 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2347,27 +2381,33 @@ public class PhoneStatusBar extends BaseStatusBar {
          @Override
          public void tickerStarting() {
              mTicking = true;
@@ -8492,7 +8492,7 @@ index 1a090cc..700607c 100644
          }
      }
  
-@@ -2659,6 +2699,18 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2648,6 +2688,26 @@ public class PhoneStatusBar extends BaseStatusBar {
          }
      };
  
@@ -8508,7 +8508,15 @@ index 1a090cc..700607c 100644
 +        }
 +    };
 +
-     private final View.OnClickListener mClockClickListener = new View.OnClickListener() {
++    private final View.OnClickListener mClockClickListener = new View.OnClickListener() {
++        @Override
++        public void onClick(View v) {
++            startActivityDismissingKeyguard(
++                    new Intent(Intent.ACTION_QUICK_CLOCK), true); // have fun, everyone
++        }
++    };
++
+     private final View.OnClickListener mNotificationButtonListener = new View.OnClickListener() {
          @Override
          public void onClick(View v) {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
@@ -8715,10 +8723,10 @@ index f3f6a80..0615ca8 100644
              scheduleAdvance();
          }
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index 9a2245c..7c179a8 100644
+index 8fada9d..c98c45e 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-@@ -887,21 +887,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -882,21 +882,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
  
      private final Runnable mRingerChordLongPress = new Runnable() {
          public void run() {
@@ -8741,7 +8749,7 @@ index 9a2245c..7c179a8 100644
          }
      };
  
-@@ -2279,8 +2265,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -2253,8 +2239,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
  
          if (DEBUG_INPUT) {
              Log.d(TAG, "interceptKeyTi keyCode=" + keyCode + " down=" + down + " repeatCount="
@@ -8751,7 +8759,7 @@ index 9a2245c..7c179a8 100644
          }
  
          // If we think we might have a volume down & power/volume-up key chord on the way
-@@ -5727,7 +5712,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -5703,7 +5688,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                  pw.println(mForceStatusBarFromKeyguard);
          pw.print(prefix); pw.print("mDismissKeyguard="); pw.print(mDismissKeyguard);
                  pw.print(" mWinDismissingKeyguard="); pw.print(mWinDismissingKeyguard);
@@ -14636,7 +14644,7 @@ index 3fb5b96..e8d0364 100644
       * Called when the device's active user changes.
       * @param userId the new active user's UserId
 diff --git a/services/java/com/android/server/NotificationManagerService.java b/services/java/com/android/server/NotificationManagerService.java
-index c0335ab..9facb48 100644
+index d14985e..cac0c20 100644
 --- a/services/java/com/android/server/NotificationManagerService.java
 +++ b/services/java/com/android/server/NotificationManagerService.java
 @@ -77,12 +77,16 @@ import android.view.accessibility.AccessibilityEvent;

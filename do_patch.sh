@@ -1,51 +1,54 @@
 #!/bin/bash -ux
 PATCH_DIR='../arararagi_lge_p880_patches/patches'
 
-#933c57dfe7ac7f86729c5df6171141b7e74faedd
+#5903ac35fee9fcee9c0307d0c4056c427e99b2cd
 git apply --directory='build' "$PATCH_DIR/build.cached.patch"
 
-#933c57dfe7ac7f86729c5df6171141b7e74faedd
+#5903ac35fee9fcee9c0307d0c4056c427e99b2cd
 git apply --directory='build' "$PATCH_DIR/build.patch"
 
-#77d027ffc8cc9a0dc306dbf85e0cb5718843b8fe
+#35f9ba1a48b8e4dfb2acdbe28e91fbf24674392b
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.cached.patch"
 
-#77d027ffc8cc9a0dc306dbf85e0cb5718843b8fe
+#35f9ba1a48b8e4dfb2acdbe28e91fbf24674392b
 git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.patch"
 
 #7fd4759ed1ecfe7cba050a08699be1ac229ad1b1
 git apply --directory='external/oprofile' "$PATCH_DIR/external-oprofile.patch"
 
-#43d82babaef529f8c75d68790c6db8f0bfa4c708
+#b78bf2140b53c6c3d63eb4b46d56a919107cb5de
 git apply --directory='external/bluetooth/bluedroid' "$PATCH_DIR/external-bluetooth-bluedroid.patch"
 
 #e4396427cbf55e1559cc7aa69903c367a62ac9ca
 git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 
-#d1e3a1bc3a01e363dd4f61fbb8706bc29c2e99f5
+#723a590f10bf78804f894adaa4f3feff45bf2a66
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
-#f8aeb0c926c0540dc08ff8922962553447c8f697
+#723a590f10bf78804f894adaa4f3feff45bf2a66
+git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
+
+#83bd4a95015e2ff018ba10ab6577bcf8c53134a6
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.cached.patch"
 
-#f8aeb0c926c0540dc08ff8922962553447c8f697
+#83bd4a95015e2ff018ba10ab6577bcf8c53134a6
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.patch"
 
-#10fda29764663c173c270f2c24e0f9dcbec6fa3f
+#445494879c4634bca3c5e173b461b3c785514582
 git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
 
-#2abd45dcb33245879c2b0392c7850c369030c6d6
+#32f91672f18ff853ebf54ad8803c2a1991b0eeed
 git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
-#051862c950cf5eb4921beb575f5ede6db6e3754f
-git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.cached.patch"
+#4b709edb173e73eedfd0a09c640264dbd937cc70
+git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
 
-#4be14ed52faf6275ad5a712f20018e26a646c03f
+#0617986f267e0ab04c17b868d67c5271d9b69744
 git apply --directory='packages/apps/Torch' "$PATCH_DIR/packages-apps-Torch.patch"
 
 #b57bd4a1d4c7e737a8a6e09f35aba1b93626c89f
 git apply --directory='system/security' "$PATCH_DIR/system-security.patch"
 
-#ba3d67ae7b0208da40ec8f0d1e694d829ef02e78
+#1d55c0d8c737f3c0f5a24e9dd9d6db7dbaf46125
 git apply --directory='system/core' "$PATCH_DIR/system-core.patch"
 

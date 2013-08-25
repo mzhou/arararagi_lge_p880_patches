@@ -1,0 +1,16 @@
+diff --git a/media/java/android/media/MediaFile.java b/media/java/android/media/MediaFile.java
+index cb3f5d8..caf2572 100644
+--- a/media/java/android/media/MediaFile.java
++++ b/media/java/android/media/MediaFile.java
+@@ -86,9 +86,9 @@ public class MediaFile {
+ 
+     // More video file types
+     public static final int FILE_TYPE_MP2PS   = 200;
+-    public static final int FILE_TYPE_DIVX    = 201;
++    public static final int FILE_TYPE_DIVX2   = 201;
+     private static final int FIRST_VIDEO_FILE_TYPE2 = FILE_TYPE_MP2PS;
+-    private static final int LAST_VIDEO_FILE_TYPE2 = FILE_TYPE_DIVX;
++    private static final int LAST_VIDEO_FILE_TYPE2 = FILE_TYPE_DIVX2;
+ 
+     // Image file types
+     public static final int FILE_TYPE_JPEG    = 32;

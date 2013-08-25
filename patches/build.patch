@@ -1,5 +1,5 @@
 diff --git a/core/combo/TARGET_linux-arm.mk b/core/combo/TARGET_linux-arm.mk
-index 5cfa738..b278521 100644
+index 96f8e83..dd53f5c 100644
 --- a/core/combo/TARGET_linux-arm.mk
 +++ b/core/combo/TARGET_linux-arm.mk
 @@ -68,7 +68,7 @@ endif
