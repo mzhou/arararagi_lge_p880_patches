@@ -307,10 +307,10 @@ index 088cdb9..af5a342 100644
       * called -- no BroadcastReceiver components will be launched.
       */
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index b13f2eb..29bc4fe 100644
+index b3d540c..abf1ec7 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
-@@ -2814,6 +2814,32 @@ public final class Settings {
+@@ -2780,6 +2780,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -343,7 +343,7 @@ index b13f2eb..29bc4fe 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -2940,6 +2966,12 @@ public final class Settings {
+@@ -2906,6 +2932,12 @@ public final class Settings {
          public static final String HOME_WAKE_SCREEN = "home_wake_screen";
  
          /**
@@ -356,7 +356,7 @@ index b13f2eb..29bc4fe 100644
           * Whether to wake the screen with the volume keys, the value is boolean.
           * @hide
           */
-@@ -4351,6 +4383,13 @@ public final class Settings {
+@@ -4324,6 +4356,13 @@ public final class Settings {
              "lock_pattern_size";
  
          /**
@@ -462,10 +462,10 @@ index 5d32328..cd9aeda 100644
  
  void android_os_Process_readProcLines(JNIEnv* env, jobject clazz, jstring fileStr,
 diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index 95c25eb..4f4ab1f 100644
+index 0963e95..b3f5a13 100644
 --- a/core/res/res/values/symbols.xml
 +++ b/core/res/res/values/symbols.xml
-@@ -1196,6 +1196,8 @@
+@@ -1197,6 +1197,8 @@
    <java-symbol type="style" name="Theme.DeviceDefault.Dialog.NoFrame" />
    <java-symbol type="style" name="Theme.IconMenu" />
    <java-symbol type="style" name="Theme.Panel.Volume" />
@@ -511,6 +511,21 @@ index 87b1c9d..99808cc 100644
      <!-- DeviceDefault light theme for panel windows. This removes all extraneous window
      decorations, so you basically have an empty rectangle in which to place your content. It makes
      the window floating, with a transparent background, and turns off dimming behind the window. -->
+diff --git a/data/etc/platform.xml b/data/etc/platform.xml
+index ac253aa..bbea0f8 100644
+--- a/data/etc/platform.xml
++++ b/data/etc/platform.xml
+@@ -54,6 +54,10 @@
+         <group gid="inet" />
+     </permission>
+ 
++    <permission name="android.permission.CAMERA" >
++        <group gid="camera" />
++    </permission>
++
+     <permission name="android.permission.READ_LOGS" >
+         <group gid="log" />
+     </permission>
 diff --git a/location/java/android/location/ILocationManager.aidl b/location/java/android/location/ILocationManager.aidl
 index c353ec6..e5bac32 100644
 --- a/location/java/android/location/ILocationManager.aidl
@@ -5807,18 +5822,18 @@ index 0000000..fd88042e
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-index 82db479..157e5ea 100644
+index 5246ec4..ddc7497 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
-@@ -265,7 +265,6 @@ public class PhoneStatusBar extends BaseStatusBar {
-     PowerWidget mPowerWidget;
+@@ -267,7 +267,6 @@ public class PhoneStatusBar extends BaseStatusBar {
+     int mTrackingPosition; // the position of the top of the tracking view.
  
      // ticker
 -    private Ticker mTicker;
      private View mTickerView;
      private boolean mTicking;
  
-@@ -388,6 +387,10 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -391,6 +390,10 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mSettingsButton != null && mHasFlipSettings) {
                  mSettingsButton.setVisibility(userSetup ? View.VISIBLE : View.INVISIBLE);
              }
@@ -5829,7 +5844,7 @@ index 82db479..157e5ea 100644
              if (mSettingsPanel != null) {
                  mSettingsPanel.setEnabled(userSetup);
              }
-@@ -530,7 +533,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -561,7 +564,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mClearButton = mStatusBarWindow.findViewById(R.id.clear_all_button);
          mClearButton.setOnClickListener(mClearButtonListener);
          mClearButton.setAlpha(0f);
@@ -5838,7 +5853,7 @@ index 82db479..157e5ea 100644
          mClearButton.setEnabled(false);
  
          mHasSettingsPanel = res.getBoolean(R.bool.config_hasSettingsPanel);
-@@ -558,6 +561,14 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -589,6 +592,14 @@ public class PhoneStatusBar extends BaseStatusBar {
                  mSettingsButton.setImageResource(R.drawable.ic_notify_settings);
              }
          }
@@ -5853,7 +5868,7 @@ index 82db479..157e5ea 100644
          if (mHasFlipSettings) {
              mNotificationButton = (ImageView) mStatusBarWindow.findViewById(R.id.notification_button);
              if (mNotificationButton != null) {
-@@ -596,6 +607,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -608,6 +619,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          mTicker = new MyTicker(context, mStatusBarView);
          TickerView tickerView = (TickerView)mStatusBarView.findViewById(R.id.tickerText);
          tickerView.mTicker = mTicker;
@@ -5861,7 +5876,7 @@ index 82db479..157e5ea 100644
  
          mEdgeBorder = res.getDimensionPixelSize(R.dimen.status_bar_edge_ignore);
  
-@@ -1204,6 +1216,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1222,6 +1234,9 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mSettingsButton != null) {
              mSettingsButton.setEnabled(isDeviceProvisioned());
          }
@@ -5871,7 +5886,7 @@ index 82db479..157e5ea 100644
      }
  
      @Override
-@@ -1228,7 +1243,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1246,7 +1261,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          for (int i=0; i<N; i++) {
              Entry ent = mNotificationData.get(N-i-1);
              if (!((provisioned && ent.notification.getScore() >= HIDE_ICONS_BELOW_SCORE)
@@ -5880,7 +5895,7 @@ index 82db479..157e5ea 100644
              if (!notificationIsForCurrentUser(ent.notification)) continue;
              toShow.add(ent.icon);
          }
-@@ -1311,7 +1326,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1329,7 +1344,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                  && mFlipSettingsView.getVisibility() == View.VISIBLE
                  && mScrollView.getVisibility() != View.VISIBLE) {
              // the flip settings panel is unequivocally showing; we should not be shown
@@ -5889,7 +5904,7 @@ index 82db479..157e5ea 100644
          } else if (mClearButton.isShown()) {
              if (clearable != (mClearButton.getAlpha() == 1.0f)) {
                  ObjectAnimator clearAnimation = ObjectAnimator.ofFloat(
-@@ -1320,7 +1335,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1338,7 +1353,7 @@ public class PhoneStatusBar extends BaseStatusBar {
                      @Override
                      public void onAnimationEnd(Animator animation) {
                          if (mClearButton.getAlpha() <= 0.0f) {
@@ -5898,7 +5913,7 @@ index 82db479..157e5ea 100644
                          }
                      }
  
-@@ -1335,7 +1350,7 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1353,7 +1368,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              }
          } else {
              mClearButton.setAlpha(clearable ? 1.0f : 0.0f);
@@ -5907,24 +5922,23 @@ index 82db479..157e5ea 100644
          }
          mClearButton.setEnabled(clearable);
  
-@@ -1633,7 +1648,7 @@ public class PhoneStatusBar extends BaseStatusBar {
-     final int FLIP_DURATION = (FLIP_DURATION_IN + FLIP_DURATION_OUT);
+@@ -1652,6 +1667,7 @@ public class PhoneStatusBar extends BaseStatusBar {
  
      Animator mScrollViewAnim, mFlipSettingsViewAnim, mNotificationButtonAnim,
--        mSettingsButtonAnim, mClearButtonAnim;
-+        mSettingsButtonAnim, mHaloButtonAnim, mClearButtonAnim;
+         mSettingsButtonAnim, mClearButtonAnim, mRibbonViewAnim;
++        mSettingsButtonAnim, mHaloButtonAnim, mClearButtonAnim, mRibbonViewAnim;
  
      @Override
      public void animateExpandNotificationsPanel() {
-@@ -1659,6 +1674,7 @@ public class PhoneStatusBar extends BaseStatusBar {
-         if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
+@@ -1678,6 +1694,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
+         if (mRibbonViewAnim != null) mRibbonViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
 +        if (mHaloButtonAnim != null) mHaloButtonAnim.cancel();
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1696,6 +1712,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1721,6 +1738,11 @@ public class PhoneStatusBar extends BaseStatusBar {
          mSettingsButtonAnim = start(
              ObjectAnimator.ofFloat(mSettingsButton, View.ALPHA, 1f)
                  .setDuration(FLIP_DURATION));
@@ -5936,7 +5950,7 @@ index 82db479..157e5ea 100644
          mClearButton.setVisibility(View.VISIBLE);
          mClearButton.setAlpha(0f);
          setAreThereNotifications(); // this will show/hide the button as necessary
-@@ -1741,6 +1762,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1766,6 +1788,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          mFlipSettingsView.setScaleX(1f);
          mFlipSettingsView.setVisibility(View.VISIBLE);
          mSettingsButton.setVisibility(View.GONE);
@@ -5944,19 +5958,19 @@ index 82db479..157e5ea 100644
 +        updateHaloButton();
          mScrollView.setVisibility(View.GONE);
          mScrollView.setScaleX(0f);
-         mPowerWidget.setVisibility(View.GONE);
-@@ -1800,6 +1823,7 @@ public class PhoneStatusBar extends BaseStatusBar {
-         if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
+         if (mRibbonView != null) {
+@@ -1835,6 +1859,7 @@ public class PhoneStatusBar extends BaseStatusBar {
          if (mScrollViewAnim != null) mScrollViewAnim.cancel();
+         if (mRibbonViewAnim != null) mRibbonViewAnim.cancel();
          if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
 +        if (mHaloButtonAnim != null) mHaloButtonAnim.cancel();
          if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
          if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1831,6 +1855,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -1877,6 +1902,11 @@ public class PhoneStatusBar extends BaseStatusBar {
+                 ObjectAnimator.ofFloat(mSettingsButton, View.ALPHA, 0f)
                      .setDuration(FLIP_DURATION),
                      mScrollView, View.INVISIBLE));
-         mPowerWidget.setVisibility(View.GONE);
 +        mHaloButtonAnim = start(
 +            setVisibilityWhenDone(
 +                ObjectAnimator.ofFloat(mHaloButton, View.ALPHA, 0f)
@@ -5965,16 +5979,16 @@ index 82db479..157e5ea 100644
          mNotificationButton.setVisibility(View.VISIBLE);
          mNotificationButtonAnim = start(
              ObjectAnimator.ofFloat(mNotificationButton, View.ALPHA, 1f)
-@@ -1883,6 +1912,7 @@ public class PhoneStatusBar extends BaseStatusBar {
-             if (mFlipSettingsViewAnim != null) mFlipSettingsViewAnim.cancel();
+@@ -1930,6 +1960,7 @@ public class PhoneStatusBar extends BaseStatusBar {
              if (mScrollViewAnim != null) mScrollViewAnim.cancel();
+             if (mRibbonViewAnim != null) mRibbonViewAnim.cancel();
              if (mSettingsButtonAnim != null) mSettingsButtonAnim.cancel();
 +            if (mHaloButtonAnim != null) mHaloButtonAnim.cancel();
              if (mNotificationButtonAnim != null) mNotificationButtonAnim.cancel();
              if (mClearButtonAnim != null) mClearButtonAnim.cancel();
  
-@@ -1891,6 +1921,9 @@ public class PhoneStatusBar extends BaseStatusBar {
-             mPowerWidget.updateVisibility();
+@@ -1941,6 +1972,9 @@ public class PhoneStatusBar extends BaseStatusBar {
+             }
              mSettingsButton.setAlpha(1f);
              mSettingsButton.setVisibility(View.VISIBLE);
 +            mHaloButton.setAlpha(1f);
@@ -5983,7 +5997,7 @@ index 82db479..157e5ea 100644
              mNotificationPanel.setVisibility(View.GONE);
              mFlipSettingsView.setVisibility(View.GONE);
              mNotificationButton.setVisibility(View.GONE);
-@@ -2318,8 +2351,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2368,8 +2402,8 @@ public class PhoneStatusBar extends BaseStatusBar {
  
      @Override
      protected void tick(IBinder key, StatusBarNotification n, boolean firstTime) {
@@ -5994,7 +6008,7 @@ index 82db479..157e5ea 100644
  
          // no ticking in Setup
          if (!isDeviceProvisioned()) return;
-@@ -2331,7 +2364,8 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2381,7 +2415,8 @@ public class PhoneStatusBar extends BaseStatusBar {
          // until status bar window is attached to the window manager,
          // because...  well, what's the point otherwise?  And trying to
          // run a ticker without being attached will crash!
@@ -6004,7 +6018,7 @@ index 82db479..157e5ea 100644
              if (0 == (mDisabled & (StatusBarManager.DISABLE_NOTIFICATION_ICONS
                              | StatusBarManager.DISABLE_NOTIFICATION_TICKER))) {
                  mTicker.addEntry(n);
-@@ -2347,27 +2381,33 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2397,27 +2432,33 @@ public class PhoneStatusBar extends BaseStatusBar {
          @Override
          public void tickerStarting() {
              mTicking = true;
@@ -6051,7 +6065,7 @@ index 82db479..157e5ea 100644
          }
      }
  
-@@ -2648,6 +2688,26 @@ public class PhoneStatusBar extends BaseStatusBar {
+@@ -2698,6 +2739,26 @@ public class PhoneStatusBar extends BaseStatusBar {
          }
      };
  
@@ -6079,7 +6093,7 @@ index 82db479..157e5ea 100644
          @Override
          public void onClick(View v) {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
-index ce58f2a..40985e1 100644
+index 1a157b6..1b27b35 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettings.java
 @@ -373,6 +373,27 @@ class QuickSettings {
@@ -6111,7 +6125,7 @@ index ce58f2a..40985e1 100644
  
      private void addSystemTiles(ViewGroup parent, LayoutInflater inflater) {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
-index cc4f187..325ca3a 100644
+index 79142c9..5bbc198 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/QuickSettingsController.java
 @@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;
@@ -6130,7 +6144,7 @@ index cc4f187..325ca3a 100644
  import com.android.systemui.quicksettings.QuietHoursTile;
  import com.android.systemui.quicksettings.RingerModeTile;
  import com.android.systemui.quicksettings.ScreenTimeoutTile;
-@@ -189,6 +191,8 @@ public class QuickSettingsController {
+@@ -192,6 +194,8 @@ public class QuickSettingsController {
                  qs = new BatteryTile(mContext, this, mStatusBarService.mBatteryController);
              } else if (tile.equals(TILE_SETTINGS)) {
                  qs = new PreferencesTile(mContext, this);
@@ -6282,7 +6296,7 @@ index f3f6a80..0615ca8 100644
              scheduleAdvance();
          }
 diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
-index 8fada9d..c98c45e 100644
+index 08f66f7..c240cf5 100644
 --- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 +++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
 @@ -882,21 +882,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
@@ -6318,7 +6332,7 @@ index 8fada9d..c98c45e 100644
          }
  
          // If we think we might have a volume down & power/volume-up key chord on the way
-@@ -5703,7 +5688,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+@@ -5704,7 +5689,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                  pw.println(mForceStatusBarFromKeyguard);
          pw.print(prefix); pw.print("mDismissKeyguard="); pw.print(mDismissKeyguard);
                  pw.print(" mWinDismissingKeyguard="); pw.print(mWinDismissingKeyguard);

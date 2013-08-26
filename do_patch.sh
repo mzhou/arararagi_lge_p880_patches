@@ -1,7 +1,7 @@
 #!/bin/bash -ux
 PATCH_DIR='../arararagi_lge_p880_patches/patches'
 
-#5903ac35fee9fcee9c0307d0c4056c427e99b2cd
+#43f3bd220ff6b8361a301b5d89fec01a088145f1
 git apply --directory='build' "$PATCH_DIR/build.patch"
 
 #35f9ba1a48b8e4dfb2acdbe28e91fbf24674392b
@@ -13,25 +13,25 @@ git apply --directory='device/lge/p880' "$PATCH_DIR/device-lge-p880.patch"
 #7fd4759ed1ecfe7cba050a08699be1ac229ad1b1
 git apply --directory='external/oprofile' "$PATCH_DIR/external-oprofile.patch"
 
-#b78bf2140b53c6c3d63eb4b46d56a919107cb5de
+#6f88b8aea546181b718d57cf035f67e326d469a9
 git apply --directory='external/bluetooth/bluedroid' "$PATCH_DIR/external-bluetooth-bluedroid.patch"
 
 #e4396427cbf55e1559cc7aa69903c367a62ac9ca
 git apply --directory='external/clang' "$PATCH_DIR/external-clang.patch"
 
-#723a590f10bf78804f894adaa4f3feff45bf2a66
+#c669c0748fabe2837c1ef36fefcc44931c3f5e76
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.cached.patch"
 
-#723a590f10bf78804f894adaa4f3feff45bf2a66
+#c669c0748fabe2837c1ef36fefcc44931c3f5e76
 git apply --directory='frameworks/base' "$PATCH_DIR/frameworks-base.patch"
 
-#83bd4a95015e2ff018ba10ab6577bcf8c53134a6
+#838a36040abc61bbf56280bdbb7adf1b20c3b82e
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.cached.patch"
 
-#83bd4a95015e2ff018ba10ab6577bcf8c53134a6
+#838a36040abc61bbf56280bdbb7adf1b20c3b82e
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.patch"
 
-#4b709edb173e73eedfd0a09c640264dbd937cc70
+#c024f411641c0bf31c3a73bd60a4d4f4dd0b0761
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
 
 #0617986f267e0ab04c17b868d67c5271d9b69744

@@ -1,31 +1,12 @@
-diff --git a/data/etc/platform.xml b/data/etc/platform.xml
-index ac253aa..bbea0f8 100644
---- a/data/etc/platform.xml
-+++ b/data/etc/platform.xml
-@@ -54,6 +54,10 @@
-         <group gid="inet" />
-     </permission>
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+index ddc7497..76fc7fe 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+@@ -1666,7 +1666,6 @@ public class PhoneStatusBar extends BaseStatusBar {
+     final int FLIP_DURATION = (FLIP_DURATION_IN + FLIP_DURATION_OUT);
  
-+    <permission name="android.permission.CAMERA" >
-+        <group gid="camera" />
-+    </permission>
-+
-     <permission name="android.permission.READ_LOGS" >
-         <group gid="log" />
-     </permission>
-diff --git a/media/java/android/media/MediaFile.java b/media/java/android/media/MediaFile.java
-index cb3f5d8..caf2572 100644
---- a/media/java/android/media/MediaFile.java
-+++ b/media/java/android/media/MediaFile.java
-@@ -86,9 +86,9 @@ public class MediaFile {
+     Animator mScrollViewAnim, mFlipSettingsViewAnim, mNotificationButtonAnim,
+-        mSettingsButtonAnim, mClearButtonAnim, mRibbonViewAnim;
+         mSettingsButtonAnim, mHaloButtonAnim, mClearButtonAnim, mRibbonViewAnim;
  
-     // More video file types
-     public static final int FILE_TYPE_MP2PS   = 200;
--    public static final int FILE_TYPE_DIVX    = 201;
-+    public static final int FILE_TYPE_DIVX2   = 201;
-     private static final int FIRST_VIDEO_FILE_TYPE2 = FILE_TYPE_MP2PS;
--    private static final int LAST_VIDEO_FILE_TYPE2 = FILE_TYPE_DIVX;
-+    private static final int LAST_VIDEO_FILE_TYPE2 = FILE_TYPE_DIVX2;
- 
-     // Image file types
-     public static final int FILE_TYPE_JPEG    = 32;
+     @Override

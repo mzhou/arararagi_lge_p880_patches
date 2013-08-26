@@ -72,10 +72,10 @@ index 1a11ebb..1adff83 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
-index 2bc1375..9b87212 100644
+index 0a3814c..0edeb5d 100644
 --- a/res/values/cm_strings.xml
 +++ b/res/values/cm_strings.xml
-@@ -700,6 +700,7 @@
+@@ -649,6 +649,7 @@
      <string name="title_tile_profile">Profile</string>
      <string name="title_tile_autorotate">Orientation</string>
      <string name="title_tile_settings">Settings</string>
@@ -83,7 +83,7 @@ index 2bc1375..9b87212 100644
      <string name="title_tile_sound">Sound</string>
      <string name="title_tile_sync">Sync</string>
      <string name="title_tile_wifiap">Wi-Fi AP</string>
-@@ -849,6 +850,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
+@@ -807,6 +808,9 @@ two in order to insert additional control points. \'Remove\' deletes the selecte
      <string name="auto_brightness_sensitivity_high">High</string>
      <string name="auto_brightness_sensitivity_veryhigh">Very high</string>
  
@@ -414,7 +414,7 @@ index 07d8ad3..929a2e2 100644
      }
  }
 diff --git a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
-index 5c9a155..e6302ae 100644
+index 4c5fa04..e677d98 100644
 --- a/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
 +++ b/src/com/android/settings/cyanogenmod/QuickSettingsUtil.java
 @@ -32,6 +32,7 @@ import static com.android.internal.util.cm.QSConstants.TILE_MOBILEDATA;
