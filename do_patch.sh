@@ -2,9 +2,6 @@
 PATCH_DIR='../arararagi_lge_p880_patches/patches'
 
 #5903ac35fee9fcee9c0307d0c4056c427e99b2cd
-git apply --directory='build' "$PATCH_DIR/build.cached.patch"
-
-#5903ac35fee9fcee9c0307d0c4056c427e99b2cd
 git apply --directory='build' "$PATCH_DIR/build.patch"
 
 #35f9ba1a48b8e4dfb2acdbe28e91fbf24674392b
@@ -33,12 +30,6 @@ git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.ca
 
 #83bd4a95015e2ff018ba10ab6577bcf8c53134a6
 git apply --directory='hardware/libhardware' "$PATCH_DIR/hardware-libhardware.patch"
-
-#445494879c4634bca3c5e173b461b3c785514582
-git apply --directory='libcore' "$PATCH_DIR/libcore.cached.patch"
-
-#32f91672f18ff853ebf54ad8803c2a1991b0eeed
-git apply --directory='packages/apps/Mms' "$PATCH_DIR/packages-apps-Mms.cached.patch"
 
 #4b709edb173e73eedfd0a09c640264dbd937cc70
 git apply --directory='packages/apps/Settings' "$PATCH_DIR/packages-apps-Settings.patch"
