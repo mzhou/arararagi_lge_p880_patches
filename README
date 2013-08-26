@@ -7,9 +7,9 @@ https://dl-ssl.google.com/dl/googlesource/git-repo/repo
 
 mkdir -p ~/CyanogenMod/android
 cd ~/CyanogenMod
-git clone git://github.com/mzhou/arararagi_lge_p880_patches.git
+git clone -b cm-10.2 git://github.com/mzhou/arararagi_lge_p880_patches.git
 cd ~/CyanogenMod/android
-repo init -u git://github.com/mzhou/arararagi_android.git -b cm10.2
+repo init -u git://github.com/mzhou/arararagi_android.git -b cm-10.2
 repo sync -j128
 . build/envsetup.sh
 breakfast p880
