@@ -283,7 +283,7 @@ index 3e0ac7e..f3d07cc 100644
              intents[i] = new Intent(mIntents.get(i));
          }
 diff --git a/core/java/android/content/Intent.java b/core/java/android/content/Intent.java
-index 088cdb9..af5a342 100644
+index 99e899a..d1a8226 100644
 --- a/core/java/android/content/Intent.java
 +++ b/core/java/android/content/Intent.java
 @@ -3316,7 +3316,6 @@ public class Intent implements Parcelable, Cloneable {
@@ -307,10 +307,10 @@ index 088cdb9..af5a342 100644
       * called -- no BroadcastReceiver components will be launched.
       */
 diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
-index 4864397..c3da0fd 100644
+index a6f6cbe..2ab080d 100644
 --- a/core/java/android/provider/Settings.java
 +++ b/core/java/android/provider/Settings.java
-@@ -2802,6 +2802,32 @@ public final class Settings {
+@@ -2803,6 +2803,32 @@ public final class Settings {
          public static final String COMBINED_BAR_AUTO_HIDE = "combined_bar_auto_hide";
  
          /**
@@ -343,7 +343,7 @@ index 4864397..c3da0fd 100644
           * Display style of AM/PM next to clock in status bar
           * 0: Normal display (Eclair stock)
           * 1: Small display (Froyo stock)
-@@ -4346,6 +4372,13 @@ public final class Settings {
+@@ -4347,6 +4373,13 @@ public final class Settings {
              "lock_pattern_size";
  
          /**

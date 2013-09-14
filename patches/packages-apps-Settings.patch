@@ -382,7 +382,7 @@ index 4c5fa04..e677d98 100644
                  "com.android.systemui:drawable/ic_qs_ring_on"));
          registerTile(new QuickSettingsUtil.TileInfo(
 diff --git a/src/com/android/settings/cyanogenmod/SystemUiSettings.java b/src/com/android/settings/cyanogenmod/SystemUiSettings.java
-index 0228eb9..5883eb5 100644
+index 0228eb9..b4d2e4a 100644
 --- a/src/com/android/settings/cyanogenmod/SystemUiSettings.java
 +++ b/src/com/android/settings/cyanogenmod/SystemUiSettings.java
 @@ -16,10 +16,14 @@
@@ -426,11 +426,7 @@ index 0228eb9..5883eb5 100644
      @Override
      public void onCreate(Bundle savedInstanceState) {
          super.onCreate(savedInstanceState);
-@@ -81,9 +95,34 @@ public class SystemUiSettings extends SettingsPreferenceFragment  implements
-                 prefScreen.removePreference(findPreference(CATEGORY_NAVBAR));
-                 mPieControl = null;
-             }
-+
+@@ -84,6 +98,30 @@ public class SystemUiSettings extends SettingsPreferenceFragment  implements
          } catch (RemoteException e) {
              Log.e(TAG, "Error getting navigation bar status");
          }
@@ -461,7 +457,7 @@ index 0228eb9..5883eb5 100644
      }
  
      @Override
-@@ -101,6 +140,32 @@ public class SystemUiSettings extends SettingsPreferenceFragment  implements
+@@ -101,6 +139,32 @@ public class SystemUiSettings extends SettingsPreferenceFragment  implements
              boolean value = (Boolean) objValue;
              updateExpandedDesktop(value ? 2 : 0);
              return true;
@@ -494,7 +490,7 @@ index 0228eb9..5883eb5 100644
          }
  
          return false;
-@@ -143,4 +208,13 @@ public class SystemUiSettings extends SettingsPreferenceFragment  implements
+@@ -143,4 +207,13 @@ public class SystemUiSettings extends SettingsPreferenceFragment  implements
              mExpandedDesktopPref.setSummary(res.getString(summary));
          }
      }

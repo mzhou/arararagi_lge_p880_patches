@@ -17,16 +17,17 @@ index e8033bd..cdb24b3 100644
 +
 +WITH_DEXPREOPT := true
 diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
-index 795efe8..727eef3 100755
+index 795efe8..ad317ba 100755
 --- a/overlay/frameworks/base/core/res/res/values/config.xml
 +++ b/overlay/frameworks/base/core/res/res/values/config.xml
-@@ -176,4 +176,8 @@
+@@ -176,4 +176,9 @@
      </integer-array>
  
      <integer name="config_deviceHardwareKeys">7</integer>
 +
 +    <bool name="config_intrusiveNotificationLed">true</bool>
 +    <bool name="config_intrusiveBatteryLed">true</bool>
++    <bool name="config_showNavigationBar">true</bool>
 +
  </resources>
 diff --git a/pulled/QMemobin.apk b/pulled/QMemobin.apk
@@ -5328,4 +5329,14 @@ zilsLJSQ=^aP*9Z&0eMpUL7hSbY@Vn-H$Wzmya}v0sn<~7?-r$!1AB*u@(_Lk3x1t~
 z*c4)uSP?p0jywkH=aH58C#D>)?C#fq;gAf51A2}L%ae!lTV$|M_9RseDu6lKlmdCE
 zdlI{rbghK?vabxvo$^9Zur!aXj3Rv0OkG*(YlG4#9n}(`v&=0kjg(BPGWCTbDU`hS
 cb9wk`p)4Og1N^-v`2A2NU+@D!Rd9X&4}*D{KL7v#
+
+diff --git a/pulled/lge-ril.so b/pulled/lge-ril.so
+index cfc0cbf69817524359b50020197d7d11226f5259..b2da9c9b84405faea74e65488af6f969121dd6d9 100644
+GIT binary patch
+delta 66
+icmbQRhj+pr-i9rVi+Xh!_7e}=&-F5HKiA9TbO8Wr!5X#z
+
+delta 66
+zcmV-I0KNZ^ybX}N4S=)(qKzyAAo2GG=yypVMhTh-t9eBB_fPo%C<NOGn-j4ZXaFcI
+Y(Q!#~N_j+jM3m--&W!=L&W!>>(4#jTF#rGn
 
